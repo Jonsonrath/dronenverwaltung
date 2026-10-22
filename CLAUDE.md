@@ -59,6 +59,14 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 - Name tests after the requirement they cover, e.g. `REQ_005_RejectsLoanOfAlreadyLoanedDrone`.
 - Do not add features beyond the current task.
 
+## Frontend Conventions
+- Follow the `angular-developer` skill (official Angular skill, copied from github.com/angular/skills): standalone components, signal-based `input()`/`output()`, `@if`/`@for` control flow, `inject()`, `httpResource`/`HttpClient` for REST calls.
+- Create the Angular app with `ng new drone-inventory-ui` as the project assignment says; generate components and services with the Angular CLI.
+- Run `ng build` after generating code and fix errors before continuing.
+- The frontend only displays state and sends requests. It must not re-implement domain rules; show the backend's error responses (409, 422) to the user.
+- For visual design use the `frontend-design` skill: pick one clear direction (colors, typography, spacing) and keep it consistent across all pages. The UI must be usable at phone width.
+- Keep the UI simple. Required views: drone list with status, drone form, student group form, loan form (with batteries/propellers), active loans, return action, loan history.
+
 ## Out of Scope (initial change)
 Login/users/roles, individual battery inventory (BAT-001 ...), reservations, damage management and return differences, statistics/exports. These come later as separate change requests.
 

@@ -27,5 +27,5 @@ gh issue list --limit 100 --state all
 gh issue create --title "<task title>" --body "OpenSpec change: <change-name>
 Task: <task number>
 Requirements: <REQ-IDs>"
-gh project item-add 4 --owner <OWNER> --url <issue-url>
+gh project item-add 4 --owner Jonsonrath --url <issue-url>
 ```

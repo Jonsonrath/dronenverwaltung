@@ -63,6 +63,8 @@ SQLite
 
 ## 📋 Anforderungen
 
+Ausformuliert mit SHALL und Given/When/Then in [`docs/requirements.md`](docs/requirements.md).
+
 | ID | Anforderung |
 |---|---|
 | REQ-001 | Drohne anlegen |
@@ -97,7 +99,7 @@ Problem → Requirements → DDD → OpenSpec → Tasks → GitHub Issues
 
 - Verhalten ändern heißt: **zuerst die Spec ändern**.
 - Ein Issue = ein Branch = ein Pull Request.
-- Jedes Given/Then/When-Szenario braucht einen Test.
+- Jedes Given/When/Then-Szenario braucht einen Test.
 - Specs liegen unter `openspec/specs`, geplante Änderungen unter `openspec/changes`.
 
 ## 📁 Projektstruktur
@@ -106,29 +108,35 @@ Problem → Requirements → DDD → OpenSpec → Tasks → GitHub Issues
 drone-inventory/
 ├── backend/DroneInventory.Api/
 ├── frontend/drone-inventory-ui/
+├── docs/requirements.md   # Anforderungen REQ-001 … REQ-010
 ├── openspec/
 │   ├── specs/       # aktueller Sollzustand
 │   ├── changes/     # geplante Änderungen
 │   └── config.yaml
-├── AGENTS.md
+├── .claude/skills/  # Skills für Claude Code
+├── .agents/skills/  # Skills für Codex
+├── AGENTS.md        # Agentenregeln (Codex, Claude Code liest sie über CLAUDE.md)
+├── CLAUDE.md
 └── README.md
 ```
 
 ## 🚀 Erste Schritte
+
+Voraussetzungen: .NET 10 SDK, Node.js 22+, GitHub CLI (`gh`), OpenSpec (`npm install -g @fission-ai/openspec`).
 
 ```bash
 # Backend
 cd backend/DroneInventory.Api
 dotnet run
 
-# Frontend
+# Frontend (Angular 22, Tests mit Vitest)
 cd frontend/drone-inventory-ui
 npm install
-ng serve
+npx ng serve
 
 # Tests
-dotnet test
-ng test
+dotnet test          # sobald das Testprojekt angelegt ist
+npx ng test --watch=false
 ```
 
 ## 🔗 Traceability

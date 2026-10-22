@@ -1,0 +1,21 @@
+# .NET
+bin/
+obj/
+*.user
+.vs/
+
+# SQLite
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Angular / Node
+node_modules/
+dist/
+.angular/
+frontend/**/coverage/
+
+# Secrets
+.env
+*.pem

@@ -1,11 +1,15 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
+import { DroneApi } from '../../core/drone-api';
 
-// Page shell from task 5.1; its content is built in a later task.
+/** Drone list with the status derived by the backend (REQ-002). */
 @Component({
   selector: 'app-drones',
-  template: `
-    <h1>Drones</h1>
-    <p class="lead">All drones in the cabinet and whether they are available.</p>
-  `,
+  templateUrl: './drones.html',
+  styleUrl: './drones.css',
 })
-export class Drones {}
+export class Drones {
+  private readonly droneApi = inject(DroneApi);
+
+  protected readonly drones = rxResource({ stream: () => this.droneApi.list() });
+}

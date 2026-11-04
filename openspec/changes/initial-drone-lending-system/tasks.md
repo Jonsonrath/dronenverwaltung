@@ -35,7 +35,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 6. Frontend: drones and student groups
 
-- [ ] 6.1 Implement `DroneApi` service and drone list page (name, status, description); verify with a Vitest service test (`GET /api/drones`) and manually against the running backend (REQ-002) (#17)
+- [x] 6.1 Implement `DroneApi` service and drone list page (name, status, description); verify with a Vitest service test (`GET /api/drones`) and manually against the running backend (REQ-002) (#17)
 - [ ] 6.2 Implement the drone create form on the drone page; verify with a Vitest test that the backend error message (422) is shown, and manually that a new drone appears as Available (REQ-001) (#18)
 - [ ] 6.3 Implement `StudentGroupApi` service and student group page (list + create form); verify with a Vitest service test and manually that a new group appears and a blank name shows the backend error (REQ-003) (#19)
 

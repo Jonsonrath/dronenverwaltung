@@ -1,6 +1,6 @@
 # Requirements – Drone Lending System (Drohnenverwaltung)
 
-> Status: **Draft – to be reviewed by the team** before `/opsx:propose`.
+> Status: **Reviewed** – team decisions recorded below (04.11.2026).
 > Input for the OpenSpec change `initial-drone-lending-system`.
 
 ## Problem
@@ -40,6 +40,11 @@ The system SHALL allow creating a drone with a name and an optional free-text de
 - WHEN a drone is created with an empty name
 - THEN the drone is rejected
 
+**Scenario: Name is unique**
+- GIVEN a drone named "TELLO-07" exists
+- WHEN a drone is created with name "tello-07"
+- THEN the drone is rejected
+
 ### REQ-002 List drones
 The system SHALL list all drones with name, status (Available | Loaned) and description.
 
@@ -59,6 +64,11 @@ The system SHALL allow creating a student group with a name.
 
 **Scenario: Name is required**
 - WHEN a student group is created with an empty name
+- THEN the student group is rejected
+
+**Scenario: Name is unique**
+- GIVEN a student group named "Group 3" exists
+- WHEN a student group is created with name "group 3"
 - THEN the student group is rejected
 
 ### REQ-004 Loan drone
@@ -148,8 +158,8 @@ Returned loans SHALL never be deleted. The system SHALL list past (returned) loa
 
 These follow later as separate change requests.
 
-## Open Questions for the Team Review
+## Team Decisions
 
-- Must drone names and group names be unique?
-- Is a loan with 0 batteries and 0 propellers allowed? (Draft: yes, quantities >= 0.)
-- Date only or date and time for LoanDate/ReturnDate? (Draft: stored as date and time, shown as date.)
+- Drone names and student group names must be unique (ignoring upper/lower case and surrounding spaces).
+- A loan with 0 batteries and 0 propellers is allowed (quantities >= 0).
+- LoanDate and ReturnDate are stored as date and time and shown as date.

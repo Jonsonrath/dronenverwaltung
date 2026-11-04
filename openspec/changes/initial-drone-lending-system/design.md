@@ -51,6 +51,9 @@ Because the drone status needs the `Loan` entity, the drone endpoints first retu
 - If two requests pass that check at the same time, the second `SaveChanges` violates the filtered unique index. `LoanService` catches this `DbUpdateException` (inner `SqliteException` with error code 19, constraint violation) and throws `ConflictException`, so the client gets **409, never 500**.
 - A test sends two `POST /api/loans` for the same drone in parallel and expects one 201, one 409 and exactly one active loan.
 
+### 4b. Unique drone and group names
+Names are trimmed before saving. Uniqueness ignores case: the `Name` columns of `Drones` and `StudentGroups` use `COLLATE NOCASE` and a unique index. The service checks first and throws `ConflictException`; a unique-constraint violation from the index is mapped to `ConflictException` the same way as in 4a, so duplicates always give 409.
+
 ### 5. Error mapping
 Domain and service code throws small exceptions (`NotFoundException`, `ConflictException`, `ValidationException`). One `IExceptionHandler` maps them to RFC 7807 ProblemDetails:
 
@@ -59,7 +62,7 @@ Domain and service code throws small exceptions (`NotFoundException`, `ConflictE
 | created | 201 Created |
 | invalid input (blank name, negative quantity, malformed body) | 422 Unprocessable Entity |
 | unknown drone / student group / loan | 404 Not Found |
-| drone already loaned, loan already returned | 409 Conflict |
+| drone already loaned, loan already returned, duplicate drone or group name | 409 Conflict |
 
 ASP.NET's automatic model-validation response is switched from 400 to 422 so all invalid input looks the same.
 *Alternative:* return `Result` objects instead of exceptions. Rejected: more code for the same effect at this size.
@@ -91,8 +94,8 @@ Migrations are created in this order, one per task, and each task's tests run ag
 | Task | Migration | Creates |
 |---|---|---|
 | 1.2 | – | empty `DbContext`, `Migrate()` with no migrations is a no-op |
-| 2.1 | `InitialCreate` | `Drones` |
-| 3.1 | `AddStudentGroups` | `StudentGroups` |
+| 2.1 | `InitialCreate` | `Drones` with unique, case-insensitive `Name` |
+| 3.1 | `AddStudentGroups` | `StudentGroups` with unique, case-insensitive `Name` |
 | 4.1 | `AddLoans` | `Loans`, `LoanItems`, filtered unique index on `Loans(DroneId)` |
 
 Tests build their database by applying the same migrations (`Database.Migrate()` on an in-memory SQLite connection), not with `EnsureCreated()`, so tests and production use the same schema. Migrations are never edited after they are merged; a fix is a new migration.
@@ -129,6 +132,7 @@ Vitest: API services with `HttpTestingController` (correct URL/method/body) and 
 
 Greenfield: no data to migrate. The first EF migration (`InitialCreate`) creates all tables. Rollback = delete `droneinventory.db`.
 
-## Open Questions
+## Team Decisions
 
-- Should drone names or group names be unique? Not required by the assignment; the specs allow duplicates. To be confirmed by the team; a uniqueness rule would be a small addition (one scenario, one index) without affecting the rest of this design.
+- A loan with 0 batteries and 0 propellers is allowed (quantities >= 0, as in the assignment).
+- Drone names and student group names are unique, ignoring case and surrounding whitespace (see 4b).

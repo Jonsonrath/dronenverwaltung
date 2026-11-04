@@ -54,7 +54,7 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 ## Backend Conventions
 - Domain rules live in the domain model / services, not in controllers.
 - Compute drone availability from the active loan, never store a status field on `Drone`.
-- HTTP status codes: 201 on create, 404 unknown drone/group/loan, 409 drone already loaned (REQ-005) or loan already returned, 422 invalid input (blank name, negative quantity).
+- HTTP status codes: 201 on create, 404 unknown drone/group/loan, 409 drone already loaned (REQ-005), loan already returned or duplicate drone/group name, 422 invalid input (blank name, negative quantity).
 - Never delete a returned `Loan`; the history must stay.
 - Name tests after the requirement they cover, e.g. `REQ_005_RejectsLoanOfAlreadyLoanedDrone`.
 - Do not add features beyond the current task.

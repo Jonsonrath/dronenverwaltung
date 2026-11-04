@@ -31,7 +31,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 5. Frontend: setup
 
-- [ ] 5.1 Add `provideHttpClient()`, `proxy.conf.json` (`/api` → `http://localhost:5087`), shared models in `core/`, routes with navigation (Drones, Student Groups, New Loan, Active Loans, History) and base styles in `styles.css`; verify `npx ng build` succeeds and navigation works in the browser at desktop and phone width (#16)
+- [x] 5.1 Add `provideHttpClient()`, `proxy.conf.json` (`/api` → `http://localhost:5087`), shared models in `core/`, routes with navigation (Drones, Student Groups, New Loan, Active Loans, History) and base styles in `styles.css`; verify `npx ng build` succeeds and navigation works in the browser at desktop and phone width (#16)
 
 ## 6. Frontend: drones and student groups
 

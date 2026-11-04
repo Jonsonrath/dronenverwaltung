@@ -143,12 +143,13 @@ cd backend
 dotnet ef migrations add <Name> --project DroneInventory.Api --output-dir Data/Migrations
 ```
 
-**Frontend starten** (Angular 22)
+**Frontend starten** (Angular 22) – läuft auf http://localhost:4200
 ```bash
 cd frontend/drone-inventory-ui
 npm install
 npx ng serve
 ```
+`ng serve` leitet alle Aufrufe an `/api` über `proxy.conf.json` an das Backend auf `http://localhost:5087` weiter. Das Backend muss also gleichzeitig laufen.
 
 **Tests**
 ```bash

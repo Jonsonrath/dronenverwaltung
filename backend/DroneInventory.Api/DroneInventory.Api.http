@@ -1,5 +1,9 @@
 @DroneInventory.Api_HostAddress = http://localhost:5087
 
+### List drones (REQ-002) → 200
+GET {{DroneInventory.Api_HostAddress}}/api/drones
+Accept: application/json
+
 ### Create a drone (REQ-001) → 201
 POST {{DroneInventory.Api_HostAddress}}/api/drones
 Content-Type: application/json

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using DroneInventory.Api.Contracts;
 using DroneInventory.Api.Data;
 using DroneInventory.Api.Domain;
@@ -46,8 +47,9 @@ public class NoDoubleLoanApiTests
         var drone = await CreateDrone(client, "TELLO-07");
         var group3 = await CreateGroup(client, "Group 3");
         var group1 = await CreateGroup(client, "Group 1");
-        await client.PostAsJsonAsync("/api/loans", new { droneId = drone.Id, studentGroupId = group3.Id });
-        ReturnAllLoans(factory); // the return endpoint follows in task 4.5
+        var first = await client.PostAsJsonAsync("/api/loans", new { droneId = drone.Id, studentGroupId = group3.Id });
+        var firstLoan = (await first.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt32();
+        await client.PostAsync($"/api/loans/{firstLoan}/return", null);
 
         var response = await client.PostAsJsonAsync("/api/loans", new { droneId = drone.Id, studentGroupId = group1.Id });
 
@@ -110,16 +112,5 @@ public class NoDoubleLoanApiTests
         using var scope = factory.Services.CreateScope();
         return scope.ServiceProvider.GetRequiredService<DroneInventoryDbContext>()
             .Loans.Include(l => l.Items).AsNoTracking().ToList();
-    }
-
-    private static void ReturnAllLoans(ApiFactory factory)
-    {
-        using var scope = factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<DroneInventoryDbContext>();
-        foreach (var loan in db.Loans.Where(l => l.Status == LoanStatus.Active))
-        {
-            loan.Return(factory.Time.GetUtcNow().UtcDateTime);
-        }
-        db.SaveChanges();
     }
 }

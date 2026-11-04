@@ -144,6 +144,33 @@ public class LoanMappingTests : IDisposable
     }
 
     [Fact]
+    public void REQ_008_SecondConcurrentReturnFailsAndKeepsFirstReturnDate()
+    {
+        int loanId;
+        using (var setup = _database.CreateContext())
+        {
+            var loan = NewLoan(setup, _droneId, 4, 8);
+            setup.SaveChanges();
+            loanId = loan.Id;
+        }
+
+        // Both contexts load the loan while it is still active.
+        using var first = _database.CreateContext();
+        using var second = _database.CreateContext();
+        var firstLoan = first.Loans.Single(l => l.Id == loanId);
+        var secondLoan = second.Loans.Single(l => l.Id == loanId);
+
+        firstLoan.Return(LoanDate.AddDays(7));
+        first.SaveChanges();
+
+        secondLoan.Return(LoanDate.AddDays(8));
+        Assert.Throws<DbUpdateConcurrencyException>(() => second.SaveChanges());
+
+        using var check = _database.CreateContext();
+        Assert.Equal(LoanDate.AddDays(7), check.Loans.Single(l => l.Id == loanId).ReturnDate);
+    }
+
+    [Fact]
     public void REQ_006_DatabaseRejectsNegativeQuantity()
     {
         using var context = _database.CreateContext();

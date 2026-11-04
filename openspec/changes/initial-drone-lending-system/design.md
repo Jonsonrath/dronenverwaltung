@@ -51,6 +51,9 @@ Because the drone status needs the `Loan` entity, the drone endpoints first retu
 - If two requests pass that check at the same time, the second `SaveChanges` violates the filtered unique index. `LoanService` catches this `DbUpdateException` (inner `SqliteException` with error code 19, constraint violation) and throws `ConflictException`, so the client gets **409, never 500**.
 - A test sends two `POST /api/loans` for the same drone in parallel and expects one 201, one 409 and exactly one active loan.
 
+### 4c. Returning a loan only once
+`Loan.Status` is an EF Core **concurrency token**: the UPDATE of a return only succeeds if the row still has the status that was loaded (`Active`). If two requests load the same active loan and both call `Return()`, the second `SaveChanges` updates no row and throws `DbUpdateConcurrencyException`; `LoanService.ReturnAsync` maps it to `ConflictException` (409), so the first ReturnDate is never overwritten. The token needs no extra column and no migration (`dotnet ef migrations has-pending-model-changes` reports no changes).
+
 ### 4b. Unique drone and group names
 Names are trimmed before saving. Uniqueness ignores upper/lower case **including non-ASCII letters** (e.g. "Ärzte" = "ärzte"): `Drone` and `StudentGroup` keep an additional column `NormalizedName = Name.Trim().ToUpperInvariant()`, set only by the entity, with a unique index on it. The displayed `Name` keeps its original spelling. The service checks `NormalizedName` first and throws `ConflictException`; a unique-constraint violation from the index is mapped to `ConflictException` the same way as in 4a, so duplicates always give 409.
 *Alternative:* `COLLATE NOCASE`. Rejected: SQLite's NOCASE only folds ASCII letters, so "Ärzte" and "ärzte" would count as different names.

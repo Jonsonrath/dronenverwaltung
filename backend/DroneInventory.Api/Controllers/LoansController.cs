@@ -40,4 +40,15 @@ public class LoansController(LoanService loans) : ControllerBase
         // No single-loan endpoint exists, so the response has no Location header.
         return StatusCode(StatusCodes.Status201Created, LoanResponse.From(loan));
     }
+
+    /// <summary>
+    /// Return a loan (REQ-008, REQ-009). A POST action and not DELETE, because the
+    /// loan is kept as history (REQ-010).
+    /// </summary>
+    [HttpPost("{id:int}/return")]
+    [ProducesResponseType<LoanResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<LoanResponse> Return(int id, CancellationToken cancellationToken) =>
+        LoanResponse.From(await loans.ReturnAsync(id, cancellationToken));
 }

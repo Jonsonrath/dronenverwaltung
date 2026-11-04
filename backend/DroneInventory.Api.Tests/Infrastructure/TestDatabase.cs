@@ -1,6 +1,7 @@
 using DroneInventory.Api.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace DroneInventory.Api.Tests.Infrastructure;
 
@@ -20,9 +21,10 @@ public sealed class TestDatabase : IDisposable
         context.Database.Migrate();
     }
 
-    public DroneInventoryDbContext CreateContext() =>
+    public DroneInventoryDbContext CreateContext(params IInterceptor[] interceptors) =>
         new(new DbContextOptionsBuilder<DroneInventoryDbContext>()
             .UseSqlite(_connection)
+            .AddInterceptors(interceptors)
             .Options);
 
     public void Dispose() => _connection.Dispose();

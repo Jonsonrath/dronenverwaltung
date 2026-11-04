@@ -1,5 +1,6 @@
 using DroneInventory.Api.Data;
 using DroneInventory.Api.Errors;
+using DroneInventory.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,6 +24,8 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddDbContext<DroneInventoryDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DroneInventory")));
+
+builder.Services.AddScoped<DroneService>();
 
 // LoanDate and ReturnDate are taken from TimeProvider so tests can use fixed dates.
 builder.Services.AddSingleton(TimeProvider.System);

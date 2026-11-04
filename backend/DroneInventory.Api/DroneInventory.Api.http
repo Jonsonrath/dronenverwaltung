@@ -1,3 +1,28 @@
 @DroneInventory.Api_HostAddress = http://localhost:5087
 
+### Create a drone (REQ-001) → 201
+POST {{DroneInventory.Api_HostAddress}}/api/drones
+Content-Type: application/json
+
+{
+  "name": "TELLO-07",
+  "description": "SSID: TELLO-9FA21B, rechter Propellerschutz beschädigt"
+}
+
+### Duplicate name, other case (REQ-001) → 409
+POST {{DroneInventory.Api_HostAddress}}/api/drones
+Content-Type: application/json
+
+{
+  "name": "tello-07"
+}
+
+### Empty name (REQ-001) → 422
+POST {{DroneInventory.Api_HostAddress}}/api/drones
+Content-Type: application/json
+
+{
+  "name": "   "
+}
+
 ###

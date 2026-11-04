@@ -30,3 +30,25 @@ Content-Type: application/json
 }
 
 ###
+
+### List student groups (REQ-003) → 200
+GET {{DroneInventory.Api_HostAddress}}/api/student-groups
+Accept: application/json
+
+### Create a student group (REQ-003) → 201
+POST {{DroneInventory.Api_HostAddress}}/api/student-groups
+Content-Type: application/json
+
+{
+  "name": "Group 3"
+}
+
+### Duplicate group name (REQ-003) → 409
+POST {{DroneInventory.Api_HostAddress}}/api/student-groups
+Content-Type: application/json
+
+{
+  "name": " group 3 "
+}
+
+###

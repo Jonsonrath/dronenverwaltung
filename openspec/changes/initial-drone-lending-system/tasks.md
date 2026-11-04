@@ -16,7 +16,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 3. Backend: student groups (spec student-group)
 
-- [ ] 3.1 Implement `StudentGroup` entity (Name trimmed and required, `NormalizedName` as for `Drone`), EF mapping with a unique index on `NormalizedName` and migration `AddStudentGroups`; verify with tests that a blank name throws `ValidationException` and a migration test that the `StudentGroups` table exists and rejects a duplicate name (REQ-003) (#8)
+- [x] 3.1 Implement `StudentGroup` entity (Name trimmed and required, `NormalizedName` as for `Drone`), EF mapping with a unique index on `NormalizedName` and migration `AddStudentGroups`; verify with tests that a blank name throws `ValidationException` and a migration test that the `StudentGroups` table exists and rejects a duplicate name (REQ-003) (#8)
 - [ ] 3.2 Implement `POST /api/student-groups` and `GET /api/student-groups`; verify with API tests: create returns 201, blank name returns 422, duplicate name returns 409, list and empty list (REQ-003 scenarios) (#9)
 
 ## 4. Backend: loans (spec loan)

@@ -16,19 +16,8 @@ public class Drone
 
     public Drone(string name, string? description)
     {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new ValidationException("The name of a drone must not be empty.");
-        }
-
-        Name = name.Trim();
-        NormalizedName = Normalize(name);
+        Name = EntityName.Require(name, "drone");
+        NormalizedName = EntityName.Normalize(name);
         Description = description?.Trim() ?? string.Empty;
     }
-
-    /// <summary>
-    /// Trim and upper-case with invariant culture, so "Übungsdrohne" and " ÜBUNGSDROHNE "
-    /// give the same value (unlike SQLite NOCASE, this also covers umlauts).
-    /// </summary>
-    public static string Normalize(string name) => name.Trim().ToUpperInvariant();
 }

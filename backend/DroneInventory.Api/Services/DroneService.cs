@@ -33,12 +33,24 @@ public class DroneService(DroneInventoryDbContext db)
         return drone;
     }
 
-    /// <summary>All drones, ordered by name (REQ-002). The derived status follows in task 4.7.</summary>
-    public async Task<IReadOnlyList<Drone>> ListAsync(CancellationToken cancellationToken = default) =>
-        await db.Drones
+    /// <summary>
+    /// All drones, ordered by name, each with its status derived from the loans (REQ-002):
+    /// Loaned if it has an active loan, otherwise Available. No status is stored.
+    /// </summary>
+    public async Task<IReadOnlyList<(Drone Drone, DroneStatus Status)>> ListAsync(CancellationToken cancellationToken = default)
+    {
+        var rows = await db.Drones
             .AsNoTracking()
             .OrderBy(d => d.NormalizedName)
+            .Select(d => new
+            {
+                Drone = d,
+                IsLoaned = db.Loans.Any(l => l.DroneId == d.Id && l.Status == LoanStatus.Active),
+            })
             .ToListAsync(cancellationToken);
+
+        return rows.Select(r => (r.Drone, r.IsLoaned ? DroneStatus.Loaned : DroneStatus.Available)).ToList();
+    }
 
     private static ConflictException DuplicateName(Drone drone) =>
         new($"A drone with the name \"{drone.Name}\" already exists (names are compared ignoring case).");

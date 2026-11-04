@@ -160,6 +160,6 @@ These follow later as separate change requests.
 
 ## Team Decisions
 
-- Drone names and student group names must be unique (ignoring upper/lower case and surrounding spaces).
+- Drone names and student group names must be unique (ignoring upper/lower case, also for umlauts, and surrounding spaces).
 - A loan with 0 batteries and 0 propellers is allowed (quantities >= 0).
 - LoanDate and ReturnDate are stored as date and time and shown as date.

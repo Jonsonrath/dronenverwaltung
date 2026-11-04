@@ -52,7 +52,8 @@ Because the drone status needs the `Loan` entity, the drone endpoints first retu
 - A test sends two `POST /api/loans` for the same drone in parallel and expects one 201, one 409 and exactly one active loan.
 
 ### 4b. Unique drone and group names
-Names are trimmed before saving. Uniqueness ignores case: the `Name` columns of `Drones` and `StudentGroups` use `COLLATE NOCASE` and a unique index. The service checks first and throws `ConflictException`; a unique-constraint violation from the index is mapped to `ConflictException` the same way as in 4a, so duplicates always give 409.
+Names are trimmed before saving. Uniqueness ignores upper/lower case **including non-ASCII letters** (e.g. "Ärzte" = "ärzte"): `Drone` and `StudentGroup` keep an additional column `NormalizedName = Name.Trim().ToUpperInvariant()`, set only by the entity, with a unique index on it. The displayed `Name` keeps its original spelling. The service checks `NormalizedName` first and throws `ConflictException`; a unique-constraint violation from the index is mapped to `ConflictException` the same way as in 4a, so duplicates always give 409.
+*Alternative:* `COLLATE NOCASE`. Rejected: SQLite's NOCASE only folds ASCII letters, so "Ärzte" and "ärzte" would count as different names.
 
 ### 5. Error mapping
 Domain and service code throws small exceptions (`NotFoundException`, `ConflictException`, `ValidationException`). One `IExceptionHandler` maps them to RFC 7807 ProblemDetails:
@@ -94,8 +95,8 @@ Migrations are created in this order, one per task, and each task's tests run ag
 | Task | Migration | Creates |
 |---|---|---|
 | 1.2 | – | empty `DbContext`, `Migrate()` with no migrations is a no-op |
-| 2.1 | `InitialCreate` | `Drones` with unique, case-insensitive `Name` |
-| 3.1 | `AddStudentGroups` | `StudentGroups` with unique, case-insensitive `Name` |
+| 2.1 | `InitialCreate` | `Drones` with unique `NormalizedName` |
+| 3.1 | `AddStudentGroups` | `StudentGroups` with unique `NormalizedName` |
 | 4.1 | `AddLoans` | `Loans`, `LoanItems`, filtered unique index on `Loans(DroneId)` |
 
 Tests build their database by applying the same migrations (`Database.Migrate()` on an in-memory SQLite connection), not with `EnsureCreated()`, so tests and production use the same schema. Migrations are never edited after they are merged; a fix is a new migration.
@@ -130,9 +131,9 @@ Vitest: API services with `HttpTestingController` (correct URL/method/body) and 
 
 ## Migration Plan
 
-Greenfield: no data to migrate. The first EF migration (`InitialCreate`) creates all tables. Rollback = delete `droneinventory.db`.
+Greenfield: no data to migrate. The schema is built by the three migrations from §8 (`InitialCreate` → `AddStudentGroups` → `AddLoans`). Rollback during development = delete `droneinventory.db`.
 
 ## Team Decisions
 
 - A loan with 0 batteries and 0 propellers is allowed (quantities >= 0, as in the assignment).
-- Drone names and student group names are unique, ignoring case and surrounding whitespace (see 4b).
+- Drone names and student group names are unique, ignoring case (also for umlauts) and surrounding whitespace (see 4b).

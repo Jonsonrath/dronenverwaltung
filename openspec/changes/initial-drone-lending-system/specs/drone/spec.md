@@ -7,7 +7,7 @@ Keeps the inventory of drones that can be loaned to student groups and shows for
 ## ADDED Requirements
 
 ### Requirement: Create drone (REQ-001)
-The system SHALL allow creating a Drone with a name and an optional free-text description. Each Drone SHALL receive a unique id. The name SHALL NOT be empty or consist only of whitespace and SHALL be unique among all Drones, ignoring upper/lower case and leading/trailing whitespace. The availability of a Drone is never entered; a newly created Drone is available.
+The system SHALL allow creating a Drone with a name and an optional free-text description. Each Drone SHALL receive a unique id. The name SHALL NOT be empty or consist only of whitespace and SHALL be unique among all Drones, ignoring upper/lower case (including letters such as umlauts) and leading/trailing whitespace. The availability of a Drone is never entered; a newly created Drone is available.
 
 #### Scenario: Create a drone
 - **GIVEN** no Drone named "TELLO-07" exists
@@ -29,6 +29,11 @@ The system SHALL allow creating a Drone with a name and an optional free-text de
 - **WHEN** a Drone is created with name "tello-07"
 - **THEN** the request is rejected as a conflict
 - **AND** no second Drone is created
+
+#### Scenario: Duplicate name with umlauts rejected
+- **GIVEN** a Drone named "Übungsdrohne" exists
+- **WHEN** a Drone is created with name "ÜBUNGSDROHNE"
+- **THEN** the request is rejected as a conflict
 
 ### Requirement: List drones with availability (REQ-002)
 The system SHALL list all Drones with id, name, description and status. The status SHALL be Available when the Drone has no active Loan and Loaned when it has an active Loan. The status SHALL be derived from the Loans and never set directly.

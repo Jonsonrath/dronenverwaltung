@@ -7,7 +7,7 @@ Keeps the student groups that loan drones and are responsible for them, so that 
 ## ADDED Requirements
 
 ### Requirement: Create student group (REQ-003)
-The system SHALL allow creating a StudentGroup with a name. Each StudentGroup SHALL receive a unique id. The name SHALL NOT be empty or consist only of whitespace and SHALL be unique among all StudentGroups, ignoring upper/lower case and leading/trailing whitespace.
+The system SHALL allow creating a StudentGroup with a name. Each StudentGroup SHALL receive a unique id. The name SHALL NOT be empty or consist only of whitespace and SHALL be unique among all StudentGroups, ignoring upper/lower case (including letters such as umlauts) and leading/trailing whitespace.
 
 #### Scenario: Create a student group
 - **WHEN** a StudentGroup is created with name "Group 3"

@@ -10,13 +10,13 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 2. Backend: drones (spec drone)
 
-- [ ] 2.1 Implement `Drone` entity (Id, Name trimmed and required, Description), its EF mapping with a unique case-insensitive name (`COLLATE NOCASE`) and the first migration `InitialCreate` (table `Drones` only); verify with a test that a blank name throws `ValidationException` and a migration test that the `Drones` table exists and rejects a duplicate name (REQ-001) (#5)
-- [ ] 2.2 Implement `DroneService` and `POST /api/drones`; verify with API tests: create returns 201 with id, name and description, description optional, blank name returns 422, duplicate name (other case) returns 409 (REQ-001; the status Available is added and verified in 4.7) (#6)
+- [ ] 2.1 Implement `Drone` entity (Id, Name trimmed and required, Description, `NormalizedName = Name.Trim().ToUpperInvariant()`), its EF mapping with a unique index on `NormalizedName` and the first migration `InitialCreate` (table `Drones` only); verify with tests that a blank name throws `ValidationException`, that "Übungsdrohne" and "ÜBUNGSDROHNE" get the same `NormalizedName`, and a migration test that the `Drones` table exists and rejects a duplicate name (REQ-001) (#5)
+- [ ] 2.2 Implement `DroneService` and `POST /api/drones`; verify with API tests: create returns 201 with id, name and description, description optional, blank name returns 422, duplicate name in other case (also with umlauts) returns 409 (REQ-001; the status Available is added and verified in 4.7) (#6)
 - [ ] 2.3 Implement `GET /api/drones` returning id, name and description of all drones; verify with API tests for an empty list and a list of two drones (REQ-002; the derived status is added in 4.7 once loans exist) (#7)
 
 ## 3. Backend: student groups (spec student-group)
 
-- [ ] 3.1 Implement `StudentGroup` entity (Name trimmed and required), EF mapping with a unique case-insensitive name and migration `AddStudentGroups`; verify with a test that a blank name throws `ValidationException` and a migration test that the `StudentGroups` table exists and rejects a duplicate name (REQ-003) (#8)
+- [ ] 3.1 Implement `StudentGroup` entity (Name trimmed and required, `NormalizedName` as for `Drone`), EF mapping with a unique index on `NormalizedName` and migration `AddStudentGroups`; verify with tests that a blank name throws `ValidationException` and a migration test that the `StudentGroups` table exists and rejects a duplicate name (REQ-003) (#8)
 - [ ] 3.2 Implement `POST /api/student-groups` and `GET /api/student-groups`; verify with API tests: create returns 201, blank name returns 422, duplicate name returns 409, list and empty list (REQ-003 scenarios) (#9)
 
 ## 4. Backend: loans (spec loan)

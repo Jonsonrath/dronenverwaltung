@@ -5,7 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { DroneApi } from './drone-api';
 import { Drone } from './drone.model';
 
-// Task 6.1: DroneApi calls the backend (REQ-002).
+// DroneApi calls the backend: list (task 6.1, REQ-002), create (task 6.2, REQ-001).
 describe('DroneApi', () => {
   let api: DroneApi;
   let http: HttpTestingController;
@@ -32,5 +32,17 @@ describe('DroneApi', () => {
 
     expect(request.request.method).toBe('GET');
     expect(await result).toEqual(drones);
+  });
+
+  it('REQ-001: create() sends POST /api/drones with name and description', async () => {
+    const created: Drone = { id: 7, name: 'TELLO-07', description: 'SSID: TELLO-9FA21B', status: 'Available' };
+
+    const result = firstValueFrom(api.create({ name: 'TELLO-07', description: 'SSID: TELLO-9FA21B' }));
+    const request = http.expectOne('/api/drones');
+    request.flush(created);
+
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ name: 'TELLO-07', description: 'SSID: TELLO-9FA21B' });
+    expect(await result).toEqual(created);
   });
 });

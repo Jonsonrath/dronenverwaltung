@@ -40,8 +40,16 @@ Folders in `DroneInventory.Api`: `Domain/` (entities and domain exceptions), `Da
 
 ### 4. Availability is computed, never stored
 `Drone` has no status column. The drone list is projected with `Loans.Any(l => l.DroneId == d.Id && l.Status == Active)` → `Available | Loaned`. `Loan` keeps its own `Status` (Active | Returned) as the single source of truth.
-In addition, a **filtered unique index** on `Loans(DroneId) WHERE Status = 'Active'` guarantees REQ-005 in the database even if two requests arrive at the same time.
+In addition, a **filtered unique index** on `Loans(DroneId)` with the filter `"Status" = 'Active'` guarantees REQ-005 in the database even if two requests arrive at the same time.
 *Alternative:* `Drone.Status` column. Rejected: two truths that can drift apart (assignment, "Architekturfrage").
+
+Because the drone status needs the `Loan` entity, the drone endpoints first return id, name and description (tasks 2.2, 2.3); the derived status is added in task 4.7 after loans exist. This keeps every task implementable and testable without pulling later work forward.
+
+### 4a. Enum mapping and the one-active-loan guarantee
+- `LoanStatus` (Active | Returned) and `LoanItemType` (Battery | Propeller) are stored as **strings** (`HasConversion<string>()`), not as integers. Only then the index filter `"Status" = 'Active'` matches, and the database stays readable.
+- `LoanService.CreateLoan` first checks for an active loan and throws `ConflictException` (normal case).
+- If two requests pass that check at the same time, the second `SaveChanges` violates the filtered unique index. `LoanService` catches this `DbUpdateException` (inner `SqliteException` with error code 19, constraint violation) and throws `ConflictException`, so the client gets **409, never 500**.
+- A test sends two `POST /api/loans` for the same drone in parallel and expects one 201, one 409 and exactly one active loan.
 
 ### 5. Error mapping
 Domain and service code throws small exceptions (`NotFoundException`, `ConflictException`, `ValidationException`). One `IExceptionHandler` maps them to RFC 7807 ProblemDetails:
@@ -77,6 +85,17 @@ LoanDate and ReturnDate are set from an injected `TimeProvider` and stored in UT
 
 ### 8. Persistence: SQLite with EF Core migrations
 Connection string `Data Source=droneinventory.db` in `appsettings.json`; the `.db` file is git-ignored. Schema via EF Core migrations (`dotnet ef migrations add`), applied at startup with `Database.Migrate()`.
+
+Migrations are created in this order, one per task, and each task's tests run against exactly that state:
+
+| Task | Migration | Creates |
+|---|---|---|
+| 1.2 | – | empty `DbContext`, `Migrate()` with no migrations is a no-op |
+| 2.1 | `InitialCreate` | `Drones` |
+| 3.1 | `AddStudentGroups` | `StudentGroups` |
+| 4.1 | `AddLoans` | `Loans`, `LoanItems`, filtered unique index on `Loans(DroneId)` |
+
+Tests build their database by applying the same migrations (`Database.Migrate()` on an in-memory SQLite connection), not with `EnsureCreated()`, so tests and production use the same schema. Migrations are never edited after they are merged; a fix is a new migration.
 *Alternative:* `EnsureCreated()`. Rejected: it cannot evolve the schema, and the change requests will change it.
 
 ### 9. Backend tests
@@ -100,6 +119,7 @@ Vitest: API services with `HttpTestingController` (correct URL/method/body) and 
 ## Risks / Trade-offs
 
 - [SQLite filtered index syntax and EF Core translation] → covered by a test that creates two active loans for the same drone directly in the DbContext and expects a failure.
+- [Parallel requests on SQLite are serialized by the database lock, so the race may be hard to provoke] → the parallel test asserts the outcome (one 201, one 409, one active loan), and the `DbUpdateException` mapping is additionally tested directly in a service test.
 - [Exceptions for control flow can hide bugs] → only three custom exception types, everything else stays a 500 and is visible in tests.
 - [Signal Forms are new; little team experience] → the `angular-developer` skill has a reference; fallback to Reactive Forms is allowed if it blocks progress (implementation detail only, no spec change).
 - [Dates in UTC vs. local display] → tests compare dates only; display formatting is done in one pipe/place.
@@ -111,4 +131,4 @@ Greenfield: no data to migrate. The first EF migration (`InitialCreate`) creates
 
 ## Open Questions
 
-- Should drone names or group names be unique? Not required by the assignment; the specs allow duplicates. Can be added later as its own change without affecting this design.
+- Should drone names or group names be unique? Not required by the assignment; the specs allow duplicates. To be confirmed by the team; a uniqueness rule would be a small addition (one scenario, one index) without affecting the rest of this design.

@@ -40,6 +40,13 @@ A Drone SHALL have at most one active Loan. A Loan request for a Drone that alre
 - **AND** no new Loan is created
 - **AND** the active Loan for "Group 3" is unchanged
 
+#### Scenario: Simultaneous loan requests for the same drone
+- **GIVEN** "TELLO-07" is Available
+- **AND** the StudentGroups "Group 1" and "Group 3" exist
+- **WHEN** "TELLO-07" is loaned to "Group 1" and to "Group 3" at the same time
+- **THEN** exactly one request succeeds and creates an active Loan
+- **AND** the other request is rejected as a conflict
+
 #### Scenario: Drone can be loaned again after return
 - **GIVEN** "TELLO-07" had a Loan for "Group 3" that has been returned
 - **WHEN** "TELLO-07" is loaned to "Group 1"

@@ -26,6 +26,7 @@ builder.Services.AddDbContext<DroneInventoryDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DroneInventory")));
 
 builder.Services.AddScoped<DroneService>();
+builder.Services.AddScoped<StudentGroupService>();
 
 // LoanDate and ReturnDate are taken from TimeProvider so tests can use fixed dates.
 builder.Services.AddSingleton(TimeProvider.System);

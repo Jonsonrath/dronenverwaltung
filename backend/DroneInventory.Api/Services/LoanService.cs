@@ -73,19 +73,25 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
     }
 
     /// <summary>
-    /// Loans with the given status, with drone, group and accessories, oldest first.
-    /// Active: REQ-007 (task 4.4). Returned (loan history): REQ-010, specified in task 4.6.
+    /// Loans with the given status, with drone, group and accessories.
+    /// Active (REQ-007): oldest loan first. Returned = loan history (REQ-010):
+    /// most recent return first. Returned loans are never deleted, so the history is complete.
     /// </summary>
-    public async Task<IReadOnlyList<Loan>> ListAsync(LoanStatus status, CancellationToken cancellationToken = default) =>
-        await db.Loans
+    public async Task<IReadOnlyList<Loan>> ListAsync(LoanStatus status, CancellationToken cancellationToken = default)
+    {
+        var query = db.Loans
             .AsNoTracking()
             .Include(l => l.Drone)
             .Include(l => l.StudentGroup)
             .Include(l => l.Items)
-            .Where(l => l.Status == status)
-            .OrderBy(l => l.LoanDate)
-            .ThenBy(l => l.Drone.NormalizedName)
-            .ToListAsync(cancellationToken);
+            .Where(l => l.Status == status);
+
+        var ordered = status == LoanStatus.Returned
+            ? query.OrderByDescending(l => l.ReturnDate).ThenBy(l => l.Drone.NormalizedName)
+            : query.OrderBy(l => l.LoanDate).ThenBy(l => l.Drone.NormalizedName);
+
+        return await ordered.ToListAsync(cancellationToken);
+    }
 
     private static ConflictException AlreadyLoaned(Drone drone) =>
         new($"Drone \"{drone.Name}\" already has an active loan.");

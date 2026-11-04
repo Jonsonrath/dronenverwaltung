@@ -1,4 +1,6 @@
+using System.ComponentModel.DataAnnotations;
 using DroneInventory.Api.Contracts;
+using DroneInventory.Api.Domain;
 using DroneInventory.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,6 +10,19 @@ namespace DroneInventory.Api.Controllers;
 [Route("api/loans")]
 public class LoansController(LoanService loans) : ControllerBase
 {
+    /// <summary>
+    /// Loans with the given status: <c>?status=Active</c> lists the active loans (REQ-007).
+    /// A missing or unknown status gives 422.
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType<IReadOnlyList<LoanResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<IReadOnlyList<LoanResponse>> List([FromQuery, Required] LoanStatus? status, CancellationToken cancellationToken)
+    {
+        var all = await loans.ListAsync(status!.Value, cancellationToken);
+        return all.Select(LoanResponse.From).ToList();
+    }
+
     /// <summary>Loan a drone to a student group with accessories (REQ-004, REQ-006).</summary>
     [HttpPost]
     [ProducesResponseType<LoanResponse>(StatusCodes.Status201Created)]

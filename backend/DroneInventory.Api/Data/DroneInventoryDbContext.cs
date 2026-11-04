@@ -10,6 +10,8 @@ public class DroneInventoryDbContext(DbContextOptions<DroneInventoryDbContext> o
 {
     public DbSet<Drone> Drones => Set<Drone>();
 
+    public DbSet<StudentGroup> StudentGroups => Set<StudentGroup>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DroneInventoryDbContext).Assembly);
 }

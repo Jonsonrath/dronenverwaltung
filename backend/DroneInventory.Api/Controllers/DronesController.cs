@@ -8,6 +8,15 @@ namespace DroneInventory.Api.Controllers;
 [Route("api/drones")]
 public class DronesController(DroneService drones) : ControllerBase
 {
+    /// <summary>List all drones, ordered by name (REQ-002).</summary>
+    [HttpGet]
+    [ProducesResponseType<IReadOnlyList<DroneResponse>>(StatusCodes.Status200OK)]
+    public async Task<IReadOnlyList<DroneResponse>> List(CancellationToken cancellationToken)
+    {
+        var all = await drones.ListAsync(cancellationToken);
+        return all.Select(DroneResponse.From).ToList();
+    }
+
     /// <summary>Create a drone (REQ-001).</summary>
     [HttpPost]
     [ProducesResponseType<DroneResponse>(StatusCodes.Status201Created)]

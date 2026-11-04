@@ -33,6 +33,13 @@ public class DroneService(DroneInventoryDbContext db)
         return drone;
     }
 
+    /// <summary>All drones, ordered by name (REQ-002). The derived status follows in task 4.7.</summary>
+    public async Task<IReadOnlyList<Drone>> ListAsync(CancellationToken cancellationToken = default) =>
+        await db.Drones
+            .AsNoTracking()
+            .OrderBy(d => d.NormalizedName)
+            .ToListAsync(cancellationToken);
+
     private static ConflictException DuplicateName(Drone drone) =>
         new($"A drone with the name \"{drone.Name}\" already exists (names are compared ignoring case).");
 }

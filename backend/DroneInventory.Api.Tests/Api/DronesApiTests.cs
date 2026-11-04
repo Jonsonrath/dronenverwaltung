@@ -8,7 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace DroneInventory.Api.Tests.Api;
 
-// Task 2.2, spec drone: Requirement "Create drone (REQ-001)" via POST /api/drones.
+// Spec drone: "Create drone (REQ-001)" via POST /api/drones (task 2.2) and
+// "List drones with availability (REQ-002)" via GET /api/drones (task 2.3).
 // Every test gets its own app and database.
 public class DronesApiTests : IDisposable
 {
@@ -71,6 +72,38 @@ public class DronesApiTests : IDisposable
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
         Assert.Equal(409, problem!.Status);
         Assert.Equal(1, CountDrones());
+    }
+
+    [Fact]
+    public async Task REQ_002_NoDrones_ReturnsEmptyList()
+    {
+        var response = await _client.GetAsync("/api/drones");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var drones = await response.Content.ReadFromJsonAsync<List<DroneResponse>>();
+        Assert.Empty(drones!);
+    }
+
+    [Fact]
+    public async Task REQ_002_ListsAllDronesWithIdNameAndDescriptionOrderedByName()
+    {
+        await _client.PostAsJsonAsync("/api/drones", new { name = "TELLO-07", description = "SSID: TELLO-9FA21B" });
+        await _client.PostAsJsonAsync("/api/drones", new { name = "TELLO-02" });
+
+        var drones = await _client.GetFromJsonAsync<List<DroneResponse>>("/api/drones");
+
+        Assert.Collection(drones!,
+            first =>
+            {
+                Assert.Equal("TELLO-02", first.Name);
+                Assert.Equal(string.Empty, first.Description);
+            },
+            second =>
+            {
+                Assert.True(second.Id > 0);
+                Assert.Equal("TELLO-07", second.Name);
+                Assert.Equal("SSID: TELLO-9FA21B", second.Description);
+            });
     }
 
     private int CountDrones()

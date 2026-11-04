@@ -8,7 +8,7 @@
   </div>
 } @else if (drones.hasValue()) {
   @if (drones.value().length === 0) {
-    <p class="empty">No drones yet.</p>
+    <p class="empty">No drones yet. Add the first one below.</p>
   } @else {
     <div class="table-scroll">
       <table class="table">
@@ -40,3 +40,38 @@
 } @else {
   <p class="loading" aria-live="polite">Loading drones…</p>
 }
+
+<section class="add" aria-labelledby="add-drone-heading">
+  <h2 id="add-drone-heading">Add a drone</h2>
+
+  <form [formRoot]="droneForm">
+    @if (saveError()) {
+      <p class="alert" role="alert">{{ saveError() }}</p>
+    }
+
+    <div class="field">
+      <label for="drone-name">Name</label>
+      <input id="drone-name" type="text" autocomplete="off" placeholder="TELLO-07" [formField]="droneForm.name" />
+      @if (droneForm.name().touched() && droneForm.name().invalid()) {
+        <p class="field-error">{{ droneForm.name().errors()[0].message }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="drone-description">Description <span class="optional">(optional)</span></label>
+      <textarea
+        id="drone-description"
+        placeholder="SSID, damage, anything worth knowing"
+        [formField]="droneForm.description"
+      ></textarea>
+    </div>
+
+    <button class="button button-primary" type="submit" [disabled]="droneForm().submitting()">
+      {{ droneForm().submitting() ? 'Adding…' : 'Add drone' }}
+    </button>
+
+    @if (added()) {
+      <p class="added" role="status">{{ added() }} added. It is available now.</p>
+    }
+  </form>
+</section>

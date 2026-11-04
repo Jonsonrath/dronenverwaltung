@@ -11,8 +11,8 @@ namespace DroneInventory.Api.Controllers;
 public class LoansController(LoanService loans) : ControllerBase
 {
     /// <summary>
-    /// Loans with the given status: <c>?status=Active</c> lists the active loans (REQ-007).
-    /// A missing or unknown status gives 422.
+    /// Loans with the given status: <c>?status=Active</c> lists the active loans (REQ-007),
+    /// <c>?status=Returned</c> the loan history (REQ-010). A missing or unknown status gives 422.
     /// </summary>
     [HttpGet]
     [ProducesResponseType<IReadOnlyList<LoanResponse>>(StatusCodes.Status200OK)]

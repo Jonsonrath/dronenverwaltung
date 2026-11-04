@@ -57,6 +57,10 @@ Content-Type: application/json
 GET {{DroneInventory.Api_HostAddress}}/api/loans?status=Active
 Accept: application/json
 
+### Loan history (REQ-010) → 200
+GET {{DroneInventory.Api_HostAddress}}/api/loans?status=Returned
+Accept: application/json
+
 ### Loan a drone with accessories (REQ-004, REQ-006) → 201
 POST {{DroneInventory.Api_HostAddress}}/api/loans
 Content-Type: application/json

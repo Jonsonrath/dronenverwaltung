@@ -124,24 +124,37 @@ drone-inventory/
 
 Voraussetzungen: .NET 10 SDK, Node.js 22+, GitHub CLI (`gh`), OpenSpec (`npm install -g @fission-ai/openspec`).
 
-```bash
-# Lokale .NET-Tools (dotnet-ef für Migrationen)
-dotnet tool restore
+Alle Blöcke starten im **Repository-Root** (`dronenverwaltung/`).
 
-# Backend (legt droneinventory.db an und migriert sie beim Start)
+**Einmalig: lokale .NET-Tools** (`dotnet-ef` aus `.config/dotnet-tools.json`)
+```bash
+dotnet tool restore
+```
+
+**Backend starten** – legt `droneinventory.db` an und migriert sie beim Start
+```bash
 cd backend/DroneInventory.Api
 dotnet run
+```
 
-# Neue Migration (aus backend/)
+**Neue EF-Core-Migration anlegen**
+```bash
+cd backend
 dotnet ef migrations add <Name> --project DroneInventory.Api --output-dir Data/Migrations
+```
 
-# Frontend (Angular 22, Tests mit Vitest)
+**Frontend starten** (Angular 22)
+```bash
 cd frontend/drone-inventory-ui
 npm install
 npx ng serve
+```
 
-# Tests
+**Tests**
+```bash
 dotnet test backend/DroneInventory.slnx
+
+cd frontend/drone-inventory-ui
 npx ng test --watch=false
 ```
 

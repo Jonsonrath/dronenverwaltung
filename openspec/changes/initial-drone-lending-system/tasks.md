@@ -5,7 +5,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 ## 1. Backend: setup
 
 - [x] 1.1 Create solution `backend/DroneInventory.slnx` and xUnit test project `backend/DroneInventory.Api.Tests` referencing the API; remove the weather-forecast template endpoint; verify `dotnet build` and `dotnet test` succeed (one placeholder test) (#2)
-- [ ] 1.2 Add EF Core SQLite (`Microsoft.EntityFrameworkCore.Sqlite`, `Microsoft.EntityFrameworkCore.Design`), an empty `DroneInventoryDbContext`, connection string `Data Source=droneinventory.db`, `TimeProvider` registration, `Database.Migrate()` at startup and a test helper that creates an in-memory SQLite database by applying the migrations; verify the app starts with no migration yet and `dotnet test` passes (#3)
+- [x] 1.2 Add EF Core SQLite (`Microsoft.EntityFrameworkCore.Sqlite`, `Microsoft.EntityFrameworkCore.Design`), an empty `DroneInventoryDbContext`, connection string `Data Source=droneinventory.db`, `TimeProvider` registration, `Database.Migrate()` at startup and a test helper that creates an in-memory SQLite database by applying the migrations; verify the app starts with no migration yet and `dotnet test` passes (#3)
 - [ ] 1.3 Add domain exceptions (`NotFoundException`, `ConflictException`, `ValidationException`), an `IExceptionHandler` mapping them to ProblemDetails 404/409/422, 422 for automatic model validation, and a helper that detects a SQLite unique-constraint violation in a `DbUpdateException`; verify with tests for each mapping (#4)
 
 ## 2. Backend: drones (spec drone)

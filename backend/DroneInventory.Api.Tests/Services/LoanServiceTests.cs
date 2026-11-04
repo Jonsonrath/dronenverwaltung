@@ -45,6 +45,43 @@ public class LoanServiceTests : IDisposable
         Assert.Equal(_group1Id, loan.StudentGroupId);
     }
 
+    [Fact]
+    public async Task REQ_008_LoanReturnedConcurrently_ThrowsConflictAndKeepsFirstReturnDate()
+    {
+        int loanId;
+        await using (var setup = _database.CreateContext())
+        {
+            var loan = await new LoanService(setup, new FakeTimeProvider(Now)).CreateAsync(_droneId, _group3Id, 4, 8);
+            loanId = loan.Id;
+        }
+
+        // Simulates a second request that returns the same loan after our read
+        // but before our SaveChanges.
+        var firstReturnDate = Now.UtcDateTime.AddDays(7);
+        await using var context = _database.CreateContext(new ReturnLoanBeforeSave(_database, loanId, firstReturnDate));
+        var service = new LoanService(context, new FakeTimeProvider(Now.AddDays(8)));
+
+        await Assert.ThrowsAsync<ConflictException>(() => service.ReturnAsync(loanId));
+
+        await using var check = _database.CreateContext();
+        var stored = await check.Loans.SingleAsync(l => l.Id == loanId);
+        Assert.Equal(LoanStatus.Returned, stored.Status);
+        Assert.Equal(firstReturnDate, stored.ReturnDate);
+    }
+
+    private sealed class ReturnLoanBeforeSave(TestDatabase database, int loanId, DateTime returnDate) : SaveChangesInterceptor
+    {
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            await using var other = database.CreateContext();
+            var loan = await other.Loans.SingleAsync(l => l.Id == loanId, cancellationToken);
+            loan.Return(returnDate);
+            await other.SaveChangesAsync(cancellationToken);
+            return result;
+        }
+    }
+
     private sealed class LoanSameDroneBeforeSave(LoanServiceTests test) : SaveChangesInterceptor
     {
         public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(

@@ -101,6 +101,13 @@ The system SHALL allow returning an active Loan. Returning SHALL change the Loan
 - **THEN** the request is rejected as a conflict
 - **AND** the Loan and its ReturnDate are unchanged
 
+#### Scenario: Simultaneous returns of the same loan
+- **GIVEN** "TELLO-07" is loaned to "Group 3"
+- **WHEN** the same Loan is returned twice at the same time
+- **THEN** exactly one return succeeds and stores the ReturnDate
+- **AND** the other return is rejected as a conflict
+- **AND** the stored ReturnDate is not overwritten
+
 #### Scenario: Unknown loan
 - **WHEN** a Loan that does not exist is returned
 - **THEN** the request is rejected as not found

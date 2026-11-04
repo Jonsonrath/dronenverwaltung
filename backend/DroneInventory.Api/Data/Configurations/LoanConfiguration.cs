@@ -9,7 +9,12 @@ public class LoanConfiguration : IEntityTypeConfiguration<Loan>
     public void Configure(EntityTypeBuilder<Loan> builder)
     {
         // Stored as text so the index filter below can compare with 'Active' (design.md §4a).
-        builder.Property(l => l.Status).HasConversion<string>().IsRequired();
+        // Concurrency token: a return only saves if the status is still the loaded one,
+        // so a loan cannot be returned twice at the same time (design.md §4c).
+        builder.Property(l => l.Status)
+            .HasConversion<string>()
+            .IsRequired()
+            .IsConcurrencyToken();
 
         // Dates are stored in UTC; SQLite returns them without a kind, so mark them as UTC on read.
         builder.Property(l => l.LoanDate)

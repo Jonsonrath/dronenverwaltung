@@ -58,7 +58,17 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
             ?? throw new NotFoundException($"Loan {loanId} does not exist.");
 
         loan.Return(time.GetUtcNow().UtcDateTime);
-        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            // Another request returned the loan between our read and our save; its
+            // ReturnDate stays (Status is a concurrency token, design.md §4c).
+            throw new ConflictException($"Loan {loanId} has already been returned.");
+        }
+
         return loan;
     }
 

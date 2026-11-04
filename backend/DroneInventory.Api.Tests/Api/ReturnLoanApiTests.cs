@@ -7,6 +7,7 @@ using DroneInventory.Api.Data;
 using DroneInventory.Api.Domain;
 using DroneInventory.Api.Tests.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -96,6 +97,41 @@ public class ReturnLoanApiTests : IDisposable
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal(404, (await response.Content.ReadFromJsonAsync<ProblemDetails>())!.Status);
+    }
+
+    [Fact]
+    public async Task REQ_008_SimultaneousReturns_OneSucceedsOneConflicts()
+    {
+        // A database file, so both requests run in parallel with their own connection.
+        var file = Path.Combine(Path.GetTempPath(), $"drone-inventory-{Guid.NewGuid():N}.db");
+        try
+        {
+            using var factory = ApiFactory.WithDatabaseFile(file);
+            var client = factory.CreateClient();
+            var group = await (await client.PostAsJsonAsync("/api/student-groups", new { name = "Group 3" }))
+                .Content.ReadFromJsonAsync<StudentGroupResponse>();
+
+            for (var round = 0; round < 5; round++)
+            {
+                var drone = await (await client.PostAsJsonAsync("/api/drones", new { name = $"TELLO-{round:00}" }))
+                    .Content.ReadFromJsonAsync<DroneResponse>();
+                var loan = await (await client.PostAsJsonAsync("/api/loans", new { droneId = drone!.Id, studentGroupId = group!.Id }))
+                    .Content.ReadFromJsonAsync<LoanResponse>(JsonOptions);
+
+                var responses = await Task.WhenAll(
+                    client.PostAsync($"/api/loans/{loan!.Id}/return", null),
+                    client.PostAsync($"/api/loans/{loan.Id}/return", null));
+
+                Assert.Equal(
+                    new[] { HttpStatusCode.OK, HttpStatusCode.Conflict },
+                    responses.Select(r => r.StatusCode).Order());
+            }
+        }
+        finally
+        {
+            SqliteConnection.ClearAllPools();
+            File.Delete(file);
+        }
     }
 
     private async Task<StudentGroupResponse> CreateGroup(string name) =>

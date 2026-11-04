@@ -27,7 +27,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 - [x] 4.4 Implement `GET /api/loans?status=Active` with group name, drone name, batteries, propellers, LoanDate; verify with tests for two active loans (fixed date 19.08.2026 via `FakeTimeProvider`) and returned loans not listed (REQ-007) (#13)
 - [x] 4.5 Implement `POST /api/loans/{id}/return`; verify with tests: status Returned and drone Available again, ReturnDate set and other fields unchanged, already returned 409, unknown loan 404 (REQ-008, REQ-009) (#14)
 - [x] 4.6 Implement `GET /api/loans?status=Returned` (loan history); verify with tests: returned loan listed with LoanDate and ReturnDate, active loan not listed, loan still listed after restarting the app on the same database file (REQ-010) (#15)
-- [ ] 4.7 Derive the drone status (Available | Loaned) in `POST /api/drones` and `GET /api/drones` from active loans, without a status column; verify with API tests: a new drone is Available, a drone with an active loan is Loaned, a drone with only returned loans is Available (REQ-001, REQ-002) (#26)
+- [x] 4.7 Derive the drone status (Available | Loaned) in `POST /api/drones` and `GET /api/drones` from active loans, without a status column; verify with API tests: a new drone is Available, a drone with an active loan is Loaned, a drone with only returned loans is Available (REQ-001, REQ-002) (#26)
 
 ## 5. Frontend: setup
 

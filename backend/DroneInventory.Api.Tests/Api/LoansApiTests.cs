@@ -108,7 +108,7 @@ public class LoansApiTests : IDisposable
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal(0, CountLoans());
-        // "TELLO-07 stays Available": there is no loan for the drone. The status itself is checked in task 4.7.
+        // "TELLO-07 stays Available": see DroneStatusApiTests.REQ_004_RejectedLoanForUnknownGroupLeavesDroneAvailable.
     }
 
     [Theory]

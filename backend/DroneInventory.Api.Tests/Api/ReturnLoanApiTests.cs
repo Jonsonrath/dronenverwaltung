@@ -42,7 +42,7 @@ public class ReturnLoanApiTests : IDisposable
         Assert.Equal(LoanStatus.Returned, returned!.Status);
 
         // "TELLO-07 becomes available again": it has no active loan any more and can be
-        // loaned again. The status field itself is added and checked in task 4.7.
+        // loaned again. The status field: DroneStatusApiTests.REQ_002_DroneWithOnlyReturnedLoansIsAvailable.
         var active = await _client.GetFromJsonAsync<List<LoanResponse>>("/api/loans?status=Active", JsonOptions);
         Assert.Empty(active!);
         var group1 = await CreateGroup("Group 1");

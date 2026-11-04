@@ -52,3 +52,26 @@ Content-Type: application/json
 }
 
 ###
+
+### Loan a drone with accessories (REQ-004, REQ-006) → 201
+POST {{DroneInventory.Api_HostAddress}}/api/loans
+Content-Type: application/json
+
+{
+  "droneId": 1,
+  "studentGroupId": 1,
+  "batteries": 4,
+  "propellers": 8
+}
+
+### Negative quantity (REQ-006) → 422
+POST {{DroneInventory.Api_HostAddress}}/api/loans
+Content-Type: application/json
+
+{
+  "droneId": 1,
+  "studentGroupId": 1,
+  "batteries": -1
+}
+
+###

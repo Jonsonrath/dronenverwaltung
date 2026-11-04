@@ -44,11 +44,13 @@ public class LoanTests
     }
 
     [Theory]
-    [InlineData(-1, 0)]
-    [InlineData(0, -1)]
-    public void REQ_006_NegativeQuantityThrows(int batteries, int propellers)
+    [InlineData(-1, 0, "The number of batteries must not be negative.")]
+    [InlineData(0, -1, "The number of propellers must not be negative.")]
+    public void REQ_006_NegativeQuantityThrows(int batteries, int propellers, string message)
     {
-        Assert.Throws<ValidationException>(() => new Loan(_drone, _group, batteries, propellers, LoanDate));
+        var error = Assert.Throws<ValidationException>(() => new Loan(_drone, _group, batteries, propellers, LoanDate));
+
+        Assert.Equal(message, error.Message);
     }
 
     [Fact]

@@ -23,7 +23,8 @@ public class LoanItem
     {
         if (quantity < 0)
         {
-            throw new ValidationException($"The number of {type.ToString().ToLowerInvariant()}s must not be negative.");
+            var what = type == LoanItemType.Battery ? "batteries" : "propellers";
+            throw new ValidationException($"The number of {what} must not be negative.");
         }
 
         Type = type;

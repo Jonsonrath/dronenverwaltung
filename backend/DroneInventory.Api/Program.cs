@@ -3,10 +3,13 @@ using DroneInventory.Api.Errors;
 using DroneInventory.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers()
+    // Enums such as LoanStatus are sent as "Active" / "Returned" (design.md §6).
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()))
     .ConfigureApiBehaviorOptions(options =>
     {
         // Invalid request bodies give 422 like all other invalid input (design.md §5).
@@ -27,6 +30,7 @@ builder.Services.AddDbContext<DroneInventoryDbContext>(options =>
 
 builder.Services.AddScoped<DroneService>();
 builder.Services.AddScoped<StudentGroupService>();
+builder.Services.AddScoped<LoanService>();
 
 // LoanDate and ReturnDate are taken from TimeProvider so tests can use fixed dates.
 builder.Services.AddSingleton(TimeProvider.System);

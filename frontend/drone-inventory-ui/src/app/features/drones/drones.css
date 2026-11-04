@@ -1,0 +1,50 @@
+.name {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.description {
+  color: var(--ink-soft);
+}
+
+.loading {
+  color: var(--ink-soft);
+}
+
+.alert p {
+  margin-bottom: var(--space-3);
+}
+
+/* Phone: one block per drone – name and status on top, description below in full width. */
+@media (max-width: 40rem) {
+  thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    column-gap: var(--space-3);
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .table td {
+    padding: 0;
+    border-bottom: 0;
+  }
+
+  .table .description {
+    grid-column: 1 / -1;
+    padding-top: var(--space-1);
+  }
+
+  .description:empty {
+    display: none;
+  }
+}

@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
@@ -9,13 +11,17 @@ describe('App', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter(routes)],
+      // Pages load data; the testing backend keeps these navigation tests offline.
+      providers: [provideRouter(routes), provideHttpClient(), provideHttpClientTesting()],
     });
   });
 
   async function renderAt(url: string) {
     const fixture = TestBed.createComponent(App);
     await TestBed.inject(Router).navigateByUrl(url);
+    fixture.detectChanges();
+    // Answer the page's data requests with empty lists; only the shell is tested here.
+    TestBed.inject(HttpTestingController).match(() => true).forEach((request) => request.flush([]));
     await fixture.whenStable();
     fixture.detectChanges();
     return fixture.nativeElement as HTMLElement;

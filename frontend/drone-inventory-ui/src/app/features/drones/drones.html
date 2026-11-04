@@ -1,0 +1,42 @@
+<h1>Drones</h1>
+<p class="lead">All drones in the cabinet and whether they are available.</p>
+
+@if (drones.error()) {
+  <div class="alert" role="alert">
+    <p>The drones could not be loaded. Check that the backend is running, then try again.</p>
+    <button class="button" type="button" (click)="drones.reload()">Try again</button>
+  </div>
+} @else if (drones.hasValue()) {
+  @if (drones.value().length === 0) {
+    <p class="empty">No drones yet.</p>
+  } @else {
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Status</th>
+            <th scope="col">Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (drone of drones.value(); track drone.id) {
+            <tr>
+              <td class="name">{{ drone.name }}</td>
+              <td>
+                @if (drone.status === 'Loaned') {
+                  <span class="tag tag-loaned">Loaned</span>
+                } @else {
+                  <span class="tag tag-available">Available</span>
+                }
+              </td>
+              <td class="description">{{ drone.description }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+} @else {
+  <p class="loading" aria-live="polite">Loading drones…</p>
+}

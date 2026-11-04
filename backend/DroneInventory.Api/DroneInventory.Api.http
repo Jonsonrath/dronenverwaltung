@@ -79,3 +79,8 @@ Content-Type: application/json
 }
 
 ###
+
+### Return a loan (REQ-008, REQ-009) → 200, second time → 409
+POST {{DroneInventory.Api_HostAddress}}/api/loans/1/return
+
+###

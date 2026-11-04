@@ -43,6 +43,26 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
     }
 
     /// <summary>
+    /// Returns a loan (REQ-008, REQ-009): Active → Returned with the current date as
+    /// ReturnDate; the drone becomes available again because it has no active loan.
+    /// Throws NotFoundException for an unknown loan and ConflictException if the loan
+    /// has already been returned. The loan itself is kept (REQ-010).
+    /// </summary>
+    public async Task<Loan> ReturnAsync(int loanId, CancellationToken cancellationToken = default)
+    {
+        var loan = await db.Loans
+            .Include(l => l.Drone)
+            .Include(l => l.StudentGroup)
+            .Include(l => l.Items)
+            .SingleOrDefaultAsync(l => l.Id == loanId, cancellationToken)
+            ?? throw new NotFoundException($"Loan {loanId} does not exist.");
+
+        loan.Return(time.GetUtcNow().UtcDateTime);
+        await db.SaveChangesAsync(cancellationToken);
+        return loan;
+    }
+
+    /// <summary>
     /// Loans with the given status, with drone, group and accessories, oldest first.
     /// Active: REQ-007 (task 4.4). Returned (loan history): REQ-010, specified in task 4.6.
     /// </summary>

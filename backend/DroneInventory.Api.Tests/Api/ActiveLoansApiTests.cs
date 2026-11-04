@@ -3,10 +3,8 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using DroneInventory.Api.Contracts;
-using DroneInventory.Api.Data;
 using DroneInventory.Api.Domain;
 using DroneInventory.Api.Tests.Infrastructure;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace DroneInventory.Api.Tests.Api;
 
@@ -46,7 +44,7 @@ public class ActiveLoansApiTests : IDisposable
     {
         await LoanDrone("TELLO-02", "Group 1", 3, 4);
         var returned = await LoanDrone("TELLO-07", "Group 3", 4, 8);
-        Return(returned.Id); // the return endpoint follows in task 4.5
+        await _client.PostAsync($"/api/loans/{returned.Id}/return", null);
 
         var loans = await _client.GetFromJsonAsync<List<LoanResponse>>("/api/loans?status=Active", JsonOptions);
 
@@ -93,13 +91,5 @@ public class ActiveLoansApiTests : IDisposable
             new { droneId = drone!.Id, studentGroupId = group!.Id, batteries, propellers });
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<LoanResponse>(JsonOptions))!;
-    }
-
-    private void Return(int loanId)
-    {
-        using var scope = _factory.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<DroneInventoryDbContext>();
-        db.Loans.Single(l => l.Id == loanId).Return(_factory.Time.GetUtcNow().UtcDateTime);
-        db.SaveChanges();
     }
 }

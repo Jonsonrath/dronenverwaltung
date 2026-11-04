@@ -42,6 +42,21 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
         return loan;
     }
 
+    /// <summary>
+    /// Loans with the given status, with drone, group and accessories, oldest first.
+    /// Active: REQ-007 (task 4.4). Returned (loan history): REQ-010, specified in task 4.6.
+    /// </summary>
+    public async Task<IReadOnlyList<Loan>> ListAsync(LoanStatus status, CancellationToken cancellationToken = default) =>
+        await db.Loans
+            .AsNoTracking()
+            .Include(l => l.Drone)
+            .Include(l => l.StudentGroup)
+            .Include(l => l.Items)
+            .Where(l => l.Status == status)
+            .OrderBy(l => l.LoanDate)
+            .ThenBy(l => l.Drone.NormalizedName)
+            .ToListAsync(cancellationToken);
+
     private static ConflictException AlreadyLoaned(Drone drone) =>
         new($"Drone \"{drone.Name}\" already has an active loan.");
 }

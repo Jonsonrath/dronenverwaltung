@@ -1,10 +1,15 @@
+using DroneInventory.Api.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace DroneInventory.Api.Data;
 
-// EF Core context for the Drone Lending System. Entities and their
-// mappings are added by later tasks, each with its own migration.
+// EF Core context for the Drone Lending System. Each entity has its own
+// configuration in Data/Configurations and is added with its own migration.
 public class DroneInventoryDbContext(DbContextOptions<DroneInventoryDbContext> options)
     : DbContext(options)
 {
+    public DbSet<Drone> Drones => Set<Drone>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder) =>
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(DroneInventoryDbContext).Assembly);
 }

@@ -12,6 +12,8 @@ public class DroneInventoryDbContext(DbContextOptions<DroneInventoryDbContext> o
 
     public DbSet<StudentGroup> StudentGroups => Set<StudentGroup>();
 
+    public DbSet<Loan> Loans => Set<Loan>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(DroneInventoryDbContext).Assembly);
 }

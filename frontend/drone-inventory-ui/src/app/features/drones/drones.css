@@ -7,38 +7,6 @@
   color: var(--ink-soft);
 }
 
-.loading {
-  color: var(--ink-soft);
-}
-
-.alert p {
-  margin-bottom: var(--space-3);
-}
-
-.add {
-  max-width: 32rem;
-  margin-top: var(--space-8);
-  padding-top: var(--space-5);
-  border-top: 4px solid var(--ink);
-}
-
-.optional {
-  color: var(--ink-soft);
-  font-weight: 400;
-}
-
-.field-error {
-  margin: 0;
-  color: var(--error);
-  font-size: var(--text-sm);
-}
-
-.added {
-  margin: var(--space-3) 0 0;
-  color: var(--available);
-  font-weight: 600;
-}
-
 /* Phone: one block per drone – name and status on top, description below in full width. */
 @media (max-width: 40rem) {
   thead {

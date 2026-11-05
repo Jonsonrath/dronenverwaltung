@@ -1,0 +1,14 @@
+/* Groups only have a name, so a ruled list instead of a one-column table. */
+.groups {
+  max-width: 32rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--paper);
+}
+
+.groups li {
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+}

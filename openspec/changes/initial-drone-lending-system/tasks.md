@@ -44,7 +44,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 - [x] 7.1 Implement `LoanApi` service and the loan form (select drone and group, batteries, propellers); verify with a Vitest test that a 409 message is shown, and manually that a loan is created and the drone becomes Loaned (REQ-004, REQ-005, REQ-006) (#20)
 - [x] 7.2 Implement the active loans page (group, drone, batteries, propellers, loan date as dd.MM.yyyy); verify with a Vitest component test rendering two loans, and manually against the backend (REQ-007) (#21)
 - [x] 7.3 Add the return action to the active loans page; verify with a Vitest test that return calls `POST /api/loans/{id}/return` and the list reloads, and manually that the drone is Available again (REQ-008, REQ-009) (#22)
-- [ ] 7.4 Implement the loan history page (group, drone, accessories, loan date, return date); verify with a Vitest component test and manually that a returned loan appears (REQ-010) (#23)
+- [x] 7.4 Implement the loan history page (group, drone, accessories, loan date, return date); verify with a Vitest component test and manually that a returned loan appears (REQ-010) (#23)
 
 ## 8. Integration and documentation
 

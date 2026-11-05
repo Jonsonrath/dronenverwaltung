@@ -29,6 +29,15 @@ describe('LoanApi', () => {
     expect(await result).toEqual([]);
   });
 
+  it('REQ-010: list("Returned") sends GET /api/loans?status=Returned', async () => {
+    const result = firstValueFrom(api.list('Returned'));
+    const request = http.expectOne('/api/loans?status=Returned');
+    request.flush([]);
+
+    expect(request.request.method).toBe('GET');
+    expect(await result).toEqual([]);
+  });
+
   it('REQ-004/REQ-006: create() sends POST /api/loans with drone, group and accessories', async () => {
     const loan: Loan = {
       id: 1,

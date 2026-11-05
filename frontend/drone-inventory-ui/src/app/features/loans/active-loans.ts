@@ -12,7 +12,7 @@ import { problemMessage } from '../../core/problem-message';
   selector: 'app-active-loans',
   imports: [DatePipe, RouterLink],
   templateUrl: './active-loans.html',
-  styleUrl: './active-loans.css',
+  styleUrls: ['./loan-table.css', './active-loans.css'],
 })
 export class ActiveLoans {
   private readonly loanApi = inject(LoanApi);

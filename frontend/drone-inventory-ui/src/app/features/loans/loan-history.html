@@ -1,0 +1,42 @@
+<h1>Loan history</h1>
+<p class="lead">Every returned loan, most recent first.</p>
+
+@if (loans.error()) {
+  <div class="alert" role="alert">
+    <p>The loan history could not be loaded. Check that the backend is running, then try again.</p>
+    <button class="button" type="button" (click)="loans.reload()">Try again</button>
+  </div>
+} @else if (loans.hasValue()) {
+  @if (loans.value().length === 0) {
+    <p class="empty">No loan has been returned yet.</p>
+  } @else {
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Group</th>
+            <th scope="col">Drone</th>
+            <th scope="col" class="number">Batteries</th>
+            <th scope="col" class="number">Propellers</th>
+            <th scope="col">Loan date</th>
+            <th scope="col">Return date</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (loan of loans.value(); track loan.id) {
+            <tr>
+              <td class="group">{{ loan.studentGroupName }}</td>
+              <td class="drone">{{ loan.droneName }}</td>
+              <td class="number" data-label="Batteries">{{ loan.batteries }}</td>
+              <td class="number" data-label="Propellers">{{ loan.propellers }}</td>
+              <td class="date" data-label="Loaned on">{{ loan.loanDate | date: 'dd.MM.yyyy' }}</td>
+              <td class="date" data-label="Returned on">{{ loan.returnDate | date: 'dd.MM.yyyy' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+} @else {
+  <p class="loading" aria-live="polite">Loading the loan history…</p>
+}

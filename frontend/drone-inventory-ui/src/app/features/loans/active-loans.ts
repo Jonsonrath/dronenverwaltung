@@ -1,11 +1,18 @@
-import { Component } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Component, inject } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
+import { RouterLink } from '@angular/router';
+import { LoanApi } from '../../core/loan-api';
 
-// Page shell from task 5.1; its content is built in a later task.
+/** The drones that are out right now (REQ-007). */
 @Component({
   selector: 'app-active-loans',
-  template: `
-    <h1>Active loans</h1>
-    <p class="lead">Drones that are out right now.</p>
-  `,
+  imports: [DatePipe, RouterLink],
+  templateUrl: './active-loans.html',
+  styleUrl: './active-loans.css',
 })
-export class ActiveLoans {}
+export class ActiveLoans {
+  private readonly loanApi = inject(LoanApi);
+
+  protected readonly loans = rxResource({ stream: () => this.loanApi.list('Active') });
+}

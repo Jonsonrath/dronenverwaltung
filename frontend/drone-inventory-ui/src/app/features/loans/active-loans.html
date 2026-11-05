@@ -1,0 +1,40 @@
+<h1>Active loans</h1>
+<p class="lead">Drones that are out right now.</p>
+
+@if (loans.error()) {
+  <div class="alert" role="alert">
+    <p>The active loans could not be loaded. Check that the backend is running, then try again.</p>
+    <button class="button" type="button" (click)="loans.reload()">Try again</button>
+  </div>
+} @else if (loans.hasValue()) {
+  @if (loans.value().length === 0) {
+    <p class="empty">No drone is loaned right now. <a routerLink="/loans/new">Loan a drone</a></p>
+  } @else {
+    <div class="table-scroll">
+      <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">Group</th>
+            <th scope="col">Drone</th>
+            <th scope="col" class="number">Batteries</th>
+            <th scope="col" class="number">Propellers</th>
+            <th scope="col">Loan date</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (loan of loans.value(); track loan.id) {
+            <tr>
+              <td class="group">{{ loan.studentGroupName }}</td>
+              <td class="drone">{{ loan.droneName }}</td>
+              <td class="number" data-label="Batteries">{{ loan.batteries }}</td>
+              <td class="number" data-label="Propellers">{{ loan.propellers }}</td>
+              <td class="date" data-label="Loaned on">{{ loan.loanDate | date: 'dd.MM.yyyy' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+} @else {
+  <p class="loading" aria-live="polite">Loading active loans…</p>
+}

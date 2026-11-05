@@ -1,12 +1,17 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { Observable } from 'rxjs';
-import { CreateLoanRequest, Loan } from './loan.model';
+import { CreateLoanRequest, Loan, LoanStatus } from './loan.model';
 
 /** Backend calls for loans (design.md §6). */
 @Service()
 export class LoanApi {
   private readonly http = inject(HttpClient);
+
+  /** Loans with the given status: Active (REQ-007) or Returned, the loan history (REQ-010). */
+  list(status: LoanStatus): Observable<Loan[]> {
+    return this.http.get<Loan[]>('/api/loans', { params: { status } });
+  }
 
   /**
    * Loans a drone to a student group with batteries and propellers (REQ-004, REQ-006).

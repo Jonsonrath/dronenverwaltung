@@ -1,0 +1,53 @@
+.group,
+.drone {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.date {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Phone: one block per loan – group and drone on top, the numbers below with labels. */
+@media (max-width: 40rem) {
+  thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  tr {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    justify-content: start;
+    gap: var(--space-1) var(--space-5);
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .table td {
+    padding: 0;
+    border-bottom: 0;
+    text-align: left;
+  }
+
+  .table .group {
+    grid-column: 1 / -1;
+  }
+
+  .table .drone {
+    grid-column: 1 / -1;
+    color: var(--ink-soft);
+  }
+
+  .table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--ink-soft);
+    font-size: var(--text-xs);
+    font-weight: 600;
+  }
+}

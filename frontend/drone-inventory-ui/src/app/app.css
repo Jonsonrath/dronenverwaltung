@@ -1,55 +1,42 @@
+/*
+ * App shell (design §2):
+ * - desktop (>= 64rem): side navigation on the left, content on the right
+ * - tablet (40–64rem): top bar
+ * - phone (< 40rem): brand on top, tab bar at the bottom (thumb reach at the cabinet)
+ */
+
 :host {
   display: block;
   min-height: 100dvh;
 }
 
-.bar {
-  display: flex;
-  align-items: stretch;
-  gap: var(--space-5);
-  /* Same left edge as the page content (max 64rem, centered). */
-  padding: 0 max(var(--space-5), calc((100% - 64rem) / 2 + var(--space-5)));
-  background: var(--surface);
-  color: var(--text);
-  border-bottom: 4px solid var(--loaned);
-}
-
 .brand {
   display: inline-flex;
-  align-self: center;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-3) 0;
-  color: inherit;
-  font-family: var(--font);
-  font-size: var(--text-lg);
+  color: var(--text);
+  font-size: var(--text-md);
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
 }
 
 .brand-mark {
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.5rem;
+  height: 1.5rem;
   fill: none;
-  stroke: var(--loaned);
+  stroke: var(--muted);
   stroke-width: 2;
-}
-
-.tabs {
-  display: flex;
-  gap: var(--space-1);
-  overflow-x: auto;
 }
 
 .tab {
   display: flex;
   align-items: center;
-  padding: var(--space-4) var(--space-3);
   color: var(--muted);
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
+  transition: color var(--ease), background-color var(--ease);
 }
 
 .tab:hover {
@@ -58,52 +45,126 @@
 
 .tab.is-active {
   color: var(--text);
-  /* Drawn inside the tab: .tabs scrolls horizontally and would clip anything outside. */
-  box-shadow: inset 0 -4px 0 var(--text);
 }
 
 .page {
   max-width: 64rem;
-  margin: 0 auto;
-  padding: var(--space-6) var(--space-5) var(--space-8);
+  padding: var(--space-8) var(--space-6);
 }
 
-/* Phone: navigation as a bottom tab bar, in thumb reach at the cabinet. */
-@media (max-width: 40rem) {
+/* Desktop: side navigation */
+@media (min-width: 64rem) {
+  :host {
+    display: grid;
+    grid-template-columns: 15rem minmax(0, 1fr);
+  }
+
   .bar {
-    padding: 0 var(--space-4);
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    height: 100dvh;
+    padding: var(--space-6) var(--space-4);
+    border-right: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  .brand {
+    padding: 0 var(--space-3);
+  }
+
+  .tabs {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .tab {
+    min-height: 2.5rem;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-sm);
+  }
+
+  .tab:hover {
+    background: var(--raised);
+  }
+
+  .tab.is-active {
+    background: var(--raised);
+  }
+}
+
+/* Tablet: top bar */
+@media (min-width: 40rem) and (max-width: 63.99rem) {
+  .bar {
+    display: flex;
+    align-items: stretch;
+    gap: var(--space-6);
+    padding: 0 var(--space-6);
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  .brand {
+    align-self: center;
+  }
+
+  .tabs {
+    display: flex;
+    gap: var(--space-1);
+    overflow-x: auto;
+  }
+
+  .tab {
+    padding: var(--space-4) var(--space-3);
+  }
+
+  .tab.is-active {
+    box-shadow: inset 0 -2px 0 var(--text);
+  }
+}
+
+/* Phone: brand on top, tab bar at the bottom */
+@media (max-width: 39.99rem) {
+  .bar {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
   }
 
   .tabs {
     position: fixed;
     inset: auto 0 0 0;
     z-index: 10;
-    justify-content: space-between;
-    gap: 0;
+    display: flex;
     padding: 0 var(--space-1) env(safe-area-inset-bottom);
-    overflow-x: visible;
+    border-top: 1px solid var(--line);
     background: var(--surface);
-    border-top: 4px solid var(--loaned);
   }
 
   .tab {
-    flex-grow: 1;
-    flex-shrink: 1;
-    flex-basis: 0%;
+    flex: 1 1 0%;
     min-width: 0;
     justify-content: center;
-    padding: var(--space-3) var(--space-1);
-    line-height: 1.2;
+    min-height: 3.5rem;
+    padding: var(--space-2) var(--space-1);
     font-size: var(--text-xs);
+    line-height: 1.2;
     text-align: center;
     white-space: normal;
   }
 
   .tab.is-active {
-    box-shadow: inset 0 4px 0 var(--text);
+    box-shadow: inset 0 2px 0 var(--text);
   }
 
   .page {
-    padding: var(--space-5) var(--space-4) calc(var(--space-8) + 3.5rem);
+    padding: var(--space-6) var(--space-4) calc(var(--space-8) + 3.5rem);
+  }
+
+  .page h1 {
+    font-size: var(--text-xl);
   }
 }

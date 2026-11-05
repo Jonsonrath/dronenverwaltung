@@ -19,66 +19,79 @@
   </div>
 } @else {
   <form class="loan-form" [formRoot]="loanForm">
-    @if (saveError()) {
-      <p class="alert" role="alert">{{ saveError() }}</p>
-    }
-
-    <div class="field">
-      <label for="loan-drone">Drone</label>
-      <select id="loan-drone" [formField]="loanForm.droneId">
-        <option value="">Choose a drone</option>
-        <optgroup label="Available">
-          @for (drone of availableDrones(); track drone.id) {
-            <option [value]="drone.id.toString()">{{ drone.name }}</option>
-          }
-        </optgroup>
-        @if (loanedDrones().length > 0) {
-          <optgroup label="Loaned right now">
-            @for (drone of loanedDrones(); track drone.id) {
-              <option [value]="drone.id.toString()">{{ drone.name }}</option>
+    <fieldset class="drones">
+      <legend>Drone</legend>
+      <!-- Loaned drones stay selectable: the backend decides and answers 409 (REQ-005). -->
+      @for (group of droneGroups(); track group.label) {
+        @if (group.drones.length > 0) {
+          <div class="drone-group" [attr.data-group]="group.key">
+            <p class="group-label">{{ group.label }}</p>
+            @for (drone of group.drones; track drone.id) {
+              <label
+                class="choice status-row"
+                [class.is-available]="drone.status === 'Available'"
+                [class.is-loaned]="drone.status === 'Loaned'"
+              >
+                <input type="radio" [value]="drone.id.toString()" [formField]="loanForm.droneId" />
+                <span class="name">{{ drone.name }}</span>
+                <span class="tag" [class.tag-available]="drone.status === 'Available'" [class.tag-loaned]="drone.status === 'Loaned'">
+                  {{ drone.status }}
+                </span>
+                @if (drone.description) {
+                  <span class="description">{{ drone.description }}</span>
+                }
+              </label>
             }
-          </optgroup>
+          </div>
         }
-      </select>
+      }
       @if (loanForm.droneId().touched() && loanForm.droneId().invalid()) {
         <p class="field-error">{{ loanForm.droneId().errors()[0].message }}</p>
       }
-    </div>
-
-    <div class="field">
-      <label for="loan-group">Student group</label>
-      <select id="loan-group" [formField]="loanForm.studentGroupId">
-        <option value="">Choose a student group</option>
-        @for (group of groups.value(); track group.id) {
-          <option [value]="group.id.toString()">{{ group.name }}</option>
-        }
-      </select>
-      @if (loanForm.studentGroupId().touched() && loanForm.studentGroupId().invalid()) {
-        <p class="field-error">{{ loanForm.studentGroupId().errors()[0].message }}</p>
-      }
-    </div>
-
-    <fieldset class="accessories">
-      <legend>Accessories</legend>
-      <div class="field">
-        <label for="loan-batteries">Batteries</label>
-        <input id="loan-batteries" type="number" inputmode="numeric" [formField]="loanForm.batteries" />
-      </div>
-      <div class="field">
-        <label for="loan-propellers">Propellers</label>
-        <input id="loan-propellers" type="number" inputmode="numeric" [formField]="loanForm.propellers" />
-      </div>
     </fieldset>
 
-    <button class="button button-primary" type="submit" [disabled]="loanForm().submitting()">
-      {{ loanForm().submitting() ? 'Loaning…' : 'Loan drone' }}
-    </button>
+    <div class="details">
+      <fieldset class="groups">
+        <legend>Student group</legend>
+        <div class="chips">
+          @for (group of groups.value(); track group.id) {
+            <label class="chip">
+              <input type="radio" [value]="group.id.toString()" [formField]="loanForm.studentGroupId" />
+              <span>{{ group.name }}</span>
+            </label>
+          }
+        </div>
+        @if (loanForm.studentGroupId().touched() && loanForm.studentGroupId().invalid()) {
+          <p class="field-error">{{ loanForm.studentGroupId().errors()[0].message }}</p>
+        }
+      </fieldset>
 
-    @if (created(); as loan) {
-      <p class="added" role="status">
-        {{ loan.droneName }} loaned to {{ loan.studentGroupName }} with {{ loan.batteries }} batteries and
-        {{ loan.propellers }} propellers. <a routerLink="/loans">See active loans</a>
-      </p>
-    }
+      <fieldset class="accessories">
+        <legend>Accessories</legend>
+        <div class="field">
+          <label for="loan-batteries">Batteries</label>
+          <app-quantity-stepper label="batteries" inputId="loan-batteries" [formField]="loanForm.batteries" />
+        </div>
+        <div class="field">
+          <label for="loan-propellers">Propellers</label>
+          <app-quantity-stepper label="propellers" inputId="loan-propellers" [formField]="loanForm.propellers" />
+        </div>
+      </fieldset>
+
+      @if (saveError()) {
+        <p class="alert" role="alert">{{ saveError() }}</p>
+      }
+
+      <button class="button button-primary submit" type="submit" [disabled]="loanForm().submitting()">
+        {{ loanForm().submitting() ? 'Loaning…' : 'Loan drone' }}
+      </button>
+
+      @if (created(); as loan) {
+        <p class="added" role="status">
+          {{ loan.droneName }} loaned to {{ loan.studentGroupName }} with {{ loan.batteries }} batteries and
+          {{ loan.propellers }} propellers. <a routerLink="/loans">See active loans</a>
+        </p>
+      }
+    </div>
   </form>
 }

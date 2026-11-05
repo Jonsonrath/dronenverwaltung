@@ -7,7 +7,7 @@ import { Loan } from '../../core/loan.model';
 import { StudentGroup } from '../../core/student-group.model';
 import { NewLoan } from './new-loan';
 
-// Task 7.1: loan form (REQ-004, REQ-005, REQ-006).
+// Loan form (REQ-004, REQ-005, REQ-006): task 7.1; drone rows, group chips and steppers: improve-frontend-design task 3.2.
 describe('New loan page', () => {
   let fixture: ComponentFixture<NewLoan>;
   let http: HttpTestingController;
@@ -44,12 +44,22 @@ describe('New loan page', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  function choose(page: HTMLElement, selector: string, value: string) {
-    const element = page.querySelector(selector) as HTMLSelectElement | HTMLInputElement;
-    element.value = value;
-    element.dispatchEvent(new Event('input'));
-    element.dispatchEvent(new Event('change'));
+  /** Tap the drone row or group chip with this id (radio inputs styled as rows and chips). */
+  function pick(page: HTMLElement, list: 'drones' | 'groups', id: string) {
+    const radio = page.querySelector(`fieldset.${list} input[value="${id}"]`) as HTMLInputElement;
+    radio.click();
   }
+
+  /** Type a quantity into a stepper's number field. */
+  function type(page: HTMLElement, id: string, value: string) {
+    const field = page.querySelector(`#${id}`) as HTMLInputElement;
+    field.value = value;
+    field.dispatchEvent(new Event('input'));
+  }
+
+  /** Names shown in one group of the drone choice ('available' or 'loaned'). */
+  const droneNames = (page: HTMLElement, group: string) =>
+    [...page.querySelectorAll(`.drone-group[data-group="${group}"] .name`)].map((n) => n.textContent);
 
   async function submit(page: HTMLElement) {
     page.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
@@ -66,10 +76,10 @@ describe('New loan page', () => {
 
   it('REQ-004/REQ-006: loans the chosen drone with batteries and propellers', async () => {
     const page = await load();
-    choose(page, '#loan-drone', '7');
-    choose(page, '#loan-group', '3');
-    choose(page, '#loan-batteries', '4');
-    choose(page, '#loan-propellers', '8');
+    pick(page, 'drones', '7');
+    pick(page, 'groups', '3');
+    type(page, 'loan-batteries', '4');
+    type(page, 'loan-propellers', '8');
 
     await submit(page);
     const create = http.expectOne({ method: 'POST', url: '/api/loans' });
@@ -93,15 +103,34 @@ describe('New loan page', () => {
     expect(page.querySelector('[role="status"]')?.textContent).toContain(
       'TELLO-07 loaned to Group 3 with 4 batteries and 8 propellers.',
     );
-    const loaned = [...page.querySelectorAll('optgroup[label="Loaned right now"] option')].map((o) => o.textContent);
-    expect(loaned).toEqual(['TELLO-02', 'TELLO-07']);
-    expect((page.querySelector('#loan-drone') as HTMLSelectElement).value).toBe('');
+    expect(droneNames(page, 'loaned')).toEqual(['TELLO-02', 'TELLO-07']);
+    expect(page.querySelector('fieldset.drones input:checked')).toBeNull();
+  });
+
+  it('REQ-006: batteries and propellers can be counted with the + buttons only', async () => {
+    const page = await load();
+    pick(page, 'drones', '7');
+    pick(page, 'groups', '3');
+    for (let i = 0; i < 4; i++) {
+      (page.querySelector('button[aria-label="More batteries"]') as HTMLButtonElement).click();
+    }
+    (page.querySelector('button[aria-label="More propellers"]') as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    await submit(page);
+    const create = http.expectOne({ method: 'POST', url: '/api/loans' });
+
+    expect(create.request.body).toEqual({ droneId: 7, studentGroupId: 3, batteries: 4, propellers: 1 });
+    create.flush({}, { status: 201, statusText: 'Created' });
+    await settle();
+    fixture.detectChanges();
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush(drones);
   });
 
   it('REQ-006: missing accessories are sent as 0', async () => {
     const page = await load();
-    choose(page, '#loan-drone', '7');
-    choose(page, '#loan-group', '3');
+    pick(page, 'drones', '7');
+    pick(page, 'groups', '3');
 
     await submit(page);
     const create = http.expectOne({ method: 'POST', url: '/api/loans' });
@@ -115,8 +144,8 @@ describe('New loan page', () => {
 
   it('REQ-005: shows the backend message when the drone is already loaned (409)', async () => {
     const page = await load();
-    choose(page, '#loan-drone', '2');
-    choose(page, '#loan-group', '1');
+    pick(page, 'drones', '2');
+    pick(page, 'groups', '1');
 
     await submit(page);
     await answerPost({ status: 409, title: 'Conflict', detail: 'Drone "TELLO-02" already has an active loan.' }, 409);
@@ -129,9 +158,9 @@ describe('New loan page', () => {
 
   it('REQ-006: shows the backend message for a negative quantity (422)', async () => {
     const page = await load();
-    choose(page, '#loan-drone', '7');
-    choose(page, '#loan-group', '3');
-    choose(page, '#loan-batteries', '-1');
+    pick(page, 'drones', '7');
+    pick(page, 'groups', '3');
+    type(page, 'loan-batteries', '-1');
 
     await submit(page);
     await answerPost({ status: 422, detail: 'The number of batteries must not be negative.' }, 422);
@@ -144,10 +173,8 @@ describe('New loan page', () => {
   it('REQ-005: groups the drones by the status from the backend', async () => {
     const page = await load();
 
-    const available = [...page.querySelectorAll('optgroup[label="Available"] option')].map((o) => o.textContent);
-    const loaned = [...page.querySelectorAll('optgroup[label="Loaned right now"] option')].map((o) => o.textContent);
-    expect(available).toEqual(['TELLO-07']);
-    expect(loaned).toEqual(['TELLO-02']);
+    expect(droneNames(page, 'available')).toEqual(['TELLO-07']);
+    expect(droneNames(page, 'loaned')).toEqual(['TELLO-02']);
   });
 
   it('asks for a drone and a group before sending anything', async () => {

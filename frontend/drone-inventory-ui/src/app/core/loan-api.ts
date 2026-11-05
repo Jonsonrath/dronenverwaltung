@@ -21,4 +21,12 @@ export class LoanApi {
   create(request: CreateLoanRequest): Observable<Loan> {
     return this.http.post<Loan>('/api/loans', request);
   }
+
+  /**
+   * Returns a loan (REQ-008, REQ-009): the backend sets the ReturnDate and the drone is
+   * available again. It rejects a loan that is already returned (409) or unknown (404).
+   */
+  returnLoan(id: number): Observable<Loan> {
+    return this.http.post<Loan>(`/api/loans/${id}/return`, null);
+  }
 }

@@ -1,4 +1,9 @@
-/* Table layout: loan-table.css. Here only what belongs to the return action. */
+/* Table layout: loan-table.css. Here: the status bar of a loaned drone and the return action. */
+
+/* Every active loan is a drone that is out: the same ochre bar as "Loaned" in the drone list. */
+.table tbody td:first-child {
+  box-shadow: inset 3px 0 0 var(--loaned);
+}
 .action {
   text-align: right;
 }
@@ -9,6 +14,14 @@ p.alert {
 }
 
 @media (max-width: 40rem) {
+  .table tbody td:first-child {
+    box-shadow: none;
+  }
+
+  .table tbody tr {
+    box-shadow: inset 3px 0 0 var(--loaned);
+  }
+
   .table .action {
     grid-column: 1 / -1;
     margin-top: var(--space-2);

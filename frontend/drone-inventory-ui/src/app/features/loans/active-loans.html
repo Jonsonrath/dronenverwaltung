@@ -1,6 +1,15 @@
 <h1>Active loans</h1>
 <p class="lead">Drones that are out right now.</p>
 
+@if (returnError()) {
+  <p class="alert" role="alert">{{ returnError() }}</p>
+}
+@if (returned(); as loan) {
+  <p class="added" role="status">
+    {{ loan.droneName }} returned by {{ loan.studentGroupName }}. It is available again.
+  </p>
+}
+
 @if (loans.error()) {
   <div class="alert" role="alert">
     <p>The active loans could not be loaded. Check that the backend is running, then try again.</p>
@@ -19,6 +28,7 @@
             <th scope="col" class="number">Batteries</th>
             <th scope="col" class="number">Propellers</th>
             <th scope="col">Loan date</th>
+            <th scope="col"><span class="visually-hidden">Action</span></th>
           </tr>
         </thead>
         <tbody>
@@ -29,6 +39,17 @@
               <td class="number" data-label="Batteries">{{ loan.batteries }}</td>
               <td class="number" data-label="Propellers">{{ loan.propellers }}</td>
               <td class="date" data-label="Loaned on">{{ loan.loanDate | date: 'dd.MM.yyyy' }}</td>
+              <td class="action">
+                <button
+                  class="button"
+                  type="button"
+                  [disabled]="returningId() === loan.id"
+                  [attr.aria-label]="'Return ' + loan.droneName"
+                  (click)="returnLoan(loan)"
+                >
+                  {{ returningId() === loan.id ? 'Returning…' : 'Return' }}
+                </button>
+              </td>
             </tr>
           }
         </tbody>

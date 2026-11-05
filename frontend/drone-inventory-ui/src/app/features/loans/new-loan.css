@@ -1,25 +1,166 @@
+/* Loan form (design §4): pick a drone row, pick a group chip, count with steppers – tapping only. */
+
 .loan-form {
-  max-width: 32rem;
+  display: grid;
+  gap: var(--space-8);
 }
 
+@media (min-width: 64rem) {
+  .loan-form {
+    grid-template-columns: minmax(0, 1fr) 22rem;
+    align-items: start;
+  }
+
+  .details {
+    position: sticky;
+    top: var(--space-8);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+}
+
+fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+legend {
+  margin-bottom: var(--space-3);
+  padding: 0;
+  font-size: var(--text-md);
+  font-weight: 500;
+}
+
+/* The radio itself is hidden; its label is the visible control. Keyboard focus shows on the label. */
+.choice input,
+.chip input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+/* Drone rows */
+.drone-group + .drone-group {
+  margin-top: var(--space-5);
+}
+
+.group-label {
+  margin: 0 0 var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.choice {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: var(--space-4);
+  margin-bottom: var(--space-2);
+  padding-top: var(--space-3);
+  padding-bottom: var(--space-3);
+  padding-right: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  transition: background-color var(--ease), border-color var(--ease);
+}
+
+.choice:hover {
+  border-color: var(--muted);
+}
+
+.choice:has(input:checked) {
+  border-color: var(--text);
+  background: var(--raised);
+}
+
+.choice:has(input:focus-visible) {
+  box-shadow: var(--focus);
+}
+
+.name {
+  font-size: var(--text-md);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.description {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+/* Group chips */
+.groups {
+  margin-bottom: var(--space-6);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--raised);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--ease), border-color var(--ease), color var(--ease);
+}
+
+.chip:hover {
+  border-color: var(--muted);
+}
+
+.chip:has(input:checked) {
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--bg);
+}
+
+.chip:has(input:focus-visible) {
+  box-shadow: var(--focus);
+}
+
+/* Accessories */
 .accessories {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-4);
-  margin: 0 0 var(--space-5);
-  padding: var(--space-4);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
+  margin-bottom: var(--space-5);
 }
 
 .accessories legend {
-  padding: 0 var(--space-2);
-  font-weight: 600;
+  grid-column: 1 / -1;
 }
 
 .accessories .field {
   margin-bottom: 0;
+}
+
+.submit {
+  width: 100%;
+}
+
+.field-error {
+  margin-top: var(--space-2);
+}
+
+.added {
+  margin-top: var(--space-4);
 }
 
 .empty p {

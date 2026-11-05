@@ -8,11 +8,12 @@ import { LoanApi } from '../../core/loan-api';
 import { Loan } from '../../core/loan.model';
 import { problemMessage } from '../../core/problem-message';
 import { StudentGroupApi } from '../../core/student-group-api';
+import { QuantityStepper } from '../../shared/quantity-stepper';
 
 /** Form to loan a drone with batteries and propellers to a student group (REQ-004, REQ-006). */
 @Component({
   selector: 'app-new-loan',
-  imports: [FormField, FormRoot, RouterLink],
+  imports: [FormField, FormRoot, RouterLink, QuantityStepper],
   templateUrl: './new-loan.html',
   styleUrl: './new-loan.css',
 })
@@ -32,6 +33,12 @@ export class NewLoan {
   protected readonly loanedDrones = computed(() =>
     this.drones.hasValue() ? this.drones.value().filter((d) => d.status === 'Loaned') : [],
   );
+
+  /** The two groups of the drone choice, in this order. */
+  protected readonly droneGroups = computed(() => [
+    { key: 'available', label: 'Available', drones: this.availableDrones() },
+    { key: 'loaned', label: 'Loaned right now', drones: this.loanedDrones() },
+  ]);
 
   /** Select values are strings; the ids are converted to numbers when the loan is sent. */
   protected readonly newLoan = signal({ droneId: '', studentGroupId: '', batteries: 0, propellers: 0 });

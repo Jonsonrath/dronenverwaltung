@@ -1,0 +1,170 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { Drone } from '../../core/drone.model';
+import { Loan } from '../../core/loan.model';
+import { StudentGroup } from '../../core/student-group.model';
+import { NewLoan } from './new-loan';
+
+// Task 7.1: loan form (REQ-004, REQ-005, REQ-006).
+describe('New loan page', () => {
+  let fixture: ComponentFixture<NewLoan>;
+  let http: HttpTestingController;
+
+  const drones: Drone[] = [
+    { id: 2, name: 'TELLO-02', description: '', status: 'Loaned' },
+    { id: 7, name: 'TELLO-07', description: 'SSID: TELLO-9FA21B', status: 'Available' },
+  ];
+  const groups: StudentGroup[] = [
+    { id: 1, name: 'Group 1' },
+    { id: 3, name: 'Group 3' },
+  ];
+
+  /** Let the async submit action run up to its next pending request. */
+  const settle = () => new Promise((resolve) => setTimeout(resolve));
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [NewLoan],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+    });
+    fixture = TestBed.createComponent(NewLoan);
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => http.verify());
+
+  async function load(droneList = drones, groupList = groups) {
+    fixture.detectChanges();
+    http.expectOne('/api/drones').flush(droneList);
+    http.expectOne('/api/student-groups').flush(groupList);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  function choose(page: HTMLElement, selector: string, value: string) {
+    const element = page.querySelector(selector) as HTMLSelectElement | HTMLInputElement;
+    element.value = value;
+    element.dispatchEvent(new Event('input'));
+    element.dispatchEvent(new Event('change'));
+  }
+
+  async function submit(page: HTMLElement) {
+    page.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    await settle();
+    fixture.detectChanges();
+  }
+
+  async function answerPost(body: object, status: number) {
+    http.expectOne({ method: 'POST', url: '/api/loans' })
+      .flush(body, { status, statusText: status === 201 ? 'Created' : 'Error' });
+    await settle();
+    fixture.detectChanges();
+  }
+
+  it('REQ-004/REQ-006: loans the chosen drone with batteries and propellers', async () => {
+    const page = await load();
+    choose(page, '#loan-drone', '7');
+    choose(page, '#loan-group', '3');
+    choose(page, '#loan-batteries', '4');
+    choose(page, '#loan-propellers', '8');
+
+    await submit(page);
+    const create = http.expectOne({ method: 'POST', url: '/api/loans' });
+    expect(create.request.body).toEqual({ droneId: 7, studentGroupId: 3, batteries: 4, propellers: 8 });
+    const loan: Loan = {
+      id: 1, droneId: 7, droneName: 'TELLO-07', studentGroupId: 3, studentGroupName: 'Group 3',
+      batteries: 4, propellers: 8, loanDate: '2026-08-19T08:00:00Z', returnDate: null, status: 'Active',
+    };
+    create.flush(loan, { status: 201, statusText: 'Created' });
+    await settle();
+    fixture.detectChanges();
+
+    // The drone list is loaded again, so TELLO-07 moves to "Loaned right now".
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush([
+      drones[0],
+      { ...drones[1], status: 'Loaned' },
+    ]);
+    await settle();
+    fixture.detectChanges();
+
+    expect(page.querySelector('[role="status"]')?.textContent).toContain(
+      'TELLO-07 loaned to Group 3 with 4 batteries and 8 propellers.',
+    );
+    const loaned = [...page.querySelectorAll('optgroup[label="Loaned right now"] option')].map((o) => o.textContent);
+    expect(loaned).toEqual(['TELLO-02', 'TELLO-07']);
+    expect((page.querySelector('#loan-drone') as HTMLSelectElement).value).toBe('');
+  });
+
+  it('REQ-006: missing accessories are sent as 0', async () => {
+    const page = await load();
+    choose(page, '#loan-drone', '7');
+    choose(page, '#loan-group', '3');
+
+    await submit(page);
+    const create = http.expectOne({ method: 'POST', url: '/api/loans' });
+
+    expect(create.request.body).toEqual({ droneId: 7, studentGroupId: 3, batteries: 0, propellers: 0 });
+    create.flush({}, { status: 201, statusText: 'Created' });
+    await settle();
+    fixture.detectChanges();
+    http.expectOne({ method: 'GET', url: '/api/drones' }).flush(drones);
+  });
+
+  it('REQ-005: shows the backend message when the drone is already loaned (409)', async () => {
+    const page = await load();
+    choose(page, '#loan-drone', '2');
+    choose(page, '#loan-group', '1');
+
+    await submit(page);
+    await answerPost({ status: 409, title: 'Conflict', detail: 'Drone "TELLO-02" already has an active loan.' }, 409);
+
+    expect(page.querySelector('form [role="alert"]')?.textContent).toContain(
+      'Drone "TELLO-02" already has an active loan.',
+    );
+    expect(page.querySelector('[role="status"]')).toBeNull();
+  });
+
+  it('REQ-006: shows the backend message for a negative quantity (422)', async () => {
+    const page = await load();
+    choose(page, '#loan-drone', '7');
+    choose(page, '#loan-group', '3');
+    choose(page, '#loan-batteries', '-1');
+
+    await submit(page);
+    await answerPost({ status: 422, detail: 'The number of batteries must not be negative.' }, 422);
+
+    expect(page.querySelector('form [role="alert"]')?.textContent).toContain(
+      'The number of batteries must not be negative.',
+    );
+  });
+
+  it('REQ-005: groups the drones by the status from the backend', async () => {
+    const page = await load();
+
+    const available = [...page.querySelectorAll('optgroup[label="Available"] option')].map((o) => o.textContent);
+    const loaned = [...page.querySelectorAll('optgroup[label="Loaned right now"] option')].map((o) => o.textContent);
+    expect(available).toEqual(['TELLO-07']);
+    expect(loaned).toEqual(['TELLO-02']);
+  });
+
+  it('asks for a drone and a group before sending anything', async () => {
+    const page = await load();
+
+    await submit(page);
+
+    http.expectNone({ method: 'POST', url: '/api/loans' });
+    const hints = [...page.querySelectorAll('.field-error')].map((e) => e.textContent);
+    expect(hints).toEqual(['Choose a drone.', 'Choose a student group.']);
+  });
+
+  it('points to the other pages when there are no drones or groups yet', async () => {
+    const page = await load([], []);
+
+    expect(page.querySelector('form')).toBeNull();
+    expect(page.querySelector('a[href="/drones"]')?.textContent).toBe('Add a drone');
+    expect(page.querySelector('a[href="/student-groups"]')?.textContent).toBe('Add a student group');
+  });
+});

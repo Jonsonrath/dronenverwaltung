@@ -1,0 +1,84 @@
+<h1>New loan</h1>
+<p class="lead">Hand out a drone with batteries and propellers to a group.</p>
+
+@if (drones.error() || groups.error()) {
+  <div class="alert" role="alert">
+    <p>The drones or student groups could not be loaded. Check that the backend is running, then try again.</p>
+    <button class="button" type="button" (click)="drones.reload(); groups.reload()">Try again</button>
+  </div>
+} @else if (!drones.hasValue() || !groups.hasValue()) {
+  <p class="loading" aria-live="polite">Loading drones and student groups…</p>
+} @else if (drones.value().length === 0 || groups.value().length === 0) {
+  <div class="empty">
+    @if (drones.value().length === 0) {
+      <p>There are no drones yet. <a routerLink="/drones">Add a drone</a> first.</p>
+    }
+    @if (groups.value().length === 0) {
+      <p>There are no student groups yet. <a routerLink="/student-groups">Add a student group</a> first.</p>
+    }
+  </div>
+} @else {
+  <form class="loan-form" [formRoot]="loanForm">
+    @if (saveError()) {
+      <p class="alert" role="alert">{{ saveError() }}</p>
+    }
+
+    <div class="field">
+      <label for="loan-drone">Drone</label>
+      <select id="loan-drone" [formField]="loanForm.droneId">
+        <option value="">Choose a drone</option>
+        <optgroup label="Available">
+          @for (drone of availableDrones(); track drone.id) {
+            <option [value]="drone.id.toString()">{{ drone.name }}</option>
+          }
+        </optgroup>
+        @if (loanedDrones().length > 0) {
+          <optgroup label="Loaned right now">
+            @for (drone of loanedDrones(); track drone.id) {
+              <option [value]="drone.id.toString()">{{ drone.name }}</option>
+            }
+          </optgroup>
+        }
+      </select>
+      @if (loanForm.droneId().touched() && loanForm.droneId().invalid()) {
+        <p class="field-error">{{ loanForm.droneId().errors()[0].message }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <label for="loan-group">Student group</label>
+      <select id="loan-group" [formField]="loanForm.studentGroupId">
+        <option value="">Choose a student group</option>
+        @for (group of groups.value(); track group.id) {
+          <option [value]="group.id.toString()">{{ group.name }}</option>
+        }
+      </select>
+      @if (loanForm.studentGroupId().touched() && loanForm.studentGroupId().invalid()) {
+        <p class="field-error">{{ loanForm.studentGroupId().errors()[0].message }}</p>
+      }
+    </div>
+
+    <fieldset class="accessories">
+      <legend>Accessories</legend>
+      <div class="field">
+        <label for="loan-batteries">Batteries</label>
+        <input id="loan-batteries" type="number" inputmode="numeric" [formField]="loanForm.batteries" />
+      </div>
+      <div class="field">
+        <label for="loan-propellers">Propellers</label>
+        <input id="loan-propellers" type="number" inputmode="numeric" [formField]="loanForm.propellers" />
+      </div>
+    </fieldset>
+
+    <button class="button button-primary" type="submit" [disabled]="loanForm().submitting()">
+      {{ loanForm().submitting() ? 'Loaning…' : 'Loan drone' }}
+    </button>
+
+    @if (created(); as loan) {
+      <p class="added" role="status">
+        {{ loan.droneName }} loaned to {{ loan.studentGroupName }} with {{ loan.batteries }} batteries and
+        {{ loan.propellers }} propellers. <a routerLink="/loans">See active loans</a>
+      </p>
+    }
+  </form>
+}

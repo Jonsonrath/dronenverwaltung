@@ -1,14 +1,19 @@
-/* Groups only have a name, so a ruled list instead of a one-column table. */
+/* Student groups: a plain list of names; list + form layout: .layout in styles.css. */
 .groups {
-  max-width: 32rem;
   margin: 0;
   padding: 0;
   list-style: none;
-  background: var(--surface);
+  border-top: 1px solid var(--line);
 }
 
 .groups li {
-  padding: var(--space-3);
+  padding: var(--space-4) var(--space-2);
   border-bottom: 1px solid var(--line);
+  font-size: var(--text-md);
   font-weight: 600;
+  transition: background-color var(--ease);
+}
+
+.groups li:hover {
+  background: var(--surface);
 }

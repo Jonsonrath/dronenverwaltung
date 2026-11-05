@@ -300,6 +300,33 @@ a:hover {
   text-align: center;
 }
 
+/* List + form pages (drones, student groups): form beside the list on desktop, below on phones */
+.layout {
+  display: grid;
+  gap: var(--space-8);
+}
+
+/* The grid gap separates list and form; no extra margin on top of it. */
+.layout .add {
+  margin-top: 0;
+}
+
+@media (min-width: 64rem) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    align-items: start;
+  }
+
+  .add {
+    position: sticky;
+    top: var(--space-8);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+}
+
 /* Form below or next to a list: "Add a drone", "Add a student group" */
 .add {
   max-width: 32rem;

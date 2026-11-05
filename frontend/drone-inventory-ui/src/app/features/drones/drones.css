@@ -1,30 +1,4 @@
-/* Drones (design §3): one row per drone with the status bar on the left; the form beside the list on desktop. */
-
-.layout {
-  display: grid;
-  gap: var(--space-8);
-}
-
-/* The grid gap separates list and form; no extra margin on top of it. */
-.layout .add {
-  margin-top: 0;
-}
-
-@media (min-width: 64rem) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr) 20rem;
-    align-items: start;
-  }
-
-  .add {
-    position: sticky;
-    top: var(--space-8);
-    padding: var(--space-5);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--surface);
-  }
-}
+/* Drones (design §3): one row per drone with the status bar on the left. List + form layout: .layout in styles.css. */
 
 .drone-list {
   margin: 0;

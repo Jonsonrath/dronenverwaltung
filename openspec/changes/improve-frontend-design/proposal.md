@@ -1,0 +1,42 @@
+# Proposal
+
+## Why
+
+The first change delivered all required views (drone list, drone form, student groups, loan form, active loans with return, history), but the team finds the look too plain: light grey pages, plain tables and forms below long lists. The app is used at the drone cabinet, often on a phone, and should feel like the tool it is – closer to a drone control app than to a form page. Changing only the presentation now, before the change requests of the semester arrive, gives every later page a better base.
+
+## What Changes
+
+A frontend-only redesign as a dark "cockpit" UI. Same pages, same routes, same data, same REST calls.
+
+- **Dark theme** with high-contrast text and glowing status colors: Available and Loaned stay the two status colors, readable on dark backgrounds (WCAG AA contrast).
+- **Navigation:** a side navigation on desktop; the bottom tab bar stays on phones.
+- **Drones page:** drones shown as **tiles like cabinet slots** – name, big status, description – instead of a table; the "Add a drone" form becomes a **side panel next to the tiles** on desktop (below on phones).
+- **Student groups page:** list and "Add a student group" form side by side on desktop.
+- **New loan page:**
+  - drones as **clickable tiles** grouped into *Available* and *Loaned right now* instead of a dropdown (loaned drones stay selectable – the backend decides, as before)
+  - student group as clickable chips
+  - **+/- steppers** for batteries and propellers
+- **Active loans and history:** restyled for the dark theme; the existing phone layout (one block per loan) is kept.
+- Unchanged on purpose: every request, every validation and every error message comes from the backend as before; the frontend still does not implement domain rules.
+
+### Out of Scope
+
+- Any backend or API change, any new data (e.g. showing which group has a loaned drone on the drone tile would need a new API field – a separate change)
+- New features: search, filters, sorting, statistics, a dashboard, editing or deleting drones and groups
+- A light/dark switch – the app is dark only
+- Login, roles and everything else that was already out of scope in the first change
+
+## Capabilities
+
+### New Capabilities
+<!-- none: presentation only -->
+
+### Modified Capabilities
+<!-- none: no requirement changes. The change declares skip_specs: true. -->
+
+## Impact
+
+- **Frontend only** (`frontend/drone-inventory-ui`): `styles.css` (design tokens, dark theme), app shell (`app.html`, `app.css`), templates and styles of the five pages, the loan form's drone and group selection and the accessory fields.
+- **Tests:** existing Vitest tests that look for table rows or `<select>` elements are updated to the new markup; their assertions (what is shown, which request is sent, which backend message appears) stay the same. New tests for the steppers and the tile selection.
+- **No change** to the backend, the REST API, the database or the OpenSpec main specs.
+- **Dependencies:** none expected (plain CSS, no UI library).

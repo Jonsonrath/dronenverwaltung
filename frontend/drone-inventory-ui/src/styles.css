@@ -1,30 +1,33 @@
 /*
- * Base styles for Drone Lending (task 5.1).
- * Direction: equipment labels in a drone hangar. Ink-navy text on a cool grey,
- * signal yellow for things that are out (loaned), green for things in the cabinet.
- * The one memorable element is the status tag; everything else stays quiet.
+ * Base styles for Drone Lending – "dark, grown-up" (change improve-frontend-design, task 1.1).
+ * Near-neutral graphite, almost no color: color only means status (Available, Loaned) or an error.
+ * The one memorable element: the narrow status bar on the left edge of a row (.status-row).
+ *
+ * Contrast (WCAG): every text and status color is at least 4.5:1 on --bg, --surface and --raised
+ * (text 12.8–15.5, muted 4.8–5.9, available 6.9–8.3, loaned 6.6–8.0, error 5.1–6.2).
  */
 
 :root {
+  color-scheme: dark;
+
   /* Colors */
-  --ink: #16324a;
-  --ink-soft: #3d5a73;
-  --surface: #eef2f5;
-  --paper: #ffffff;
-  --paper-muted: #b9c8d6;
-  --line: #c9d4dd;
-  --signal: #f2c230;
-  --available: #1f7a5c;
-  --error: #b3261e;
-  --error-surface: #fbe9e7;
+  --bg: #161718;
+  --surface: #1d1f21;
+  --raised: #25282b;
+  --line: #303438;
+  --text: #edeeef;
+  --muted: #8e949a;
+  --available: #7fbf8e;
+  --loaned: #d9a441;
+  --error: #e5786d;
 
   /* Type */
-  --font-body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Barlow Semi Condensed', 'Barlow', system-ui, sans-serif;
+  --font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
-  --text-lg: 1.25rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.375rem;
   --text-xl: 1.75rem;
   --text-2xl: 2.25rem;
 
@@ -37,8 +40,12 @@
   --space-6: 2rem;
   --space-8: 3rem;
 
-  --radius: 4px;
-  --focus: 0 0 0 3px var(--signal);
+  /* Radius: controls small, containers a bit larger */
+  --radius-sm: 6px;
+  --radius: 10px;
+
+  --focus: 0 0 0 2px var(--bg), 0 0 0 4px var(--text);
+  --ease: 120ms ease-out;
 }
 
 *,
@@ -53,56 +60,64 @@ html {
 
 body {
   margin: 0;
-  background: var(--surface);
-  color: var(--ink);
-  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
   font-size: var(--text-base);
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1,
 h2,
 h3 {
-  margin: 0 0 var(--space-3);
-  font-family: var(--font-display);
-  font-weight: 600;
+  margin: 0 0 var(--space-2);
+  font-weight: 500;
   line-height: 1.15;
+  letter-spacing: -0.01em;
 }
 
 h1 {
   font-size: var(--text-2xl);
+  letter-spacing: -0.02em;
 }
 
 h2 {
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
 }
 
 h3 {
-  font-size: var(--text-lg);
+  font-size: var(--text-md);
 }
 
 p {
   margin: 0 0 var(--space-4);
-  max-width: 70ch;
+  max-width: 68ch;
 }
 
 .lead {
-  color: var(--ink-soft);
-  font-size: var(--text-lg);
+  margin-bottom: var(--space-6);
+  color: var(--muted);
+  font-size: var(--text-md);
 }
 
 a {
-  color: var(--ink);
+  color: var(--text);
+  text-decoration-color: var(--muted);
   text-underline-offset: 0.2em;
+}
+
+a:hover {
+  text-decoration-color: var(--text);
 }
 
 :focus-visible {
   outline: none;
   box-shadow: var(--focus);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
 }
 
-/* Buttons */
+/* Buttons: one light primary, one quiet secondary */
 .button {
   display: inline-flex;
   align-items: center;
@@ -110,42 +125,52 @@ a {
   gap: var(--space-2);
   min-height: 2.75rem;
   padding: var(--space-2) var(--space-4);
-  border: 2px solid var(--ink);
-  border-radius: var(--radius);
-  background: var(--paper);
-  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--raised);
+  color: var(--text);
   font: inherit;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
+  transition: background-color var(--ease), border-color var(--ease), transform var(--ease);
 }
 
 .button:hover {
-  background: var(--surface);
+  border-color: var(--muted);
+}
+
+.button:active {
+  transform: translateY(1px);
 }
 
 .button-primary {
-  background: var(--ink);
-  color: var(--paper);
+  border-color: var(--text);
+  background: var(--text);
+  color: var(--bg);
 }
 
 .button-primary:hover {
-  background: var(--ink-soft);
+  border-color: #ffffff;
+  background: #ffffff;
 }
 
 .button:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
+  transform: none;
 }
 
 /* Forms */
 .field {
   display: grid;
-  gap: var(--space-1);
-  margin-bottom: var(--space-4);
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
 }
 
 .field label {
-  font-weight: 600;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
 }
 
 .field input,
@@ -154,37 +179,55 @@ a {
   width: 100%;
   min-height: 2.75rem;
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--ink-soft);
-  border-radius: var(--radius);
-  background: var(--paper);
-  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--raised);
+  color: var(--text);
   font: inherit;
+  transition: border-color var(--ease);
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--muted);
+}
+
+.field input:hover,
+.field select:hover,
+.field textarea:hover {
+  border-color: var(--muted);
+}
+
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+  border-color: var(--text);
+  box-shadow: none;
 }
 
 .field textarea {
-  min-height: 5rem;
+  min-height: 5.5rem;
   resize: vertical;
 }
 
-/* Tables: ruled rows instead of cards */
+/* Tables: no box, rows separated by lines */
 .table {
   width: 100%;
   border-collapse: collapse;
-  background: var(--paper);
 }
 
 .table th,
 .table td {
-  padding: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--line);
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .table th {
-  color: var(--ink-soft);
+  color: var(--muted);
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .table .number {
@@ -196,55 +239,79 @@ a {
   overflow-x: auto;
 }
 
-/* Status tag, shaped like an equipment tag with a punched hole */
+/* Status as a word in its color – the bar comes from .status-row */
 .tag {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 0.125rem var(--space-3) 0.125rem var(--space-2);
-  border-radius: var(--radius) 999px 999px var(--radius);
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
 }
 
-.tag::before {
-  content: '';
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 50%;
-  background: var(--paper);
-}
-
 .tag-available {
-  background: var(--available);
-  color: var(--paper);
+  color: var(--available);
 }
 
 .tag-loaned {
-  background: var(--signal);
-  color: var(--ink);
+  color: var(--loaned);
+}
+
+/* A row with the status bar on its left edge, the memorable element */
+.status-row {
+  --status: var(--line);
+  position: relative;
+  padding-left: var(--space-5);
+}
+
+.status-row::before {
+  content: '';
+  position: absolute;
+  inset: var(--space-3) auto var(--space-3) 0;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--status);
+}
+
+.status-row.is-available {
+  --status: var(--available);
+}
+
+.status-row.is-loaned {
+  --status: var(--loaned);
 }
 
 /* Messages from the backend (404 / 409 / 422) */
 .alert {
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
-  border-left: 4px solid var(--error);
-  background: var(--error-surface);
+  border: 1px solid color-mix(in srgb, var(--error) 45%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--error) 10%, var(--bg));
   color: var(--error);
 }
 
-/* Form below a list: "Add a drone", "Add a student group" */
+.alert p {
+  margin-bottom: var(--space-3);
+}
+
+.empty {
+  padding: var(--space-6) var(--space-5);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Form below or next to a list: "Add a drone", "Add a student group" */
 .add {
   max-width: 32rem;
   margin-top: var(--space-8);
-  padding-top: var(--space-5);
-  border-top: 4px solid var(--ink);
+}
+
+.add h2 {
+  margin-bottom: var(--space-5);
 }
 
 .optional {
-  color: var(--ink-soft);
+  color: var(--muted);
   font-weight: 400;
 }
 
@@ -257,22 +324,11 @@ a {
 .added {
   margin: var(--space-3) 0 0;
   color: var(--available);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .loading {
-  color: var(--ink-soft);
-}
-
-.alert p {
-  margin-bottom: var(--space-3);
-}
-
-.empty {
-  padding: var(--space-5);
-  border: 1px dashed var(--line);
-  color: var(--ink-soft);
-  text-align: center;
+  color: var(--muted);
 }
 
 @media (prefers-reduced-motion: reduce) {

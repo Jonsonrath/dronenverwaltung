@@ -4,7 +4,7 @@
 }
 
 .description {
-  color: var(--ink-soft);
+  color: var(--muted);
 }
 
 /* Phone: one block per drone – name and status on top, description below in full width. */

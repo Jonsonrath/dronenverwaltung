@@ -1,0 +1,8 @@
+/* Table layout: loan-table.css. */
+
+/* Phone: four values in two rows – accessories on top, the two dates below. */
+@media (max-width: 40rem) {
+  tr {
+    grid-template-columns: auto 1fr;
+  }
+}

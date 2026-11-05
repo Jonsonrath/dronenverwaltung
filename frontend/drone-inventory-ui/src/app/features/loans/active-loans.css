@@ -1,19 +1,4 @@
-.group,
-.drone {
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.date {
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-
-/* The return button is taller than the text, so center the whole row. */
-.table td {
-  vertical-align: middle;
-}
-
+/* Table layout: loan-table.css. Here only what belongs to the return action. */
 .action {
   text-align: right;
 }
@@ -23,48 +8,7 @@ p.alert {
   margin-bottom: var(--space-4);
 }
 
-.visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-}
-
-/* Phone: one block per loan – group and drone on top, the numbers below with labels. */
 @media (max-width: 40rem) {
-  thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
-
-  tr {
-    display: grid;
-    /* Three label columns; the last one takes the rest, so full-width rows can stretch. */
-    grid-template-columns: auto auto 1fr;
-    gap: var(--space-1) var(--space-5);
-    padding: var(--space-3);
-    border-bottom: 1px solid var(--line);
-  }
-
-  .table td {
-    padding: 0;
-    border-bottom: 0;
-    text-align: left;
-  }
-
-  .table .group {
-    grid-column: 1 / -1;
-  }
-
-  .table .drone {
-    grid-column: 1 / -1;
-    color: var(--ink-soft);
-  }
-
   .table .action {
     grid-column: 1 / -1;
     margin-top: var(--space-2);
@@ -72,13 +16,5 @@ p.alert {
 
   .table .action .button {
     width: 100%;
-  }
-
-  .table td[data-label]::before {
-    content: attr(data-label);
-    display: block;
-    color: var(--ink-soft);
-    font-size: var(--text-xs);
-    font-weight: 600;
   }
 }

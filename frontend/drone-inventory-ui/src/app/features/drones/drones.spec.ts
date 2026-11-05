@@ -39,22 +39,24 @@ describe('Drones page', () => {
       { id: 2, name: 'TELLO-07', description: 'SSID: TELLO-9FA21B, rechter Propellerschutz beschädigt', status: 'Available' },
     ]);
 
-    const rows = [...page.querySelectorAll('tbody tr')].map((row) =>
-      [...row.querySelectorAll('td')].map((cell) => cell.textContent?.trim()),
+    const rows = [...page.querySelectorAll('.drone-list li')].map((row) =>
+      ['.name', '.tag', '.description'].map((part) => row.querySelector(part)?.textContent?.trim()),
     );
     expect(rows).toEqual([
       ['TELLO-02', 'Loaned', ''],
       ['TELLO-07', 'Available', 'SSID: TELLO-9FA21B, rechter Propellerschutz beschädigt'],
     ]);
-    expect(page.querySelector('tbody tr:first-child .tag')?.classList).toContain('tag-loaned');
-    expect(page.querySelector('tbody tr:last-child .tag')?.classList).toContain('tag-available');
+    expect(page.querySelector('.drone-list li:first-child .tag')?.classList).toContain('tag-loaned');
+    expect(page.querySelector('.drone-list li:last-child .tag')?.classList).toContain('tag-available');
+    expect(page.querySelector('.drone-list li:first-child')?.classList).toContain('is-loaned');
+    expect(page.querySelector('.drone-list li:last-child')?.classList).toContain('is-available');
   });
 
   it('REQ-002: shows a message when there are no drones', async () => {
     const page = await respond([]);
 
     expect(page.querySelector('.empty')?.textContent).toContain('No drones yet.');
-    expect(page.querySelector('table')).toBeNull();
+    expect(page.querySelector('.drone-list')).toBeNull();
   });
 
   it('shows an error with a retry button when the backend fails', async () => {
@@ -108,8 +110,8 @@ describe('Drones page', () => {
       await settle();
       fixture.detectChanges();
 
-      expect(page.querySelector('tbody tr .name')?.textContent).toBe('TELLO-07');
-      expect(page.querySelector('tbody tr .tag')?.textContent).toBe('Available');
+      expect(page.querySelector('.drone-list li .name')?.textContent).toBe('TELLO-07');
+      expect(page.querySelector('.drone-list li .tag')?.textContent).toBe('Available');
       expect(page.querySelector('[role="status"]')?.textContent).toContain('TELLO-07 added.');
       expect((page.querySelector('#drone-name') as HTMLInputElement).value).toBe('');
     });

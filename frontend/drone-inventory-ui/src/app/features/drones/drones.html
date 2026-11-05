@@ -1,77 +1,72 @@
 <h1>Drones</h1>
 <p class="lead">All drones in the cabinet and whether they are available.</p>
 
-@if (drones.error()) {
-  <div class="alert" role="alert">
-    <p>The drones could not be loaded. Check that the backend is running, then try again.</p>
-    <button class="button" type="button" (click)="drones.reload()">Try again</button>
-  </div>
-} @else if (drones.hasValue()) {
-  @if (drones.value().length === 0) {
-    <p class="empty">No drones yet. Add the first one below.</p>
-  } @else {
-    <div class="table-scroll">
-      <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">Name</th>
-            <th scope="col">Status</th>
-            <th scope="col">Description</th>
-          </tr>
-        </thead>
-        <tbody>
+<div class="layout">
+  <section class="inventory" aria-label="Drones">
+    @if (drones.error()) {
+      <div class="alert" role="alert">
+        <p>The drones could not be loaded. Check that the backend is running, then try again.</p>
+        <button class="button" type="button" (click)="drones.reload()">Try again</button>
+      </div>
+    } @else if (drones.hasValue()) {
+      @if (drones.value().length === 0) {
+        <p class="empty">No drones yet. Add the first one with the form.</p>
+      } @else {
+        <ul class="drone-list">
           @for (drone of drones.value(); track drone.id) {
-            <tr>
-              <td class="name">{{ drone.name }}</td>
-              <td>
-                @if (drone.status === 'Loaned') {
-                  <span class="tag tag-loaned">Loaned</span>
-                } @else {
-                  <span class="tag tag-available">Available</span>
-                }
-              </td>
-              <td class="description">{{ drone.description }}</td>
-            </tr>
+            <li
+              class="status-row"
+              [class.is-available]="drone.status === 'Available'"
+              [class.is-loaned]="drone.status === 'Loaned'"
+            >
+              <span class="name">{{ drone.name }}</span>
+              @if (drone.status === 'Loaned') {
+                <span class="tag tag-loaned">Loaned</span>
+              } @else {
+                <span class="tag tag-available">Available</span>
+              }
+              <span class="description">{{ drone.description }}</span>
+            </li>
           }
-        </tbody>
-      </table>
-    </div>
-  }
-} @else {
-  <p class="loading" aria-live="polite">Loading drones…</p>
-}
-
-<section class="add" aria-labelledby="add-drone-heading">
-  <h2 id="add-drone-heading">Add a drone</h2>
-
-  <form [formRoot]="droneForm">
-    @if (saveError()) {
-      <p class="alert" role="alert">{{ saveError() }}</p>
-    }
-
-    <div class="field">
-      <label for="drone-name">Name</label>
-      <input id="drone-name" type="text" autocomplete="off" placeholder="TELLO-07" [formField]="droneForm.name" />
-      @if (droneForm.name().touched() && droneForm.name().invalid()) {
-        <p class="field-error">{{ droneForm.name().errors()[0].message }}</p>
+        </ul>
       }
-    </div>
-
-    <div class="field">
-      <label for="drone-description">Description <span class="optional">(optional)</span></label>
-      <textarea
-        id="drone-description"
-        placeholder="SSID, damage, anything worth knowing"
-        [formField]="droneForm.description"
-      ></textarea>
-    </div>
-
-    <button class="button button-primary" type="submit" [disabled]="droneForm().submitting()">
-      {{ droneForm().submitting() ? 'Adding…' : 'Add drone' }}
-    </button>
-
-    @if (added()) {
-      <p class="added" role="status">{{ added() }} added. It is available now.</p>
+    } @else {
+      <p class="loading" aria-live="polite">Loading drones…</p>
     }
-  </form>
-</section>
+  </section>
+
+  <section class="add" aria-labelledby="add-drone-heading">
+    <h2 id="add-drone-heading">Add a drone</h2>
+
+    <form [formRoot]="droneForm">
+      @if (saveError()) {
+        <p class="alert" role="alert">{{ saveError() }}</p>
+      }
+
+      <div class="field">
+        <label for="drone-name">Name</label>
+        <input id="drone-name" type="text" autocomplete="off" placeholder="TELLO-07" [formField]="droneForm.name" />
+        @if (droneForm.name().touched() && droneForm.name().invalid()) {
+          <p class="field-error">{{ droneForm.name().errors()[0].message }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="drone-description">Description <span class="optional">(optional)</span></label>
+        <textarea
+          id="drone-description"
+          placeholder="SSID, damage, anything worth knowing"
+          [formField]="droneForm.description"
+        ></textarea>
+      </div>
+
+      <button class="button button-primary" type="submit" [disabled]="droneForm().submitting()">
+        {{ droneForm().submitting() ? 'Adding…' : 'Add drone' }}
+      </button>
+
+      @if (added()) {
+        <p class="added" role="status">{{ added() }} added. It is available now.</p>
+      }
+    </form>
+  </section>
+</div>

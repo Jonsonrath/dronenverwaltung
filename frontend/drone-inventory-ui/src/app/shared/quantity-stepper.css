@@ -1,0 +1,69 @@
+:host {
+  display: block;
+}
+
+.stepper {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(3rem, 1fr) 2.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--raised);
+  overflow: hidden;
+}
+
+.stepper:focus-within {
+  border-color: var(--text);
+}
+
+.step {
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-md);
+  cursor: pointer;
+  transition: background-color var(--ease);
+}
+
+.step:hover:not(:disabled) {
+  background: var(--line);
+}
+
+.step:active:not(:disabled) {
+  background: var(--muted);
+  color: var(--bg);
+}
+
+.step:disabled {
+  color: var(--muted);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+input {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-md);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+input:focus-visible {
+  box-shadow: none;
+  outline: none;
+}

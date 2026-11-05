@@ -14,7 +14,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 3. Frontend: loans
 
-- [ ] 3.1 Add a reusable `QuantityStepper` control in `shared/` (−, number field, +; "−" disabled at 0; works with `[formField]` as Signal Forms custom control, design §4); verify with Vitest tests for +, −, disabled at 0, typed value and binding to a form field (#56)
+- [x] 3.1 Add a reusable `QuantityStepper` control in `shared/` (−, number field, +; "−" disabled at 0; works with `[formField]` as Signal Forms custom control, design §4); verify with Vitest tests for +, −, disabled at 0, typed value and binding to a form field (#56)
 - [ ] 3.2 Loan form: drones as selectable radio rows grouped into *Available* / *Loaned right now*, student groups as radio chips, batteries and propellers with `QuantityStepper` (design §4); update `new-loan.spec.ts` to the new controls keeping every assertion (request body, 409 and 422 messages, confirmation, empty prerequisites); verify all tests pass and manually that a loan is created by tapping only (no keyboard) and a loaned drone still gives the backend's 409 message (#57)
 - [ ] 3.3 Active loans and history: dark table styling, Return button and status messages in the new style, phone layout kept (design §5); verify `active-loans.spec.ts` and `loan-history.spec.ts` pass unchanged and screenshots at 1280 px and 390 px (#58)
 

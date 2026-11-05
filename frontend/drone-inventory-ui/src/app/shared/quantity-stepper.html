@@ -1,0 +1,23 @@
+<div class="stepper">
+  <button
+    class="step"
+    type="button"
+    [attr.aria-label]="'Fewer ' + label()"
+    [disabled]="disabled() || value() <= 0"
+    (click)="decrement()"
+  >
+    −
+  </button>
+  <input
+    type="number"
+    inputmode="numeric"
+    step="1"
+    [id]="inputId()"
+    [value]="value()"
+    [disabled]="disabled()"
+    (input)="typed($event)"
+  />
+  <button class="step" type="button" [attr.aria-label]="'More ' + label()" [disabled]="disabled()" (click)="increment()">
+    +
+  </button>
+</div>

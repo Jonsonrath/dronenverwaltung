@@ -9,7 +9,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 2. Frontend: drones and student groups
 
-- [ ] 2.1 Drones page: drones as rows with status bar, name, description and status word (design §3), "Add a drone" form as sticky side panel on desktop and below on phones; update `drones.spec.ts` selectors to the drone list without removing any assertion; verify all drone page tests pass and manually that adding a drone shows a new Available row (#54)
+- [x] 2.1 Drones page: drones as rows with status bar, name, description and status word (design §3), "Add a drone" form as sticky side panel on desktop and below on phones; update `drones.spec.ts` selectors to the drone list without removing any assertion; verify all drone page tests pass and manually that adding a drone shows a new Available row (#54)
 - [ ] 2.2 Student groups page: list and "Add a student group" form side by side on desktop, stacked on phones, dark styling; verify `student-groups.spec.ts` passes and manually that a new group appears and a blank name shows the backend error (#55)
 
 ## 3. Frontend: loans

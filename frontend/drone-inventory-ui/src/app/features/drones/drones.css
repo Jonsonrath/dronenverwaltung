@@ -1,42 +1,66 @@
+/* Drones (design §3): one row per drone with the status bar on the left; the form beside the list on desktop. */
+
+.layout {
+  display: grid;
+  gap: var(--space-8);
+}
+
+/* The grid gap separates list and form; no extra margin on top of it. */
+.layout .add {
+  margin-top: 0;
+}
+
+@media (min-width: 64rem) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    align-items: start;
+  }
+
+  .add {
+    position: sticky;
+    top: var(--space-8);
+    padding: var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+}
+
+.drone-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+}
+
+.drone-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: var(--space-4);
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-4);
+  padding-right: var(--space-2);
+  border-bottom: 1px solid var(--line);
+  transition: background-color var(--ease);
+}
+
+.drone-list li:hover {
+  background: var(--surface);
+}
+
 .name {
+  font-size: var(--text-md);
   font-weight: 600;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .description {
+  grid-column: 1 / -1;
   color: var(--muted);
+  font-size: var(--text-sm);
 }
 
-/* Phone: one block per drone – name and status on top, description below in full width. */
-@media (max-width: 40rem) {
-  thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
-
-  tr {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    column-gap: var(--space-3);
-    padding: var(--space-3);
-    border-bottom: 1px solid var(--line);
-  }
-
-  .table td {
-    padding: 0;
-    border-bottom: 0;
-  }
-
-  .table .description {
-    grid-column: 1 / -1;
-    padding-top: var(--space-1);
-  }
-
-  .description:empty {
-    display: none;
-  }
+.description:empty {
+  display: none;
 }

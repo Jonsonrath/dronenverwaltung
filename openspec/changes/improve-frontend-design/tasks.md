@@ -4,7 +4,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 1. Frontend: theme and shell
 
-- [ ] 1.1 Replace the light tokens in `styles.css` with the dark OSD palette from design §1 (bg, panel, panel-raised, line, text, text-muted, loaned, available, error), restyle the shared base styles (buttons, fields, tables, alerts, empty state, status LED with glow, tile corner brackets) and check AA contrast of every text/status color on `--bg` and `--panel`; verify `npx ng build`, all existing `npx ng test` pass and screenshots of all five pages at 1280 px and 390 px are readable (#52)
+- [x] 1.1 Replace the light tokens in `styles.css` with the dark OSD palette from design §1 (bg, panel, panel-raised, line, text, text-muted, loaned, available, error), restyle the shared base styles (buttons, fields, tables, alerts, empty state, status LED with glow, tile corner brackets) and check AA contrast of every text/status color on `--bg` and `--panel`; verify `npx ng build`, all existing `npx ng test` pass and screenshots of all five pages at 1280 px and 390 px are readable (#52)
 - [ ] 1.2 Rebuild the app shell: side navigation on desktop (≥ 64rem), top bar on tablet, bottom tab bar on phones (design §2); verify the navigation tests in `app.spec.ts` (links, active link, routes) pass and screenshots at 1280 / 800 / 390 px show the right navigation (#53)
 
 ## 2. Frontend: drones and student groups

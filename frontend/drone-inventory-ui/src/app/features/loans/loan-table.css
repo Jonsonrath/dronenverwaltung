@@ -53,13 +53,13 @@
 
   .table .drone {
     grid-column: 1 / -1;
-    color: var(--ink-soft);
+    color: var(--text-muted);
   }
 
   .table td[data-label]::before {
     content: attr(data-label);
     display: block;
-    color: var(--ink-soft);
+    color: var(--text-muted);
     font-size: var(--text-xs);
     font-weight: 600;
   }

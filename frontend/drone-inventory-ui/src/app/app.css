@@ -9,9 +9,9 @@
   gap: var(--space-5);
   /* Same left edge as the page content (max 64rem, centered). */
   padding: 0 max(var(--space-5), calc((100% - 64rem) / 2 + var(--space-5)));
-  background: var(--ink);
-  color: var(--paper);
-  border-bottom: 4px solid var(--signal);
+  background: var(--panel);
+  color: var(--text);
+  border-bottom: 4px solid var(--loaned);
 }
 
 .brand {
@@ -32,7 +32,7 @@
   width: 1.75rem;
   height: 1.75rem;
   fill: none;
-  stroke: var(--signal);
+  stroke: var(--loaned);
   stroke-width: 2;
 }
 
@@ -46,20 +46,20 @@
   display: flex;
   align-items: center;
   padding: var(--space-4) var(--space-3);
-  color: var(--paper-muted);
+  color: var(--text-muted);
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
 }
 
 .tab:hover {
-  color: var(--paper);
+  color: var(--text);
 }
 
 .tab.is-active {
-  color: var(--paper);
+  color: var(--text);
   /* Drawn inside the tab: .tabs scrolls horizontally and would clip anything outside. */
-  box-shadow: inset 0 -4px 0 var(--paper);
+  box-shadow: inset 0 -4px 0 var(--text);
 }
 
 .page {
@@ -82,8 +82,8 @@
     gap: 0;
     padding: 0 var(--space-1) env(safe-area-inset-bottom);
     overflow-x: visible;
-    background: var(--ink);
-    border-top: 4px solid var(--signal);
+    background: var(--panel);
+    border-top: 4px solid var(--loaned);
   }
 
   .tab {
@@ -100,7 +100,7 @@
   }
 
   .tab.is-active {
-    box-shadow: inset 0 4px 0 var(--paper);
+    box-shadow: inset 0 4px 0 var(--text);
   }
 
   .page {

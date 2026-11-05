@@ -1,22 +1,28 @@
 /*
- * Base styles for Drone Lending (task 5.1).
- * Direction: equipment labels in a drone hangar. Ink-navy text on a cool grey,
- * signal yellow for things that are out (loaned), green for things in the cabinet.
- * The one memorable element is the status tag; everything else stays quiet.
+ * Base styles for Drone Lending – dark "cockpit" theme (change improve-frontend-design, task 1.1).
+ * Direction: the on-screen display of a drone camera. Night navy instead of black,
+ * signal yellow for drones that are out (Loaned), teal for drones in the cabinet (Available).
+ * The one memorable element: viewfinder corner brackets on tiles (.frame).
+ *
+ * Contrast (WCAG): every text and status color is at least 4.5:1 on --bg, --panel
+ * and --panel-raised (text 11.3–14.9, text-muted 5.5–7.2, loaned 7.9–10.4,
+ * available 7.4–9.8, error 4.8–6.3).
  */
 
 :root {
+  color-scheme: dark;
+
   /* Colors */
-  --ink: #16324a;
-  --ink-soft: #3d5a73;
-  --surface: #eef2f5;
-  --paper: #ffffff;
-  --paper-muted: #b9c8d6;
-  --line: #c9d4dd;
-  --signal: #f2c230;
-  --available: #1f7a5c;
-  --error: #b3261e;
-  --error-surface: #fbe9e7;
+  --bg: #0d1b26;
+  --panel: #142735;
+  --panel-raised: #1b3243;
+  --line: #2a4458;
+  --text: #e6eef4;
+  --text-muted: #93a9ba;
+  --loaned: #f2c230;
+  --available: #3dd9b0;
+  --error: #ff6b5e;
+  --error-surface: #3a1e22;
 
   /* Type */
   --font-body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -26,7 +32,7 @@
   --text-base: 1rem;
   --text-lg: 1.25rem;
   --text-xl: 1.75rem;
-  --text-2xl: 2.25rem;
+  --text-2xl: 2.5rem;
 
   /* Spacing */
   --space-1: 0.25rem;
@@ -37,8 +43,8 @@
   --space-6: 2rem;
   --space-8: 3rem;
 
-  --radius: 4px;
-  --focus: 0 0 0 3px var(--signal);
+  --radius: 6px;
+  --focus: 0 0 0 3px var(--loaned);
 }
 
 *,
@@ -53,8 +59,8 @@ html {
 
 body {
   margin: 0;
-  background: var(--surface);
-  color: var(--ink);
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--font-body);
   font-size: var(--text-base);
   line-height: 1.5;
@@ -66,7 +72,8 @@ h3 {
   margin: 0 0 var(--space-3);
   font-family: var(--font-display);
   font-weight: 600;
-  line-height: 1.15;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
 }
 
 h1 {
@@ -87,12 +94,12 @@ p {
 }
 
 .lead {
-  color: var(--ink-soft);
+  color: var(--text-muted);
   font-size: var(--text-lg);
 }
 
 a {
-  color: var(--ink);
+  color: var(--available);
   text-underline-offset: 0.2em;
 }
 
@@ -110,26 +117,28 @@ a {
   gap: var(--space-2);
   min-height: 2.75rem;
   padding: var(--space-2) var(--space-4);
-  border: 2px solid var(--ink);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--panel-raised);
+  color: var(--text);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
 }
 
 .button:hover {
-  background: var(--surface);
+  border-color: var(--text-muted);
 }
 
 .button-primary {
-  background: var(--ink);
-  color: var(--paper);
+  border-color: var(--available);
+  background: var(--available);
+  color: var(--bg);
 }
 
 .button-primary:hover {
-  background: var(--ink-soft);
+  border-color: var(--text);
+  background: var(--text);
 }
 
 .button:disabled {
@@ -154,11 +163,23 @@ a {
   width: 100%;
   min-height: 2.75rem;
   padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--ink-soft);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--paper);
-  color: var(--ink);
+  background: var(--bg);
+  color: var(--text);
   font: inherit;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+.field input:hover,
+.field select:hover,
+.field textarea:hover {
+  border-color: var(--text-muted);
 }
 
 .field textarea {
@@ -166,25 +187,31 @@ a {
   resize: vertical;
 }
 
-/* Tables: ruled rows instead of cards */
+/* Tables */
 .table {
   width: 100%;
   border-collapse: collapse;
-  background: var(--paper);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
 }
 
 .table th,
 .table td {
-  padding: var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--line);
   text-align: left;
   vertical-align: top;
 }
 
 .table th {
-  color: var(--ink-soft);
+  color: var(--text-muted);
   font-size: var(--text-sm);
   font-weight: 600;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
 }
 
 .table .number {
@@ -196,13 +223,11 @@ a {
   overflow-x: auto;
 }
 
-/* Status tag, shaped like an equipment tag with a punched hole */
+/* Status: a glowing LED plus the word – color is never the only signal */
 .tag {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 0.125rem var(--space-3) 0.125rem var(--space-2);
-  border-radius: var(--radius) 999px 999px var(--radius);
   font-size: var(--text-sm);
   font-weight: 600;
   white-space: nowrap;
@@ -210,41 +235,69 @@ a {
 
 .tag::before {
   content: '';
-  width: 0.5rem;
-  height: 0.5rem;
+  width: 0.625rem;
+  height: 0.625rem;
   border-radius: 50%;
-  background: var(--paper);
+  background: currentColor;
+  box-shadow: 0 0 0.5rem currentColor;
 }
 
 .tag-available {
-  background: var(--available);
-  color: var(--paper);
+  color: var(--available);
 }
 
 .tag-loaned {
-  background: var(--signal);
-  color: var(--ink);
+  color: var(--loaned);
+}
+
+/* Viewfinder corner brackets, the memorable element: put .frame on a tile */
+.frame {
+  --corner: 0.875rem;
+  --corner-color: var(--text-muted);
+  position: relative;
+  padding: var(--space-4);
+  background:
+    linear-gradient(var(--corner-color), var(--corner-color)) top left / var(--corner) 2px,
+    linear-gradient(var(--corner-color), var(--corner-color)) top left / 2px var(--corner),
+    linear-gradient(var(--corner-color), var(--corner-color)) top right / var(--corner) 2px,
+    linear-gradient(var(--corner-color), var(--corner-color)) top right / 2px var(--corner),
+    linear-gradient(var(--corner-color), var(--corner-color)) bottom left / var(--corner) 2px,
+    linear-gradient(var(--corner-color), var(--corner-color)) bottom left / 2px var(--corner),
+    linear-gradient(var(--corner-color), var(--corner-color)) bottom right / var(--corner) 2px,
+    linear-gradient(var(--corner-color), var(--corner-color)) bottom right / 2px var(--corner),
+    var(--panel);
+  background-repeat: no-repeat;
 }
 
 /* Messages from the backend (404 / 409 / 422) */
 .alert {
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
-  border-left: 4px solid var(--error);
+  border: 1px solid var(--error);
+  border-left-width: 4px;
+  border-radius: var(--radius);
   background: var(--error-surface);
   color: var(--error);
 }
 
-/* Form below a list: "Add a drone", "Add a student group" */
+.empty {
+  padding: var(--space-5);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Form below or next to a list: "Add a drone", "Add a student group" */
 .add {
   max-width: 32rem;
   margin-top: var(--space-8);
   padding-top: var(--space-5);
-  border-top: 4px solid var(--ink);
+  border-top: 1px solid var(--line);
 }
 
 .optional {
-  color: var(--ink-soft);
+  color: var(--text-muted);
   font-weight: 400;
 }
 
@@ -261,18 +314,11 @@ a {
 }
 
 .loading {
-  color: var(--ink-soft);
+  color: var(--text-muted);
 }
 
 .alert p {
   margin-bottom: var(--space-3);
-}
-
-.empty {
-  padding: var(--space-5);
-  border: 1px dashed var(--line);
-  color: var(--ink-soft);
-  text-align: center;
 }
 
 @media (prefers-reduced-motion: reduce) {

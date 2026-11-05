@@ -5,7 +5,7 @@ import { firstValueFrom } from 'rxjs';
 import { LoanApi } from './loan-api';
 import { Loan } from './loan.model';
 
-// Task 7.1: LoanApi calls the backend (REQ-004, REQ-006).
+// LoanApi calls the backend: list (task 7.2, REQ-007), create (task 7.1, REQ-004, REQ-006).
 describe('LoanApi', () => {
   let api: LoanApi;
   let http: HttpTestingController;
@@ -19,6 +19,15 @@ describe('LoanApi', () => {
   });
 
   afterEach(() => http.verify());
+
+  it('REQ-007: list("Active") sends GET /api/loans?status=Active', async () => {
+    const result = firstValueFrom(api.list('Active'));
+    const request = http.expectOne('/api/loans?status=Active');
+    request.flush([]);
+
+    expect(request.request.method).toBe('GET');
+    expect(await result).toEqual([]);
+  });
 
   it('REQ-004/REQ-006: create() sends POST /api/loans with drone, group and accessories', async () => {
     const loan: Loan = {

@@ -14,6 +14,14 @@
   vertical-align: middle;
 }
 
+.table tbody tr {
+  transition: background-color var(--ease);
+}
+
+.table tbody tr:hover {
+  background: var(--surface);
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -53,7 +61,8 @@
 
   .table .drone {
     grid-column: 1 / -1;
-    color: var(--muted);
+    margin-bottom: var(--space-2);
+    font-weight: 500;
   }
 
   .table td[data-label]::before {

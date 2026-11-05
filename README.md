@@ -39,7 +39,8 @@ SQLite
 ## 🛠️ Tech-Stack
 
 - **Backend:** C#, ASP.NET Core 10 Web API, Entity Framework Core, SQLite
-- **Frontend:** Angular, TypeScript
+- **Frontend:** Angular 22, TypeScript, Signal Forms, Vitest
+- **Tests:** xUnit (Backend), Vitest (Frontend)
 - **Werkzeuge:** VS Code, Git/GitHub, GitHub CLI (`gh`), OpenSpec, KI-Coding-Agent
 
 ## 📚 Domänenmodell (Ubiquitous Language)
@@ -60,6 +61,18 @@ SQLite
 - Zurückgegebene Ausleihen bleiben gespeichert.
 - Akkus und Propeller werden nur als Menge geführt.
 - Die Verfügbarkeit ergibt sich aus der aktiven Ausleihe (kein eigenes Statusfeld).
+
+## 🖥️ Bedienung
+
+| Seite | Pfad | Was man dort tut | Anforderung |
+|---|---|---|---|
+| Drones | `/drones` | Drohnen mit Status (Available / Loaned) sehen, neue Drohne anlegen | REQ-001, REQ-002 |
+| Student groups | `/student-groups` | Gruppen sehen und anlegen | REQ-003 |
+| New loan | `/loans/new` | Drohne mit Akkus und Propellern an eine Gruppe ausleihen | REQ-004 – REQ-006 |
+| Active loans | `/loans` | Ausgeliehene Drohnen sehen und zurückgeben | REQ-007 – REQ-009 |
+| History | `/loans/history` | Alle zurückgegebenen Ausleihen | REQ-010 |
+
+Fehlermeldungen (z. B. "Drone … already has an active loan.") kommen immer vom Backend; das Frontend prüft keine Fachregeln.
 
 ## 📋 Anforderungen
 
@@ -105,16 +118,22 @@ Problem → Requirements → DDD → OpenSpec → Tasks → GitHub Issues
 ## 📁 Projektstruktur
 
 ```
-drone-inventory/
-├── backend/DroneInventory.Api/
-├── frontend/drone-inventory-ui/
-├── docs/requirements.md   # Anforderungen REQ-001 … REQ-010
+dronenverwaltung/
+├── backend/
+│   ├── DroneInventory.slnx
+│   ├── DroneInventory.Api/        # Web API: Domain, Data (EF Core, Migrationen), Services, Controllers
+│   └── DroneInventory.Api.Tests/  # xUnit: Domain-, Datenbank-, Service- und API-Tests
+├── frontend/drone-inventory-ui/   # Angular: core/ (API-Services, Models), features/ (Seiten)
+├── docs/
+│   ├── requirements.md            # Anforderungen REQ-001 … REQ-010
+│   └── end-to-end-check.md        # Testprotokoll: Beispiel aus dem Auftrag, einmal komplett
 ├── openspec/
 │   ├── specs/       # aktueller Sollzustand
 │   ├── changes/     # geplante Änderungen
 │   └── config.yaml
 ├── .claude/skills/  # Skills für Claude Code
 ├── .agents/skills/  # Skills für Codex
+├── .config/dotnet-tools.json      # lokales Tool dotnet-ef
 ├── AGENTS.md        # Agentenregeln (Codex, Claude Code liest sie über CLAUDE.md)
 ├── CLAUDE.md
 └── README.md
@@ -158,6 +177,10 @@ dotnet test backend/DroneInventory.slnx
 cd frontend/drone-inventory-ui
 npx ng test --watch=false
 ```
+
+**Neu anfangen** – Backend stoppen und `backend/DroneInventory.Api/droneinventory.db*` löschen; beim nächsten Start wird die Datenbank leer neu angelegt.
+
+Den kompletten Ablauf aus dem Auftrag (anlegen, ausleihen, zurückgeben, Historie, Neustart) beschreibt [`docs/end-to-end-check.md`](docs/end-to-end-check.md).
 
 ## 🔗 Traceability
 

@@ -1,38 +1,35 @@
 /*
- * Base styles for Drone Lending – dark "cockpit" theme (change improve-frontend-design, task 1.1).
- * Direction: the on-screen display of a drone camera. Night navy instead of black,
- * signal yellow for drones that are out (Loaned), teal for drones in the cabinet (Available).
- * The one memorable element: viewfinder corner brackets on tiles (.frame).
+ * Base styles for Drone Lending – "dark, grown-up" (change improve-frontend-design, task 1.1).
+ * Near-neutral graphite, almost no color: color only means status (Available, Loaned) or an error.
+ * The one memorable element: the narrow status bar on the left edge of a row (.status-row).
  *
- * Contrast (WCAG): every text and status color is at least 4.5:1 on --bg, --panel
- * and --panel-raised (text 11.3–14.9, text-muted 5.5–7.2, loaned 7.9–10.4,
- * available 7.4–9.8, error 4.8–6.3).
+ * Contrast (WCAG): every text and status color is at least 4.5:1 on --bg, --surface and --raised
+ * (text 12.8–15.5, muted 4.8–5.9, available 6.9–8.3, loaned 6.6–8.0, error 5.1–6.2).
  */
 
 :root {
   color-scheme: dark;
 
   /* Colors */
-  --bg: #0d1b26;
-  --panel: #142735;
-  --panel-raised: #1b3243;
-  --line: #2a4458;
-  --text: #e6eef4;
-  --text-muted: #93a9ba;
-  --loaned: #f2c230;
-  --available: #3dd9b0;
-  --error: #ff6b5e;
-  --error-surface: #3a1e22;
+  --bg: #161718;
+  --surface: #1d1f21;
+  --raised: #25282b;
+  --line: #303438;
+  --text: #edeeef;
+  --muted: #8e949a;
+  --available: #7fbf8e;
+  --loaned: #d9a441;
+  --error: #e5786d;
 
   /* Type */
-  --font-body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Barlow Semi Condensed', 'Barlow', system-ui, sans-serif;
+  --font: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
-  --text-lg: 1.25rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.375rem;
   --text-xl: 1.75rem;
-  --text-2xl: 2.5rem;
+  --text-2xl: 2.25rem;
 
   /* Spacing */
   --space-1: 0.25rem;
@@ -43,8 +40,12 @@
   --space-6: 2rem;
   --space-8: 3rem;
 
-  --radius: 6px;
-  --focus: 0 0 0 3px var(--loaned);
+  /* Radius: controls small, containers a bit larger */
+  --radius-sm: 6px;
+  --radius: 10px;
+
+  --focus: 0 0 0 2px var(--bg), 0 0 0 4px var(--text);
+  --ease: 120ms ease-out;
 }
 
 *,
@@ -61,55 +62,62 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-body);
+  font-family: var(--font);
   font-size: var(--text-base);
   line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1,
 h2,
 h3 {
-  margin: 0 0 var(--space-3);
-  font-family: var(--font-display);
-  font-weight: 600;
-  line-height: 1.1;
-  letter-spacing: 0.01em;
+  margin: 0 0 var(--space-2);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
 }
 
 h1 {
   font-size: var(--text-2xl);
+  letter-spacing: -0.02em;
 }
 
 h2 {
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
 }
 
 h3 {
-  font-size: var(--text-lg);
+  font-size: var(--text-md);
 }
 
 p {
   margin: 0 0 var(--space-4);
-  max-width: 70ch;
+  max-width: 68ch;
 }
 
 .lead {
-  color: var(--text-muted);
-  font-size: var(--text-lg);
+  margin-bottom: var(--space-6);
+  color: var(--muted);
+  font-size: var(--text-md);
 }
 
 a {
-  color: var(--available);
+  color: var(--text);
+  text-decoration-color: var(--muted);
   text-underline-offset: 0.2em;
+}
+
+a:hover {
+  text-decoration-color: var(--text);
 }
 
 :focus-visible {
   outline: none;
   box-shadow: var(--focus);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
 }
 
-/* Buttons */
+/* Buttons: one light primary, one quiet secondary */
 .button {
   display: inline-flex;
   align-items: center;
@@ -118,43 +126,51 @@ a {
   min-height: 2.75rem;
   padding: var(--space-2) var(--space-4);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel-raised);
+  border-radius: var(--radius-sm);
+  background: var(--raised);
   color: var(--text);
   font: inherit;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
+  transition: background-color var(--ease), border-color var(--ease), transform var(--ease);
 }
 
 .button:hover {
-  border-color: var(--text-muted);
+  border-color: var(--muted);
+}
+
+.button:active {
+  transform: translateY(1px);
 }
 
 .button-primary {
-  border-color: var(--available);
-  background: var(--available);
+  border-color: var(--text);
+  background: var(--text);
   color: var(--bg);
 }
 
 .button-primary:hover {
-  border-color: var(--text);
-  background: var(--text);
+  border-color: #ffffff;
+  background: #ffffff;
 }
 
 .button:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
+  transform: none;
 }
 
 /* Forms */
 .field {
   display: grid;
-  gap: var(--space-1);
-  margin-bottom: var(--space-4);
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
 }
 
 .field label {
-  font-weight: 600;
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
 }
 
 .field input,
@@ -164,36 +180,40 @@ a {
   min-height: 2.75rem;
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--bg);
+  border-radius: var(--radius-sm);
+  background: var(--raised);
   color: var(--text);
   font: inherit;
+  transition: border-color var(--ease);
 }
 
 .field input::placeholder,
 .field textarea::placeholder {
-  color: var(--text-muted);
-  opacity: 0.8;
+  color: var(--muted);
 }
 
 .field input:hover,
 .field select:hover,
 .field textarea:hover {
-  border-color: var(--text-muted);
+  border-color: var(--muted);
+}
+
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+  border-color: var(--text);
+  box-shadow: none;
 }
 
 .field textarea {
-  min-height: 5rem;
+  min-height: 5.5rem;
   resize: vertical;
 }
 
-/* Tables */
+/* Tables: no box, rows separated by lines */
 .table {
   width: 100%;
   border-collapse: collapse;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
 }
 
 .table th,
@@ -201,17 +221,13 @@ a {
   padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--line);
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .table th {
-  color: var(--text-muted);
+  color: var(--muted);
   font-size: var(--text-sm);
-  font-weight: 600;
-}
-
-.table tbody tr:last-child td {
-  border-bottom: 0;
+  font-weight: 500;
 }
 
 .table .number {
@@ -223,23 +239,11 @@ a {
   overflow-x: auto;
 }
 
-/* Status: a glowing LED plus the word – color is never the only signal */
+/* Status as a word in its color – the bar comes from .status-row */
 .tag {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
-}
-
-.tag::before {
-  content: '';
-  width: 0.625rem;
-  height: 0.625rem;
-  border-radius: 50%;
-  background: currentColor;
-  box-shadow: 0 0 0.5rem currentColor;
 }
 
 .tag-available {
@@ -250,41 +254,49 @@ a {
   color: var(--loaned);
 }
 
-/* Viewfinder corner brackets, the memorable element: put .frame on a tile */
-.frame {
-  --corner: 0.875rem;
-  --corner-color: var(--text-muted);
+/* A row with the status bar on its left edge, the memorable element */
+.status-row {
+  --status: var(--line);
   position: relative;
-  padding: var(--space-4);
-  background:
-    linear-gradient(var(--corner-color), var(--corner-color)) top left / var(--corner) 2px,
-    linear-gradient(var(--corner-color), var(--corner-color)) top left / 2px var(--corner),
-    linear-gradient(var(--corner-color), var(--corner-color)) top right / var(--corner) 2px,
-    linear-gradient(var(--corner-color), var(--corner-color)) top right / 2px var(--corner),
-    linear-gradient(var(--corner-color), var(--corner-color)) bottom left / var(--corner) 2px,
-    linear-gradient(var(--corner-color), var(--corner-color)) bottom left / 2px var(--corner),
-    linear-gradient(var(--corner-color), var(--corner-color)) bottom right / var(--corner) 2px,
-    linear-gradient(var(--corner-color), var(--corner-color)) bottom right / 2px var(--corner),
-    var(--panel);
-  background-repeat: no-repeat;
+  padding-left: var(--space-5);
+}
+
+.status-row::before {
+  content: '';
+  position: absolute;
+  inset: var(--space-3) auto var(--space-3) 0;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--status);
+}
+
+.status-row.is-available {
+  --status: var(--available);
+}
+
+.status-row.is-loaned {
+  --status: var(--loaned);
 }
 
 /* Messages from the backend (404 / 409 / 422) */
 .alert {
   padding: var(--space-3) var(--space-4);
   margin-bottom: var(--space-4);
-  border: 1px solid var(--error);
-  border-left-width: 4px;
-  border-radius: var(--radius);
-  background: var(--error-surface);
+  border: 1px solid color-mix(in srgb, var(--error) 45%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--error) 10%, var(--bg));
   color: var(--error);
 }
 
+.alert p {
+  margin-bottom: var(--space-3);
+}
+
 .empty {
-  padding: var(--space-5);
+  padding: var(--space-6) var(--space-5);
   border: 1px dashed var(--line);
   border-radius: var(--radius);
-  color: var(--text-muted);
+  color: var(--muted);
   text-align: center;
 }
 
@@ -292,12 +304,14 @@ a {
 .add {
   max-width: 32rem;
   margin-top: var(--space-8);
-  padding-top: var(--space-5);
-  border-top: 1px solid var(--line);
+}
+
+.add h2 {
+  margin-bottom: var(--space-5);
 }
 
 .optional {
-  color: var(--text-muted);
+  color: var(--muted);
   font-weight: 400;
 }
 
@@ -310,15 +324,11 @@ a {
 .added {
   margin: var(--space-3) 0 0;
   color: var(--available);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .loading {
-  color: var(--text-muted);
-}
-
-.alert p {
-  margin-bottom: var(--space-3);
+  color: var(--muted);
 }
 
 @media (prefers-reduced-motion: reduce) {

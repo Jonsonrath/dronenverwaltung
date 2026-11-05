@@ -6,14 +6,14 @@ The first change delivered all required views (drone list, drone form, student g
 
 ## What Changes
 
-A frontend-only redesign as a dark "cockpit" UI. Same pages, same routes, same data, same REST calls.
+A frontend-only redesign as a dark, grown-up UI (revised after review: graphite instead of navy, almost no color, status as text with a bar). Same pages, same routes, same data, same REST calls.
 
-- **Dark theme** with high-contrast text and glowing status colors: Available and Loaned stay the two status colors, readable on dark backgrounds (WCAG AA contrast).
+- **Dark theme** in near-neutral graphite with high-contrast text; color only for status (Available, Loaned) and errors, readable on dark backgrounds (WCAG AA contrast).
 - **Navigation:** a side navigation on desktop; the bottom tab bar stays on phones.
-- **Drones page:** drones shown as **tiles like cabinet slots** – name, big status, description – instead of a table; the "Add a drone" form becomes a **side panel next to the tiles** on desktop (below on phones).
+- **Drones page:** drones as **rows with a status bar** – name, description, status – instead of a table; the "Add a drone" form becomes a **side panel next to the list** on desktop (below on phones).
 - **Student groups page:** list and "Add a student group" form side by side on desktop.
 - **New loan page:**
-  - drones as **clickable tiles** grouped into *Available* and *Loaned right now* instead of a dropdown (loaned drones stay selectable – the backend decides, as before)
+  - drones as **selectable rows** grouped into *Available* and *Loaned right now* instead of a dropdown (loaned drones stay selectable – the backend decides, as before)
   - student group as clickable chips
   - **+/- steppers** for batteries and propellers
 - **Active loans and history:** restyled for the dark theme; the existing phone layout (one block per loan) is kept.
@@ -21,7 +21,7 @@ A frontend-only redesign as a dark "cockpit" UI. Same pages, same routes, same d
 
 ### Out of Scope
 
-- Any backend or API change, any new data (e.g. showing which group has a loaned drone on the drone tile would need a new API field – a separate change)
+- Any backend or API change, any new data (e.g. showing which group has a loaned drone on the drone row would need a new API field – a separate change)
 - New features: search, filters, sorting, statistics, a dashboard, editing or deleting drones and groups
 - A light/dark switch – the app is dark only
 - Login, roles and everything else that was already out of scope in the first change

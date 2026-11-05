@@ -9,8 +9,8 @@
   margin: 0 0 var(--space-5);
   padding: var(--space-4);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--panel);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
 }
 
 .accessories legend {

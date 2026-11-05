@@ -48,7 +48,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 8. Integration and documentation
 
-- [ ] 8.1 Run the example from the assignment end to end (create TELLO-07 and Group 3, loan with 4 batteries / 8 propellers, check active loans, return, check history, restart backend, history still there); verify `dotnet test` and `npx ng test --watch=false` pass and update README run instructions if anything changed (#24)
+- [x] 8.1 Run the example from the assignment end to end (create TELLO-07 and Group 3, loan with 4 batteries / 8 propellers, check active loans, return, check history, restart backend, history still there); verify `dotnet test` and `npx ng test --watch=false` pass and update README run instructions if anything changed (#24)
 
 ## Workflow follow-up
 

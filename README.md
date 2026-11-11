@@ -192,4 +192,5 @@ Jede Codezeile ist rückführbar:
 
 ## 👥 Team
 
-_Teammitglieder hier eintragen._
+Luca Aigner
+Jonathan Rath

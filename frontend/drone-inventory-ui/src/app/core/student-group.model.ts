@@ -8,3 +8,8 @@ export interface StudentGroup {
 export interface CreateStudentGroupRequest {
   name: string;
 }
+
+/** Body of PUT /api/student-groups/{id} (REQ-011). */
+export interface RenameStudentGroupRequest {
+  name: string;
+}

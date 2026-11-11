@@ -22,6 +22,28 @@ public class StudentGroupTests
     }
 
     [Fact]
+    public void REQ_011_RenameChangesNameAndNormalizedName()
+    {
+        var group = new StudentGroup("Grupe 3");
+
+        group.Rename("  Group 3 ");
+
+        Assert.Equal("Group 3", group.Name);
+        Assert.Equal("GROUP 3", group.NormalizedName);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void REQ_011_RenameRejectsEmptyNameAndKeepsOldName(string name)
+    {
+        var group = new StudentGroup("Group 3");
+
+        Assert.Throws<ValidationException>(() => group.Rename(name));
+        Assert.Equal("Group 3", group.Name);
+    }
+
+    [Fact]
     public void REQ_003_TrimsName()
     {
         Assert.Equal("Group 3", new StudentGroup("  Group 3 ").Name);

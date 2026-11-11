@@ -3,13 +3,13 @@
     <h1>Schülergruppen</h1>
     <p class="lead">Wer eine Drohne ausleihen kann.</p>
   </div>
-  <button class="button button-primary" type="button" (click)="openSheet()">
+  <button class="button button-primary" type="button" (click)="openAdd()">
     <span class="plus" aria-hidden="true">+</span> Gruppe hinzufügen
   </button>
 </header>
 
-@if (added()) {
-  <p class="added" role="status">{{ added() }} hinzugefügt.</p>
+@if (notice()) {
+  <p class="added" role="status">{{ notice() }}</p>
 }
 
 <section class="inventory" aria-label="Schülergruppen">
@@ -32,6 +32,24 @@
             } @else {
               <span class="no-drone">keine Drohne</span>
             }
+            <span class="group-actions">
+              <button
+                class="button"
+                type="button"
+                [attr.aria-label]="group.name + ' umbenennen'"
+                (click)="openRename(group)"
+              >
+                Umbenennen
+              </button>
+              <button
+                class="button"
+                type="button"
+                [attr.aria-label]="group.name + ' löschen'"
+                (click)="openDelete(group)"
+              >
+                Löschen
+              </button>
+            </span>
           </li>
         }
       </ul>
@@ -41,7 +59,7 @@
   }
 </section>
 
-<dialog #sheet class="sheet" aria-labelledby="add-group-heading" (click)="closeOnBackdrop($event)">
+<dialog #addSheet class="sheet" aria-labelledby="add-group-heading" (click)="closeOnBackdrop($event)">
   <div class="sheet-body">
     <h2 id="add-group-heading">Gruppe hinzufügen</h2>
 
@@ -59,11 +77,56 @@
       </div>
 
       <div class="sheet-actions">
-        <button class="button" type="button" (click)="closeSheet()">Abbrechen</button>
+        <button class="button" type="button" (click)="closeAdd()">Abbrechen</button>
         <button class="button button-primary" type="submit" [disabled]="groupForm().submitting()">
           {{ groupForm().submitting() ? 'Wird hinzugefügt…' : 'Hinzufügen' }}
         </button>
       </div>
     </form>
+  </div>
+</dialog>
+
+<dialog #renameSheet class="sheet" aria-labelledby="rename-group-heading" (click)="closeOnBackdrop($event)">
+  <div class="sheet-body">
+    <h2 id="rename-group-heading">{{ renaming()?.name }} umbenennen</h2>
+
+    <form class="rename-form" [formRoot]="renameForm">
+      @if (renameError()) {
+        <p class="alert" role="alert">{{ renameError() }}</p>
+      }
+
+      <div class="field">
+        <label for="group-new-name">Neuer Name</label>
+        <input id="group-new-name" type="text" autocomplete="off" [formField]="renameForm.name" />
+        @if (renameForm.name().touched() && renameForm.name().invalid()) {
+          <p class="field-error">{{ renameForm.name().errors()[0].message }}</p>
+        }
+      </div>
+
+      <div class="sheet-actions">
+        <button class="button" type="button" (click)="closeRename()">Abbrechen</button>
+        <button class="button button-primary" type="submit" [disabled]="renameForm().submitting()">
+          {{ renameForm().submitting() ? 'Wird umbenannt…' : 'Umbenennen' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<dialog #deleteSheet class="sheet" aria-labelledby="delete-group-heading" (click)="closeOnBackdrop($event)">
+  <div class="sheet-body delete-sheet">
+    <h2 id="delete-group-heading">{{ deleting()?.name }} löschen?</h2>
+    <p>Die Gruppe verschwindet aus der Liste. Das geht nur, wenn sie noch nie eine Drohne ausgeliehen hat.</p>
+
+    @if (deleteError()) {
+      <p class="alert" role="alert">{{ deleteError() }}</p>
+    }
+
+    <div class="sheet-actions">
+      <button class="button" type="button" (click)="closeDelete()">Abbrechen</button>
+      <button class="button button-primary confirm-delete" type="button" [disabled]="deleteBusy()" (click)="confirmDelete()">
+        {{ deleteBusy() ? 'Wird gelöscht…' : 'Löschen' }}
+      </button>
+    </div>
   </div>
 </dialog>

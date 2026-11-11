@@ -1,40 +1,173 @@
-/* Drones (design §3): one row per drone with the status bar on the left. List + form layout: .layout in styles.css. */
+/*
+ * Drones (design §7): the page is the cabinet. One bay per drone – a filled glyph when the drone
+ * is in, a dashed outline when it is out. List + form layout: .layout in styles.css.
+ */
 
+/* "3 of 4 in the cabinet" with one segment per drone */
+.cabinet {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: end;
+}
+
+.cabinet-count {
+  margin: 0;
+  color: var(--muted);
+}
+
+.figure {
+  margin-right: 0.15em;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.cabinet-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+  max-width: 20rem;
+}
+
+.cabinet-bar span {
+  width: 1.5rem;
+  height: 0.5rem;
+  border-radius: 2px;
+  background: var(--status);
+}
+
+.cabinet-bar .is-loaned {
+  background: none;
+  box-shadow: inset 0 0 0 1.5px var(--status);
+}
+
+/* Bays */
 .drone-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: var(--space-4);
   margin: 0;
   padding: 0;
   list-style: none;
-  border-top: 1px solid var(--line);
 }
 
-.drone-list li {
+.bay {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: baseline;
-  column-gap: var(--space-4);
-  padding-top: var(--space-4);
-  padding-bottom: var(--space-4);
-  padding-right: var(--space-2);
-  border-bottom: 1px solid var(--line);
-  transition: background-color var(--ease);
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-areas:
+    'glyph tag'
+    'name name'
+    'description description'
+    'action action';
+  align-items: start;
+  min-height: 12.5rem;
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  transition: border-color var(--ease);
 }
 
-.drone-list li:hover {
-  background: var(--surface);
+.bay:hover {
+  border-color: var(--muted);
+}
+
+/* An empty bay: the drone is out */
+.bay.is-loaned {
+  border-style: dashed;
+  background: none;
+}
+
+app-drone-glyph {
+  grid-area: glyph;
+  width: 3.5rem;
+  margin-bottom: var(--space-4);
+}
+
+.tag {
+  grid-area: tag;
 }
 
 .name {
-  font-size: var(--text-md);
+  grid-area: name;
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
   font-weight: 600;
+  line-height: 1.15;
   overflow-wrap: anywhere;
 }
 
 .description {
-  grid-column: 1 / -1;
+  grid-area: description;
+  margin-top: var(--space-1);
   color: var(--muted);
   font-size: var(--text-sm);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
-.description:empty {
-  display: none;
+.bay-action {
+  grid-area: action;
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin: var(--space-3) calc(-1 * var(--space-4)) calc(-1 * var(--space-4));
+  padding: 0 var(--space-4);
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 var(--radius) var(--radius);
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color var(--ease), color var(--ease);
+}
+
+.bay.is-loaned .bay-action {
+  border-top-style: dashed;
+}
+
+.bay-action:hover {
+  background: var(--raised);
+  color: var(--accent);
+}
+
+/* Phone: one bay per line, glyph on the left */
+@media (max-width: 39.99rem) {
+  .cabinet {
+    justify-items: start;
+  }
+
+  .cabinet-bar {
+    justify-content: flex-start;
+  }
+
+  .drone-list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+
+  .bay {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto;
+    grid-template-areas:
+      'glyph name tag'
+      'glyph description description'
+      'action action action';
+    column-gap: var(--space-3);
+    min-height: 0;
+  }
+
+  app-drone-glyph {
+    width: 2.75rem;
+    margin-bottom: 0;
+  }
+
+  .name {
+    font-size: var(--text-md);
+  }
 }

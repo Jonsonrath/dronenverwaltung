@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { Drone } from '../../core/drone.model';
 import { Loan } from '../../core/loan.model';
 import { StudentGroup } from '../../core/student-group.model';
@@ -193,5 +193,62 @@ describe('New loan page', () => {
     expect(page.querySelector('form')).toBeNull();
     expect(page.querySelector('a[href="/drones"]')?.textContent).toBe('Add a drone');
     expect(page.querySelector('a[href="/student-groups"]')?.textContent).toBe('Add a student group');
+  });
+
+  it('reads the choice back on the loan slip before it is sent', async () => {
+    const page = await load();
+    const slip = () => [...page.querySelectorAll('.slip dd')].map((value) => value.textContent?.trim());
+    expect(slip()).toEqual(['Not chosen yet', 'Not chosen yet', '0', '0']);
+
+    pick(page, 'drones', '7');
+    pick(page, 'groups', '3');
+    type(page, 'loan-batteries', '4');
+    fixture.detectChanges();
+
+    expect(slip()).toEqual(['TELLO-07', 'Group 3', '4', '0']);
+  });
+});
+
+// Shortcut "Loan this drone" from a bay of the drones page: /loans/new?drone=<id>.
+describe('New loan page opened from a drone bay', () => {
+  let http: HttpTestingController;
+
+  async function open(drone: string) {
+    TestBed.configureTestingModule({
+      imports: [NewLoan],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({ drone }) } } },
+      ],
+    });
+    const fixture = TestBed.createComponent(NewLoan);
+    http = TestBed.inject(HttpTestingController);
+    fixture.detectChanges();
+    http.expectOne('/api/drones').flush([
+      { id: 2, name: 'TELLO-02', description: '', status: 'Loaned' },
+      { id: 7, name: 'TELLO-07', description: '', status: 'Available' },
+    ]);
+    http.expectOne('/api/student-groups').flush([{ id: 3, name: 'Group 3' }]);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  afterEach(() => http.verify());
+
+  it('has the drone of the link chosen already', async () => {
+    const page = await open('7');
+
+    expect((page.querySelector('fieldset.drones input:checked') as HTMLInputElement | null)?.value).toBe('7');
+    expect(page.querySelector('.slip dd')?.textContent?.trim()).toBe('TELLO-07');
+  });
+
+  it('chooses nothing when the backend does not list that drone', async () => {
+    const page = await open('99');
+
+    expect(page.querySelector('fieldset.drones input:checked')).toBeNull();
+    expect(page.querySelector('.slip dd')?.textContent?.trim()).toBe('Not chosen yet');
   });
 });

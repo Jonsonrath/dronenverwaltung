@@ -1,5 +1,25 @@
-<h1>Drones</h1>
-<p class="lead">All drones in the cabinet and whether they are available.</p>
+<header class="page-head">
+  <div>
+    <h1>Drones</h1>
+    <p class="lead">Every drone of the cabinet and whether it is in its bay.</p>
+  </div>
+
+  @if (drones.hasValue() && drones.value().length > 0) {
+    <div class="cabinet">
+      <p class="cabinet-count">
+        <span class="figure">{{ availableCount() }}</span> of {{ drones.value().length }} in the cabinet
+      </p>
+      <div class="cabinet-bar" aria-hidden="true">
+        @for (drone of drones.value(); track drone.id) {
+          <span
+            [class.is-available]="drone.status === 'Available'"
+            [class.is-loaned]="drone.status === 'Loaned'"
+          ></span>
+        }
+      </div>
+    </div>
+  }
+</header>
 
 <div class="layout">
   <section class="inventory" aria-label="Drones">
@@ -15,10 +35,11 @@
         <ul class="drone-list">
           @for (drone of drones.value(); track drone.id) {
             <li
-              class="status-row"
+              class="bay"
               [class.is-available]="drone.status === 'Available'"
               [class.is-loaned]="drone.status === 'Loaned'"
             >
+              <app-drone-glyph [out]="drone.status === 'Loaned'" />
               <span class="name">{{ drone.name }}</span>
               @if (drone.status === 'Loaned') {
                 <span class="tag tag-loaned">Loaned</span>
@@ -26,6 +47,18 @@
                 <span class="tag tag-available">Available</span>
               }
               <span class="description">{{ drone.description }}</span>
+              <!-- Shortcuts only: whether a drone can be loaned or returned is decided by the backend. -->
+              @if (drone.status === 'Loaned') {
+                <a class="bay-action" routerLink="/loans" [attr.aria-label]="'Return ' + drone.name">Return this drone</a>
+              } @else {
+                <a
+                  class="bay-action"
+                  routerLink="/loans/new"
+                  [queryParams]="{ drone: drone.id }"
+                  [attr.aria-label]="'Loan ' + drone.name"
+                  >Loan this drone</a
+                >
+              }
             </li>
           }
         </ul>

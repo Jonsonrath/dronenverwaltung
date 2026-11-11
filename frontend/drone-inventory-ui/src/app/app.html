@@ -1,12 +1,13 @@
 <header class="bar">
   <a class="brand" routerLink="/drones">
     <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-      <circle cx="8" cy="8" r="5" />
-      <circle cx="24" cy="8" r="5" />
-      <circle cx="8" cy="24" r="5" />
-      <circle cx="24" cy="24" r="5" />
-      <path d="M11 11 L21 21 M21 11 L11 21" />
-      <rect x="12.5" y="12.5" width="7" height="7" rx="1.5" />
+      <rect class="brand-tile" width="32" height="32" rx="8" />
+      <path d="M12 12l8 8M20 12l-8 8" />
+      <circle cx="9.5" cy="9.5" r="4" />
+      <circle cx="22.5" cy="9.5" r="4" />
+      <circle cx="9.5" cy="22.5" r="4" />
+      <circle cx="22.5" cy="22.5" r="4" />
+      <rect class="brand-body" x="13" y="12.5" width="6" height="7" rx="2" />
     </svg>
     <span>Drone Lending</span>
   </a>
@@ -19,8 +20,38 @@
         routerLinkActive="is-active"
         [routerLinkActiveOptions]="{ exact: true }"
         ariaCurrentWhenActive="page"
-        >{{ link.label }}</a
       >
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          @switch (link.icon) {
+            @case ('drones') {
+              <path d="M9.5 9.5l5 5M14.5 9.5l-5 5" />
+              <circle cx="6.5" cy="6.5" r="3" />
+              <circle cx="17.5" cy="6.5" r="3" />
+              <circle cx="6.5" cy="17.5" r="3" />
+              <circle cx="17.5" cy="17.5" r="3" />
+            }
+            @case ('groups') {
+              <circle cx="9" cy="8" r="3.25" />
+              <path d="M3 19.5c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+              <circle cx="17.25" cy="9" r="2.5" />
+              <path d="M17 13.6c2.3.3 4 2.4 4 5.4" />
+            }
+            @case ('new') {
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 8v8M8 12h8" />
+            }
+            @case ('active') {
+              <path d="M14 4h6v6M20 4l-8.5 8.5" />
+              <path d="M18.5 13.5V18a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7.5a2 2 0 0 1 2-2h4.5" />
+            }
+            @case ('history') {
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3.25 2" />
+            }
+          }
+        </svg>
+        <span class="tab-label">{{ link.label }}</span>
+      </a>
     }
   </nav>
 </header>

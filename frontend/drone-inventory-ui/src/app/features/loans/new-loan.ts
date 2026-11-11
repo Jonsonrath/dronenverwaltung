@@ -1,19 +1,20 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { form, FormField, FormRoot, required } from '@angular/forms/signals';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { DroneApi } from '../../core/drone-api';
 import { LoanApi } from '../../core/loan-api';
 import { Loan } from '../../core/loan.model';
 import { problemMessage } from '../../core/problem-message';
 import { StudentGroupApi } from '../../core/student-group-api';
+import { DroneGlyph } from '../../shared/drone-glyph';
 import { QuantityStepper } from '../../shared/quantity-stepper';
 
 /** Form to loan a drone with batteries and propellers to a student group (REQ-004, REQ-006). */
 @Component({
   selector: 'app-new-loan',
-  imports: [FormField, FormRoot, RouterLink, QuantityStepper],
+  imports: [FormField, FormRoot, RouterLink, QuantityStepper, DroneGlyph],
   templateUrl: './new-loan.html',
   styleUrl: './new-loan.css',
 })
@@ -40,7 +41,7 @@ export class NewLoan {
     { key: 'loaned', label: 'Loaned right now', drones: this.loanedDrones() },
   ]);
 
-  /** Select values are strings; the ids are converted to numbers when the loan is sent. */
+  /** Radio values are strings; the ids are converted to numbers when the loan is sent. */
   protected readonly newLoan = signal({ droneId: '', studentGroupId: '', batteries: 0, propellers: 0 });
 
   /** Message from the backend, e.g. 409 drone already loaned or 422 negative quantity. */
@@ -48,6 +49,31 @@ export class NewLoan {
 
   /** The loan that was created last, for the confirmation text. */
   protected readonly created = signal<Loan | undefined>(undefined);
+
+  /** The chosen drone and group, for the loan slip above the button. */
+  protected readonly chosenDrone = computed(() =>
+    this.drones.hasValue() ? this.drones.value().find((d) => d.id.toString() === this.newLoan().droneId) : undefined,
+  );
+  protected readonly chosenGroup = computed(() =>
+    this.groups.hasValue()
+      ? this.groups.value().find((g) => g.id.toString() === this.newLoan().studentGroupId)
+      : undefined,
+  );
+
+  /** Id from the link "Loan this drone" on the drones page (`/loans/new?drone=7`), used once. */
+  private requestedDroneId = inject(ActivatedRoute).snapshot.queryParamMap.get('drone');
+
+  // Preselects that drone as soon as the list is loaded – only if the backend lists it.
+  private readonly preselect = effect(() => {
+    const id = this.requestedDroneId;
+    if (!id || !this.drones.hasValue()) {
+      return;
+    }
+    this.requestedDroneId = null;
+    if (this.drones.value().some((drone) => drone.id.toString() === id)) {
+      untracked(() => this.newLoan.update((loan) => ({ ...loan, droneId: id })));
+    }
+  });
 
   protected readonly loanForm = form(
     this.newLoan,

@@ -1,5 +1,9 @@
-<h1>New loan</h1>
-<p class="lead">Hand out a drone with batteries and propellers to a group.</p>
+<header class="page-head">
+  <div>
+    <h1>New loan</h1>
+    <p class="lead">Hand out a drone with batteries and propellers to a group.</p>
+  </div>
+</header>
 
 @if (drones.error() || groups.error()) {
   <div class="alert" role="alert">
@@ -20,28 +24,35 @@
 } @else {
   <form class="loan-form" [formRoot]="loanForm">
     <fieldset class="drones">
-      <legend>Drone</legend>
+      <legend><span class="step-no" aria-hidden="true">1</span> Drone</legend>
       <!-- Loaned drones stay selectable: the backend decides and answers 409 (REQ-005). -->
       @for (group of droneGroups(); track group.label) {
         @if (group.drones.length > 0) {
           <div class="drone-group" [attr.data-group]="group.key">
             <p class="group-label">{{ group.label }}</p>
-            @for (drone of group.drones; track drone.id) {
-              <label
-                class="choice status-row"
-                [class.is-available]="drone.status === 'Available'"
-                [class.is-loaned]="drone.status === 'Loaned'"
-              >
-                <input type="radio" [value]="drone.id.toString()" [formField]="loanForm.droneId" />
-                <span class="name">{{ drone.name }}</span>
-                <span class="tag" [class.tag-available]="drone.status === 'Available'" [class.tag-loaned]="drone.status === 'Loaned'">
-                  {{ drone.status }}
-                </span>
-                @if (drone.description) {
-                  <span class="description">{{ drone.description }}</span>
-                }
-              </label>
-            }
+            <div class="choices">
+              @for (drone of group.drones; track drone.id) {
+                <label
+                  class="choice"
+                  [class.is-available]="drone.status === 'Available'"
+                  [class.is-loaned]="drone.status === 'Loaned'"
+                >
+                  <input type="radio" [value]="drone.id.toString()" [formField]="loanForm.droneId" />
+                  <app-drone-glyph [out]="drone.status === 'Loaned'" />
+                  <span class="name">{{ drone.name }}</span>
+                  <span
+                    class="tag"
+                    [class.tag-available]="drone.status === 'Available'"
+                    [class.tag-loaned]="drone.status === 'Loaned'"
+                  >
+                    {{ drone.status }}
+                  </span>
+                  @if (drone.description) {
+                    <span class="description">{{ drone.description }}</span>
+                  }
+                </label>
+              }
+            </div>
           </div>
         }
       }
@@ -52,7 +63,7 @@
 
     <div class="details">
       <fieldset class="groups">
-        <legend>Student group</legend>
+        <legend><span class="step-no" aria-hidden="true">2</span> Student group</legend>
         <div class="chips">
           @for (group of groups.value(); track group.id) {
             <label class="chip">
@@ -67,7 +78,7 @@
       </fieldset>
 
       <fieldset class="accessories">
-        <legend>Accessories</legend>
+        <legend><span class="step-no" aria-hidden="true">3</span> Accessories</legend>
         <div class="field">
           <label for="loan-batteries">Batteries</label>
           <app-quantity-stepper label="batteries" inputId="loan-batteries" [formField]="loanForm.batteries" />
@@ -77,6 +88,26 @@
           <app-quantity-stepper label="propellers" inputId="loan-propellers" [formField]="loanForm.propellers" />
         </div>
       </fieldset>
+
+      <!-- The loan slip: what will be sent, read back before the button. -->
+      <dl class="slip">
+        <div>
+          <dt>Drone</dt>
+          <dd [class.is-open]="!chosenDrone()">{{ chosenDrone()?.name ?? 'Not chosen yet' }}</dd>
+        </div>
+        <div>
+          <dt>Student group</dt>
+          <dd [class.is-open]="!chosenGroup()">{{ chosenGroup()?.name ?? 'Not chosen yet' }}</dd>
+        </div>
+        <div>
+          <dt>Batteries</dt>
+          <dd>{{ newLoan().batteries }}</dd>
+        </div>
+        <div>
+          <dt>Propellers</dt>
+          <dd>{{ newLoan().propellers }}</dd>
+        </div>
+      </dl>
 
       @if (saveError()) {
         <p class="alert" role="alert">{{ saveError() }}</p>

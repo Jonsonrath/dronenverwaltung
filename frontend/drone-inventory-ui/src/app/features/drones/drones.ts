@@ -1,14 +1,16 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { form, FormField, FormRoot, required } from '@angular/forms/signals';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { DroneApi } from '../../core/drone-api';
 import { problemMessage } from '../../core/problem-message';
+import { DroneGlyph } from '../../shared/drone-glyph';
 
 /** Drone list with the derived status (REQ-002) and the form to add a drone (REQ-001). */
 @Component({
   selector: 'app-drones',
-  imports: [FormField, FormRoot],
+  imports: [FormField, FormRoot, RouterLink, DroneGlyph],
   templateUrl: './drones.html',
   styleUrl: './drones.css',
 })
@@ -16,6 +18,11 @@ export class Drones {
   private readonly droneApi = inject(DroneApi);
 
   protected readonly drones = rxResource({ stream: () => this.droneApi.list() });
+
+  /** How many of the listed drones the backend reports as Available – only counted, not decided here. */
+  protected readonly availableCount = computed(() =>
+    this.drones.hasValue() ? this.drones.value().filter((drone) => drone.status === 'Available').length : 0,
+  );
 
   protected readonly newDrone = signal({ name: '', description: '' });
 

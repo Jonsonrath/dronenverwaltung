@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
-/** App shell: top bar with the navigation and the routed page below. */
+/** App shell: navigation (side, top or bottom, depending on the width) and the routed page. */
 @Component({
   imports: [RouterOutlet, RouterLink, RouterLinkActive],
   selector: 'app-root',
@@ -10,10 +10,10 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 })
 export class App {
   protected readonly links = [
-    { path: '/drones', label: 'Drones' },
-    { path: '/student-groups', label: 'Student groups' },
-    { path: '/loans/new', label: 'New loan' },
-    { path: '/loans', label: 'Active loans' },
-    { path: '/loans/history', label: 'History' },
+    { path: '/drones', label: 'Drones', icon: 'drones' },
+    { path: '/student-groups', label: 'Student groups', icon: 'groups' },
+    { path: '/loans/new', label: 'New loan', icon: 'new' },
+    { path: '/loans', label: 'Active loans', icon: 'active' },
+    { path: '/loans/history', label: 'History', icon: 'history' },
   ];
 }

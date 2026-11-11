@@ -1,6 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { Drone } from '../../core/drone.model';
 import { Drones } from './drones';
 
@@ -12,7 +13,7 @@ describe('Drones page', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [Drones],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
     });
     fixture = TestBed.createComponent(Drones);
     http = TestBed.inject(HttpTestingController);
@@ -50,6 +51,33 @@ describe('Drones page', () => {
     expect(page.querySelector('.drone-list li:last-child .tag')?.classList).toContain('tag-available');
     expect(page.querySelector('.drone-list li:first-child')?.classList).toContain('is-loaned');
     expect(page.querySelector('.drone-list li:last-child')?.classList).toContain('is-available');
+  });
+
+  it('counts how many of the listed drones are in the cabinet', async () => {
+    const page = await respond([
+      { id: 1, name: 'TELLO-02', description: '', status: 'Loaned' },
+      { id: 2, name: 'TELLO-07', description: '', status: 'Available' },
+    ]);
+
+    expect(page.querySelector('.cabinet-count')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      '1 of 2 in the cabinet',
+    );
+  });
+
+  it('links an available drone to the loan form and a loaned drone to the active loans', async () => {
+    const page = await respond([
+      { id: 1, name: 'TELLO-02', description: '', status: 'Loaned' },
+      { id: 2, name: 'TELLO-07', description: '', status: 'Available' },
+    ]);
+
+    const links = [...page.querySelectorAll('.drone-list li a')].map((a) => [
+      a.getAttribute('aria-label'),
+      a.getAttribute('href'),
+    ]);
+    expect(links).toEqual([
+      ['Return TELLO-02', '/loans'],
+      ['Loan TELLO-07', '/loans/new?drone=2'],
+    ]);
   });
 
   it('REQ-002: shows a message when there are no drones', async () => {

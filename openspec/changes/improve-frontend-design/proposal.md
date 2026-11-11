@@ -8,6 +8,8 @@ The first change delivered all required views (drone list, drone form, student g
 
 A frontend-only redesign as a dark, grown-up UI (revised after review: graphite instead of navy, almost no color, status as text with a bar). Same pages, same routes, same data, same REST calls.
 
+*Second revision (task 5.1), after the team used the merged UI:* clean, but too plain to be recognisable. The app gets an identity from its subject, the drone cabinet – see the last bullet group and design §7.
+
 - **Dark theme** in near-neutral graphite with high-contrast text; color only for status (Available, Loaned) and errors, readable on dark backgrounds (WCAG AA contrast).
 - **Navigation:** a side navigation on desktop; the bottom tab bar stays on phones.
 - **Drones page:** drones as **rows with a status bar** – name, description, status – instead of a table; the "Add a drone" form becomes a **side panel next to the list** on desktop (below on phones).
@@ -17,6 +19,13 @@ A frontend-only redesign as a dark, grown-up UI (revised after review: graphite 
   - student group as clickable chips
   - **+/- steppers** for batteries and propellers
 - **Active loans and history:** restyled for the dark theme; the existing phone layout (one block per loan) is kept.
+- **Second design pass (task 5.1):**
+  - one accent color (hi-vis yellow) for actions and the current page; green / blue only for Available / Loaned; a signage typeface (Barlow)
+  - navigation with icons in all three layouts
+  - drones page as the cabinet: "n of m in the cabinet" and one bay per drone with a drone glyph (filled = in, dashed outline = out)
+  - shortcut from a bay: "Loan this drone" opens the loan form with that drone chosen, "Return this drone" opens the active loans
+  - loan form in three numbered steps with a loan slip that reads the choice back before the button
+  - student groups as name plates, loans as one plate per loan
 - Unchanged on purpose: every request, every validation and every error message comes from the backend as before; the frontend still does not implement domain rules.
 
 ### Out of Scope
@@ -40,3 +49,4 @@ A frontend-only redesign as a dark, grown-up UI (revised after review: graphite 
 - **Tests:** existing Vitest tests that look for table rows or `<select>` elements are updated to the new markup; their assertions (what is shown, which request is sent, which backend message appears) stay the same. New tests for the steppers and the tile selection.
 - **No change** to the backend, the REST API, the database or the OpenSpec main specs.
 - **Dependencies:** none expected (plain CSS, no UI library).
+- **Second design pass:** new decorative component `shared/drone-glyph`, `public/favicon.svg`; the loan form reads the optional query parameter `drone` (a shortcut only – an unknown id is ignored, the backend still decides about every loan).

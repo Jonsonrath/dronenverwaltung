@@ -1,43 +1,49 @@
 <header class="page-head">
   <div>
-    <h1>Student groups</h1>
-    <p class="lead">Groups that can loan a drone.</p>
+    <h1>Schülergruppen</h1>
+    <p class="lead">Wer eine Drohne ausleihen kann.</p>
   </div>
-
-  @if (groups.hasValue() && groups.value().length > 0) {
-    <p class="count">
-      <span class="figure">{{ groups.value().length }}</span>
-      {{ groups.value().length === 1 ? 'group' : 'groups' }}
-    </p>
-  }
+  <button class="button button-primary" type="button" (click)="openSheet()">
+    <span class="plus" aria-hidden="true">+</span> Gruppe hinzufügen
+  </button>
 </header>
 
-<div class="layout">
-  <section class="inventory" aria-label="Student groups">
-    @if (groups.error()) {
-      <div class="alert" role="alert">
-        <p>
-          The student groups could not be loaded. Check that the backend is running, then try again.
-        </p>
-        <button class="button" type="button" (click)="groups.reload()">Try again</button>
-      </div>
-    } @else if (groups.hasValue()) {
-      @if (groups.value().length === 0) {
-        <p class="empty">No student groups yet. Add the first one with the form.</p>
-      } @else {
-        <ul class="groups" aria-label="Student groups">
-          @for (group of groups.value(); track group.id) {
-            <li>{{ group.name }}</li>
-          }
-        </ul>
-      }
-    } @else {
-      <p class="loading" aria-live="polite">Loading student groups…</p>
-    }
-  </section>
+@if (added()) {
+  <p class="added" role="status">{{ added() }} hinzugefügt.</p>
+}
 
-  <section class="add" aria-labelledby="add-group-heading">
-    <h2 id="add-group-heading">Add a student group</h2>
+<section class="inventory" aria-label="Schülergruppen">
+  @if (groups.error()) {
+    <div class="alert" role="alert">
+      <p>Die Schülergruppen konnten nicht geladen werden. Läuft das Backend? Dann erneut versuchen.</p>
+      <button class="button" type="button" (click)="groups.reload()">Erneut versuchen</button>
+    </div>
+  } @else if (groups.hasValue()) {
+    @if (groups.value().length === 0) {
+      <p class="empty">Noch keine Schülergruppen. Füge die erste hinzu.</p>
+    } @else {
+      <ul class="groups">
+        @for (group of groups.value(); track group.id) {
+          <li>
+            <span class="name">{{ group.name }}</span>
+            <!-- Which drone a group has is read from the active loans the backend lists. -->
+            @if (dronesByGroup().get(group.id); as drones) {
+              <span class="tag tag-loaned has-drone">hat {{ drones.join(', ') }}</span>
+            } @else {
+              <span class="no-drone">keine Drohne</span>
+            }
+          </li>
+        }
+      </ul>
+    }
+  } @else {
+    <p class="loading" aria-live="polite">Schülergruppen werden geladen…</p>
+  }
+</section>
+
+<dialog #sheet class="sheet" aria-labelledby="add-group-heading" (click)="closeOnBackdrop($event)">
+  <div class="sheet-body">
+    <h2 id="add-group-heading">Gruppe hinzufügen</h2>
 
     <form [formRoot]="groupForm">
       @if (saveError()) {
@@ -46,25 +52,18 @@
 
       <div class="field">
         <label for="group-name">Name</label>
-        <input
-          id="group-name"
-          type="text"
-          autocomplete="off"
-          placeholder="Group 3"
-          [formField]="groupForm.name"
-        />
+        <input id="group-name" type="text" autocomplete="off" placeholder="Gruppe 3" [formField]="groupForm.name" />
         @if (groupForm.name().touched() && groupForm.name().invalid()) {
           <p class="field-error">{{ groupForm.name().errors()[0].message }}</p>
         }
       </div>
 
-      <button class="button button-primary" type="submit" [disabled]="groupForm().submitting()">
-        {{ groupForm().submitting() ? 'Adding…' : 'Add student group' }}
-      </button>
-
-      @if (added()) {
-        <p class="added" role="status">{{ added() }} added.</p>
-      }
+      <div class="sheet-actions">
+        <button class="button" type="button" (click)="closeSheet()">Abbrechen</button>
+        <button class="button button-primary" type="submit" [disabled]="groupForm().submitting()">
+          {{ groupForm().submitting() ? 'Wird hinzugefügt…' : 'Hinzufügen' }}
+        </button>
+      </div>
     </form>
-  </section>
-</div>
+  </div>
+</dialog>

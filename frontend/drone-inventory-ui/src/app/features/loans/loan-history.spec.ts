@@ -48,28 +48,28 @@ describe('Loan history page', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('REQ-010: shows each returned loan with group, drone, accessories, loan date and return date', async () => {
+  it('REQ-010: shows each returned loan with drone, group, accessories, loan date and return date', async () => {
     const page = await respond(history);
 
     const rows = [...page.querySelectorAll('tbody tr')].map((row) =>
       [...row.querySelectorAll('td')].map((cell) => cell.textContent?.trim()),
     );
     expect(rows).toEqual([
-      ['Group 3', 'TELLO-07', '4', '8', '19.08.2026', '26.08.2026'],
-      ['Group 1', 'TELLO-02', '3', '4', '19.08.2026', '20.08.2026'],
+      ['TELLO-07', 'Group 3', '4', '8', '19.08.2026', '26.08.2026'],
+      ['TELLO-02', 'Group 1', '3', '4', '19.08.2026', '20.08.2026'],
     ]);
   });
 
   it('REQ-010: shows a message when nothing has been returned yet', async () => {
     const page = await respond([]);
 
-    expect(page.querySelector('.empty')?.textContent).toContain('No loan has been returned yet.');
+    expect(page.querySelector('.empty')?.textContent).toContain('Noch wurde keine Ausleihe zurückgegeben.');
     expect(page.querySelector('table')).toBeNull();
   });
 
   it('shows an error when the backend fails', async () => {
     const page = await respond(null, 500);
 
-    expect(page.querySelector('[role="alert"]')?.textContent).toContain('could not be loaded');
+    expect(page.querySelector('[role="alert"]')?.textContent).toContain('konnte nicht geladen werden');
   });
 });

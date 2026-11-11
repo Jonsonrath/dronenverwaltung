@@ -23,8 +23,8 @@ public class LoanItem
     {
         if (quantity < 0)
         {
-            var what = type == LoanItemType.Battery ? "batteries" : "propellers";
-            throw new ValidationException($"The number of {what} must not be negative.");
+            var what = type == LoanItemType.Battery ? "Akkus" : "Propeller";
+            throw new ValidationException($"Die Anzahl der {what} darf nicht negativ sein.");
         }
 
         Type = type;

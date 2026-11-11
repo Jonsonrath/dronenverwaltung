@@ -1,23 +1,8 @@
-/* Student groups: name plates in a grid; list + form layout: .layout in styles.css. */
-
-.count {
-  margin: 0;
-  color: var(--muted);
-}
-
-.figure {
-  margin-right: 0.15em;
-  color: var(--text);
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: 600;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
+/* Student groups (design §8): one plate per group with the drone it has right now. */
 
 .groups {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
   gap: var(--space-3);
   margin: 0;
   padding: 0;
@@ -26,13 +11,18 @@
 
 .groups li {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-3);
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
   min-height: 3.75rem;
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
+}
+
+.name {
   font-family: var(--font-display);
   font-size: var(--text-md);
   font-weight: 600;
@@ -40,15 +30,12 @@
   overflow-wrap: anywhere;
 }
 
-/* A head and shoulders, drawn with gradients – no extra markup, so the item text stays the name. */
-.groups li::before {
-  content: '';
-  flex: none;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 37%, var(--muted) 0 19%, transparent 21%),
-    radial-gradient(40% 30% at 50% 100%, var(--muted) 0 96%, transparent 100%),
-    var(--raised);
+/* A long list of drones may wrap inside the badge. */
+.has-drone {
+  white-space: normal;
+}
+
+.no-drone {
+  color: var(--muted);
+  font-size: var(--text-xs);
 }

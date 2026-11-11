@@ -66,13 +66,13 @@ SQLite
 
 | Seite | Pfad | Was man dort tut | Anforderung |
 |---|---|---|---|
-| Drones | `/drones` | Drohnen mit Status (Available / Loaned) sehen, neue Drohne anlegen | REQ-001, REQ-002 |
-| Student groups | `/student-groups` | Gruppen sehen und anlegen | REQ-003 |
-| New loan | `/loans/new` | Drohne mit Akkus und Propellern an eine Gruppe ausleihen | REQ-004 – REQ-006 |
-| Active loans | `/loans` | Ausgeliehene Drohnen sehen und zurückgeben | REQ-007 – REQ-009 |
-| History | `/loans/history` | Alle zurückgegebenen Ausleihen | REQ-010 |
+| Drohnen | `/drones` | Drohnen mit Status (Verfügbar / Ausgeliehen) sehen, neue Drohne hinzufügen | REQ-001, REQ-002 |
+| Schülergruppen | `/student-groups` | Gruppen sehen (mit der Drohne, die sie gerade haben) und hinzufügen | REQ-003 |
+| Neue Ausleihe | `/loans/new` | Drohne mit Akkus und Propellern an eine Gruppe ausleihen | REQ-004 – REQ-006 |
+| Aktive Ausleihen | `/loans` | Ausgeliehene Drohnen sehen und zurückgeben | REQ-007 – REQ-009 |
+| Verlauf | `/loans/history` | Alle zurückgegebenen Ausleihen | REQ-010 |
 
-Fehlermeldungen (z. B. "Drone … already has an active loan.") kommen immer vom Backend; das Frontend prüft keine Fachregeln.
+Fehlermeldungen (z. B. "Die Drohne … ist bereits ausgeliehen.") kommen immer vom Backend; das Frontend prüft keine Fachregeln.
 
 ## 📋 Anforderungen
 

@@ -26,6 +26,14 @@ A frontend-only redesign as a dark, grown-up UI (revised after review: graphite 
   - shortcut from a bay: "Loan this drone" opens the loan form with that drone chosen, "Return this drone" opens the active loans
   - loan form in three numbered steps with a loan slip that reads the choice back before the button
   - student groups as name plates, loans as one plate per loan
+- **Feedback round on the cabinet design (task 5.2):**
+  - no yellow: the accent is neutral (light on dark); green / blue stay reserved for the status
+  - the whole UI in German with one name per action (*Ausleihen*, *Zurückgeben*, *Hinzufügen*); the backend's error texts are German too, because the UI shows them as they are
+  - the same buttons everywhere; add forms open as a sheet from a "+" button in the page head
+  - loan form: loaned drones in a collapsed list (still selectable – the backend decides), summary and button as a bar that stays in view
+  - active loans: drone first, duration ("seit 3 Tagen"), loans running for more than a day are marked
+  - student groups: badge with the drone a group has right now (read from the active loans)
+  - smaller page titles, bottom navigation with the main action in the middle and labels of 13 px
 - Unchanged on purpose: every request, every validation and every error message comes from the backend as before; the frontend still does not implement domain rules.
 
 ### Out of Scope
@@ -49,4 +57,6 @@ A frontend-only redesign as a dark, grown-up UI (revised after review: graphite 
 - **Tests:** existing Vitest tests that look for table rows or `<select>` elements are updated to the new markup; their assertions (what is shown, which request is sent, which backend message appears) stay the same. New tests for the steppers and the tile selection.
 - **No change** to the backend, the REST API, the database or the OpenSpec main specs.
 - **Dependencies:** none expected (plain CSS, no UI library).
+- **Backend (task 5.2, texts only):** the messages of the domain exceptions and the ProblemDetails titles are German. Status codes, rules and the API stay the same; `LoanTests` asserts the two new texts.
+- **Not in this change:** renaming and deleting student groups – new behavior, a separate OpenSpec change with its own requirement.
 - **Second design pass:** new decorative component `shared/drone-glyph`, `public/favicon.svg`; the loan form reads the optional query parameter `drone` (a shortcut only – an unknown id is ignored, the backend still decides about every loan).

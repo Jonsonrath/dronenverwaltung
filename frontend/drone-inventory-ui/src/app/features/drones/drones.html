@@ -1,75 +1,85 @@
 <header class="page-head">
   <div>
-    <h1>Drones</h1>
-    <p class="lead">Every drone of the cabinet and whether it is in its bay.</p>
+    <h1>Drohnen</h1>
+    <p class="lead">Der Schrank auf einen Blick.</p>
   </div>
-
-  @if (drones.hasValue() && drones.value().length > 0) {
-    <div class="cabinet">
-      <p class="cabinet-count">
-        <span class="figure">{{ availableCount() }}</span> of {{ drones.value().length }} in the cabinet
-      </p>
-      <div class="cabinet-bar" aria-hidden="true">
-        @for (drone of drones.value(); track drone.id) {
-          <span
-            [class.is-available]="drone.status === 'Available'"
-            [class.is-loaned]="drone.status === 'Loaned'"
-          ></span>
-        }
-      </div>
-    </div>
-  }
+  <button class="button button-primary" type="button" (click)="openSheet()">
+    <span class="plus" aria-hidden="true">+</span> Drohne hinzufügen
+  </button>
 </header>
 
-<div class="layout">
-  <section class="inventory" aria-label="Drones">
-    @if (drones.error()) {
-      <div class="alert" role="alert">
-        <p>The drones could not be loaded. Check that the backend is running, then try again.</p>
-        <button class="button" type="button" (click)="drones.reload()">Try again</button>
-      </div>
-    } @else if (drones.hasValue()) {
-      @if (drones.value().length === 0) {
-        <p class="empty">No drones yet. Add the first one with the form.</p>
-      } @else {
-        <ul class="drone-list">
+@if (added()) {
+  <p class="added" role="status">{{ added() }} hinzugefügt. Sie ist jetzt verfügbar.</p>
+}
+
+<section class="inventory" aria-label="Drohnen">
+  @if (drones.error()) {
+    <div class="alert" role="alert">
+      <p>Die Drohnen konnten nicht geladen werden. Läuft das Backend? Dann erneut versuchen.</p>
+      <button class="button" type="button" (click)="drones.reload()">Erneut versuchen</button>
+    </div>
+  } @else if (drones.hasValue()) {
+    @if (drones.value().length === 0) {
+      <p class="empty">Noch keine Drohnen. Füge die erste hinzu.</p>
+    } @else {
+      <div class="cabinet">
+        <p class="cabinet-count">
+          <span class="figure">{{ availableCount() }}</span> von {{ drones.value().length }} im Schrank
+        </p>
+        <div class="cabinet-bar" aria-hidden="true">
           @for (drone of drones.value(); track drone.id) {
-            <li
-              class="bay"
+            <span
               [class.is-available]="drone.status === 'Available'"
               [class.is-loaned]="drone.status === 'Loaned'"
-            >
-              <app-drone-glyph [out]="drone.status === 'Loaned'" />
-              <span class="name">{{ drone.name }}</span>
-              @if (drone.status === 'Loaned') {
-                <span class="tag tag-loaned">Loaned</span>
-              } @else {
-                <span class="tag tag-available">Available</span>
-              }
-              <span class="description">{{ drone.description }}</span>
-              <!-- Shortcuts only: whether a drone can be loaned or returned is decided by the backend. -->
-              @if (drone.status === 'Loaned') {
-                <a class="bay-action" routerLink="/loans" [attr.aria-label]="'Return ' + drone.name">Return this drone</a>
-              } @else {
-                <a
-                  class="bay-action"
-                  routerLink="/loans/new"
-                  [queryParams]="{ drone: drone.id }"
-                  [attr.aria-label]="'Loan ' + drone.name"
-                  >Loan this drone</a
-                >
-              }
-            </li>
+            ></span>
           }
-        </ul>
-      }
-    } @else {
-      <p class="loading" aria-live="polite">Loading drones…</p>
-    }
-  </section>
+        </div>
+        <p class="legend" aria-hidden="true">
+          <span class="key is-available"></span> im Schrank <span class="key is-loaned"></span> ausgeliehen
+        </p>
+      </div>
 
-  <section class="add" aria-labelledby="add-drone-heading">
-    <h2 id="add-drone-heading">Add a drone</h2>
+      <ul class="drone-list">
+        @for (drone of drones.value(); track drone.id) {
+          <li
+            class="bay"
+            [class.is-available]="drone.status === 'Available'"
+            [class.is-loaned]="drone.status === 'Loaned'"
+          >
+            <app-drone-glyph [out]="drone.status === 'Loaned'" />
+            <span class="name">{{ drone.name }}</span>
+            @if (drone.status === 'Loaned') {
+              <span class="tag tag-loaned">Ausgeliehen</span>
+            } @else {
+              <span class="tag tag-available">Verfügbar</span>
+            }
+            <span class="description">{{ drone.description }}</span>
+            <!-- Shortcuts only: whether a drone can be loaned or returned is decided by the backend. -->
+            @if (drone.status === 'Loaned') {
+              <a class="button bay-action" routerLink="/loans" [attr.aria-label]="drone.name + ' zurückgeben'"
+                >Zurückgeben</a
+              >
+            } @else {
+              <a
+                class="button bay-action"
+                routerLink="/loans/new"
+                [queryParams]="{ drone: drone.id }"
+                [attr.aria-label]="drone.name + ' ausleihen'"
+                >Ausleihen</a
+              >
+            }
+          </li>
+        }
+      </ul>
+    }
+  } @else {
+    <p class="loading" aria-live="polite">Drohnen werden geladen…</p>
+  }
+</section>
+
+<dialog #sheet class="sheet" aria-labelledby="add-drone-heading" (click)="closeOnBackdrop($event)">
+  <div class="sheet-body">
+    <h2 id="add-drone-heading">Drohne hinzufügen</h2>
 
     <form [formRoot]="droneForm">
       @if (saveError()) {
@@ -85,21 +95,20 @@
       </div>
 
       <div class="field">
-        <label for="drone-description">Description <span class="optional">(optional)</span></label>
+        <label for="drone-description">Beschreibung <span class="optional">(optional)</span></label>
         <textarea
           id="drone-description"
-          placeholder="SSID, damage, anything worth knowing"
+          placeholder="SSID, Schäden, was man wissen sollte"
           [formField]="droneForm.description"
         ></textarea>
       </div>
 
-      <button class="button button-primary" type="submit" [disabled]="droneForm().submitting()">
-        {{ droneForm().submitting() ? 'Adding…' : 'Add drone' }}
-      </button>
-
-      @if (added()) {
-        <p class="added" role="status">{{ added() }} added. It is available now.</p>
-      }
+      <div class="sheet-actions">
+        <button class="button" type="button" (click)="closeSheet()">Abbrechen</button>
+        <button class="button button-primary" type="submit" [disabled]="droneForm().submitting()">
+          {{ droneForm().submitting() ? 'Wird hinzugefügt…' : 'Hinzufügen' }}
+        </button>
+      </div>
     </form>
-  </section>
-</div>
+  </div>
+</dialog>

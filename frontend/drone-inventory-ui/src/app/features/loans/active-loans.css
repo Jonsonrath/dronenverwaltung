@@ -1,27 +1,33 @@
-/* Table layout: loan-table.css. Here: the mark of a drone that is out and the return action. */
+/* Table layout: loan-table.css. Here: the mark of a drone that is out, the duration and the return action. */
 
-/* Every active loan is a drone that is out: the blue of "Loaned" on the edge of its plate. */
+/* Every active loan is a drone that is out: the blue of "Ausgeliehen" on the edge of its plate. */
 .table tbody td:first-child {
   box-shadow: inset 4px 0 0 var(--loaned);
+}
+
+.since {
+  white-space: nowrap;
+}
+
+.duration {
+  color: var(--muted);
+}
+
+/* Out for more than a day: light and outlined, so it stands out without a new color. */
+.duration.is-long {
+  display: inline-block;
+  padding: 0.1em 0.65em;
+  border: 1.5px solid var(--text);
+  border-radius: 999px;
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 600;
 }
 
 .action {
   width: 1%;
   text-align: right;
   white-space: nowrap;
-}
-
-/* Return is what this page is for: outlined in the accent, filled on hover. */
-.action .button {
-  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
-  background: none;
-  color: var(--accent);
-}
-
-.action .button:hover:not(:disabled) {
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--on-accent);
 }
 
 .added,

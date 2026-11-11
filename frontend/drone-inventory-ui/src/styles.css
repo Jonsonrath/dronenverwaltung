@@ -1,11 +1,12 @@
 /*
- * Base styles for Drone Lending – "the drone cabinet" (change improve-frontend-design, task 5.1).
- * Dark graphite with one hi-vis yellow for actions and the current page (the yellow of cabinet
- * labels and airfield markings). Green and blue only mean status: Available / Loaned.
- * The memorable element: every drone is a bay of the cabinet with its glyph (shared/drone-glyph).
+ * Base styles for Drone Lending – "the drone cabinet" (change improve-frontend-design, tasks 5.1, 5.2).
+ * Dark graphite, neutral accent: actions and the current page are light on dark, nothing else.
+ * The only colors are the two status colors – green = verfügbar, blue = ausgeliehen – and the
+ * error red. The memorable element: every drone is a bay of the cabinet with its glyph
+ * (shared/drone-glyph), filled when the drone is in, a dashed outline when it is out.
  *
  * Contrast (WCAG): every text, status and accent color is at least 4.5:1 on --bg, --surface and
- * --raised (checked in task 5.1, see design.md §7).
+ * --raised; button text on the accent 15.6:1 (see design.md §8).
  */
 
 :root {
@@ -18,8 +19,8 @@
   --line: #343946;
   --text: #f2f3f5;
   --muted: #9aa1ae;
-  --accent: #ffcb3d;
-  --on-accent: #1c1600;
+  --accent: #f2f3f5;
+  --on-accent: #14161a;
   --available: #5fd39a;
   --loaned: #7db6ff;
   --error: #ff8a8a;
@@ -33,7 +34,7 @@
   --text-md: 1.25rem;
   --text-lg: 1.5rem;
   --text-xl: 2rem;
-  --text-2xl: 2.75rem;
+  --text-2xl: 2rem;
 
   /* Spacing */
   --space-1: 0.25rem;
@@ -49,6 +50,9 @@
   --radius: 14px;
 
   --focus: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+
+  /* Height of the bottom tab bar on phones (app.css); the loan bar sits directly above it. */
+  --tabbar: 4.25rem;
   --ease: 140ms ease-out;
 }
 
@@ -101,17 +105,16 @@ p {
 .lead {
   margin-bottom: 0;
   color: var(--muted);
-  font-size: var(--text-md);
 }
 
 a {
-  color: var(--accent);
-  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  color: var(--text);
+  text-decoration-color: var(--muted);
   text-underline-offset: 0.2em;
 }
 
 a:hover {
-  text-decoration-color: var(--accent);
+  text-decoration-color: var(--text);
 }
 
 :focus-visible {
@@ -127,10 +130,10 @@ a:hover {
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-4) var(--space-6);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
 }
 
-/* Buttons: yellow means "do it", grey is the quiet alternative */
+/* Buttons: light on dark means "do it", grey is the quiet alternative. Links that act use the same classes. */
 .button {
   display: inline-flex;
   align-items: center;
@@ -144,6 +147,8 @@ a:hover {
   color: var(--text);
   font: inherit;
   font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
   transition: background-color var(--ease), border-color var(--ease), transform var(--ease);
 }
@@ -163,8 +168,8 @@ a:hover {
 }
 
 .button-primary:hover {
-  border-color: #ffd966;
-  background: #ffd966;
+  border-color: #ffffff;
+  background: #ffffff;
 }
 
 .button:disabled {
@@ -216,6 +221,7 @@ a:hover {
 .field textarea:focus-visible {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent);
+  border-radius: var(--radius-sm);
 }
 
 .field textarea {
@@ -313,7 +319,7 @@ a:hover {
 /* Confirmation after an action worked */
 .added {
   max-width: none;
-  margin: var(--space-4) 0 0;
+  margin: 0 0 var(--space-4);
   padding: var(--space-3) var(--space-4);
   border: 1px solid color-mix(in srgb, var(--available) 40%, transparent);
   border-radius: var(--radius-sm);
@@ -331,39 +337,75 @@ a:hover {
   text-align: center;
 }
 
-/* List + form pages (drones, student groups): form beside the list on desktop, below on phones */
-.layout {
-  display: grid;
-  gap: var(--space-8);
-}
-
-/* Form below or next to a list: "Add a drone", "Add a student group" */
-.add {
-  padding: var(--space-5);
+/*
+ * Add forms open from the "+" button of the page head (design §8): a bottom sheet on phones,
+ * a centered dialog on wider screens. Native <dialog>: focus stays inside, Esc closes.
+ */
+.sheet {
+  width: min(28rem, calc(100% - 2 * var(--space-4)));
+  max-width: none;
+  max-height: calc(100dvh - 2 * var(--space-4));
+  margin: auto;
+  padding: 0;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
+  color: var(--text);
+  overflow-y: auto;
 }
 
-.add h2 {
+/* The padding is inside, so a click on the dialog element itself is a click on the backdrop. */
+.sheet-body {
+  padding: var(--space-5);
+}
+
+.sheet::backdrop {
+  background: rgb(0 0 0 / 0.62);
+}
+
+.sheet[open] {
+  animation: sheet-in 180ms ease-out;
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+}
+
+.sheet h2 {
   margin-bottom: var(--space-5);
 }
 
-.add .button {
-  width: 100%;
+.sheet-actions {
+  display: flex;
+  gap: var(--space-3);
 }
 
-@media (min-width: 64rem) {
-  .layout {
-    grid-template-columns: minmax(0, 1fr) 21rem;
-    align-items: start;
-    gap: var(--space-6);
+.sheet-actions .button {
+  flex: 1 1 0%;
+}
+
+@media (max-width: 39.99rem) {
+  .sheet {
+    width: 100%;
+    max-height: 90dvh;
+    margin: auto 0 0;
+    border-width: 1px 0 0;
+    border-radius: var(--radius) var(--radius) 0 0;
   }
 
-  .add {
-    position: sticky;
-    top: var(--space-6);
+  .sheet-body {
+    padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
   }
+}
+
+/* "+" in front of the label of an add button */
+.plus {
+  font-size: 1.25em;
+  font-weight: 500;
+  line-height: 1;
 }
 
 .optional {

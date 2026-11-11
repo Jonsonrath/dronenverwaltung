@@ -13,7 +13,7 @@ public class StudentGroup
 
     public StudentGroup(string name)
     {
-        Name = EntityName.Require(name, "student group");
+        Name = EntityName.Require(name, "einer Schülergruppe");
         NormalizedName = EntityName.Normalize(name);
     }
 }

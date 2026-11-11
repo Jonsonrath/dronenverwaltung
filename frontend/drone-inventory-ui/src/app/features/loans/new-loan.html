@@ -1,69 +1,77 @@
 <header class="page-head">
   <div>
-    <h1>New loan</h1>
-    <p class="lead">Hand out a drone with batteries and propellers to a group.</p>
+    <h1>Neue Ausleihe</h1>
+    <p class="lead">Drohne, Gruppe, Zubehör.</p>
   </div>
 </header>
 
+<!-- One list of drones to choose from: radio inputs styled as bays. -->
+<ng-template #choices let-drones>
+  <div class="choices">
+    @for (drone of drones; track drone.id) {
+      <label
+        class="choice"
+        [class.is-available]="drone.status === 'Available'"
+        [class.is-loaned]="drone.status === 'Loaned'"
+      >
+        <input type="radio" [value]="drone.id.toString()" [formField]="loanForm.droneId" />
+        <app-drone-glyph [out]="drone.status === 'Loaned'" />
+        <span class="name">{{ drone.name }}</span>
+        @if (drone.status === 'Loaned') {
+          <span class="tag tag-loaned">Ausgeliehen</span>
+        } @else {
+          <span class="tag tag-available">Verfügbar</span>
+        }
+        @if (drone.description) {
+          <span class="description">{{ drone.description }}</span>
+        }
+      </label>
+    }
+  </div>
+</ng-template>
+
 @if (drones.error() || groups.error()) {
   <div class="alert" role="alert">
-    <p>The drones or student groups could not be loaded. Check that the backend is running, then try again.</p>
-    <button class="button" type="button" (click)="drones.reload(); groups.reload()">Try again</button>
+    <p>Drohnen oder Schülergruppen konnten nicht geladen werden. Läuft das Backend? Dann erneut versuchen.</p>
+    <button class="button" type="button" (click)="drones.reload(); groups.reload()">Erneut versuchen</button>
   </div>
 } @else if (!drones.hasValue() || !groups.hasValue()) {
-  <p class="loading" aria-live="polite">Loading drones and student groups…</p>
+  <p class="loading" aria-live="polite">Drohnen und Schülergruppen werden geladen…</p>
 } @else if (drones.value().length === 0 || groups.value().length === 0) {
   <div class="empty">
     @if (drones.value().length === 0) {
-      <p>There are no drones yet. <a routerLink="/drones">Add a drone</a> first.</p>
+      <p>Noch keine Drohnen. Zuerst eine <a routerLink="/drones">Drohne hinzufügen</a>.</p>
     }
     @if (groups.value().length === 0) {
-      <p>There are no student groups yet. <a routerLink="/student-groups">Add a student group</a> first.</p>
+      <p>Noch keine Schülergruppen. Zuerst eine <a routerLink="/student-groups">Gruppe hinzufügen</a>.</p>
     }
   </div>
 } @else {
   <form class="loan-form" [formRoot]="loanForm">
     <fieldset class="drones">
-      <legend><span class="step-no" aria-hidden="true">1</span> Drone</legend>
-      <!-- Loaned drones stay selectable: the backend decides and answers 409 (REQ-005). -->
-      @for (group of droneGroups(); track group.label) {
-        @if (group.drones.length > 0) {
-          <div class="drone-group" [attr.data-group]="group.key">
-            <p class="group-label">{{ group.label }}</p>
-            <div class="choices">
-              @for (drone of group.drones; track drone.id) {
-                <label
-                  class="choice"
-                  [class.is-available]="drone.status === 'Available'"
-                  [class.is-loaned]="drone.status === 'Loaned'"
-                >
-                  <input type="radio" [value]="drone.id.toString()" [formField]="loanForm.droneId" />
-                  <app-drone-glyph [out]="drone.status === 'Loaned'" />
-                  <span class="name">{{ drone.name }}</span>
-                  <span
-                    class="tag"
-                    [class.tag-available]="drone.status === 'Available'"
-                    [class.tag-loaned]="drone.status === 'Loaned'"
-                  >
-                    {{ drone.status }}
-                  </span>
-                  @if (drone.description) {
-                    <span class="description">{{ drone.description }}</span>
-                  }
-                </label>
-              }
-            </div>
-          </div>
+      <legend><span class="step-no" aria-hidden="true">1</span> Drohne</legend>
+
+      <div class="drone-group" data-group="available">
+        @if (availableDrones().length === 0) {
+          <p class="none">Gerade ist keine Drohne verfügbar.</p>
+        } @else {
+          <ng-container [ngTemplateOutlet]="choices" [ngTemplateOutletContext]="{ $implicit: availableDrones() }" />
         }
-      }
-      @if (loanForm.droneId().touched() && loanForm.droneId().invalid()) {
-        <p class="field-error">{{ loanForm.droneId().errors()[0].message }}</p>
+      </div>
+
+      <!-- Out of the way, but still selectable: the backend decides and answers 409 (REQ-005). -->
+      @if (loanedDrones().length > 0) {
+        <details class="drone-group" data-group="loaned">
+          <summary>Ausgeliehen ({{ loanedDrones().length }})</summary>
+          <p class="group-hint">Erst nach der Rückgabe wieder ausleihbar.</p>
+          <ng-container [ngTemplateOutlet]="choices" [ngTemplateOutletContext]="{ $implicit: loanedDrones() }" />
+        </details>
       }
     </fieldset>
 
     <div class="details">
       <fieldset class="groups">
-        <legend><span class="step-no" aria-hidden="true">2</span> Student group</legend>
+        <legend><span class="step-no" aria-hidden="true">2</span> Schülergruppe</legend>
         <div class="chips">
           @for (group of groups.value(); track group.id) {
             <label class="chip">
@@ -72,57 +80,48 @@
             </label>
           }
         </div>
-        @if (loanForm.studentGroupId().touched() && loanForm.studentGroupId().invalid()) {
-          <p class="field-error">{{ loanForm.studentGroupId().errors()[0].message }}</p>
-        }
       </fieldset>
 
       <fieldset class="accessories">
-        <legend><span class="step-no" aria-hidden="true">3</span> Accessories</legend>
+        <legend><span class="step-no" aria-hidden="true">3</span> Zubehör</legend>
         <div class="field">
-          <label for="loan-batteries">Batteries</label>
-          <app-quantity-stepper label="batteries" inputId="loan-batteries" [formField]="loanForm.batteries" />
+          <label for="loan-batteries">Akkus</label>
+          <app-quantity-stepper label="Akkus" inputId="loan-batteries" [formField]="loanForm.batteries" />
         </div>
         <div class="field">
-          <label for="loan-propellers">Propellers</label>
-          <app-quantity-stepper label="propellers" inputId="loan-propellers" [formField]="loanForm.propellers" />
+          <label for="loan-propellers">Propeller</label>
+          <app-quantity-stepper label="Propeller" inputId="loan-propellers" [formField]="loanForm.propellers" />
         </div>
       </fieldset>
+    </div>
 
-      <!-- The loan slip: what will be sent, read back before the button. -->
-      <dl class="slip">
-        <div>
-          <dt>Drone</dt>
-          <dd [class.is-open]="!chosenDrone()">{{ chosenDrone()?.name ?? 'Not chosen yet' }}</dd>
-        </div>
-        <div>
-          <dt>Student group</dt>
-          <dd [class.is-open]="!chosenGroup()">{{ chosenGroup()?.name ?? 'Not chosen yet' }}</dd>
-        </div>
-        <div>
-          <dt>Batteries</dt>
-          <dd>{{ newLoan().batteries }}</dd>
-        </div>
-        <div>
-          <dt>Propellers</dt>
-          <dd>{{ newLoan().propellers }}</dd>
-        </div>
-      </dl>
-
+    <!-- Always in view: what will be sent, the button and every message about it. -->
+    <div class="loan-bar">
       @if (saveError()) {
         <p class="alert" role="alert">{{ saveError() }}</p>
       }
-
-      <button class="button button-primary submit" type="submit" [disabled]="loanForm().submitting()">
-        {{ loanForm().submitting() ? 'Loaning…' : 'Loan drone' }}
-      </button>
-
+      @if (loanForm.droneId().touched() && loanForm.droneId().invalid()) {
+        <p class="field-error">{{ loanForm.droneId().errors()[0].message }}</p>
+      }
+      @if (loanForm.studentGroupId().touched() && loanForm.studentGroupId().invalid()) {
+        <p class="field-error">{{ loanForm.studentGroupId().errors()[0].message }}</p>
+      }
       @if (created(); as loan) {
         <p class="added" role="status">
-          {{ loan.droneName }} loaned to {{ loan.studentGroupName }} with {{ loan.batteries }} batteries and
-          {{ loan.propellers }} propellers. <a routerLink="/loans">See active loans</a>
+          {{ loan.droneName }} an {{ loan.studentGroupName }} ausgeliehen:
+          {{ accessories(loan.batteries, loan.propellers) }}.
+          <a routerLink="/loans">Aktive Ausleihen ansehen</a>
         </p>
       }
+
+      <p class="summary">
+        <span class="summary-who" [class.is-open]="!chosenDrone() || !chosenGroup()">{{ summary() }}</span>
+        <span class="summary-what">{{ accessories(newLoan().batteries, newLoan().propellers) }}</span>
+      </p>
+
+      <button class="button button-primary submit" type="submit" [disabled]="loanForm().submitting()">
+        {{ loanForm().submitting() ? 'Wird ausgeliehen…' : 'Ausleihen' }}
+      </button>
     </div>
   </form>
 }

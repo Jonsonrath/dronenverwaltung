@@ -101,7 +101,7 @@ describe('New loan page', () => {
     fixture.detectChanges();
 
     expect(page.querySelector('[role="status"]')?.textContent).toContain(
-      'TELLO-07 loaned to Group 3 with 4 batteries and 8 propellers.',
+      'TELLO-07 an Group 3 ausgeliehen: 4 Akkus, 8 Propeller.',
     );
     expect(droneNames(page, 'loaned')).toEqual(['TELLO-02', 'TELLO-07']);
     expect(page.querySelector('fieldset.drones input:checked')).toBeNull();
@@ -112,9 +112,9 @@ describe('New loan page', () => {
     pick(page, 'drones', '7');
     pick(page, 'groups', '3');
     for (let i = 0; i < 4; i++) {
-      (page.querySelector('button[aria-label="More batteries"]') as HTMLButtonElement).click();
+      (page.querySelector('button[aria-label="Mehr Akkus"]') as HTMLButtonElement).click();
     }
-    (page.querySelector('button[aria-label="More propellers"]') as HTMLButtonElement).click();
+    (page.querySelector('button[aria-label="Mehr Propeller"]') as HTMLButtonElement).click();
     fixture.detectChanges();
 
     await submit(page);
@@ -184,28 +184,39 @@ describe('New loan page', () => {
 
     http.expectNone({ method: 'POST', url: '/api/loans' });
     const hints = [...page.querySelectorAll('.field-error')].map((e) => e.textContent);
-    expect(hints).toEqual(['Choose a drone.', 'Choose a student group.']);
+    expect(hints).toEqual(['Drohne wählen.', 'Schülergruppe wählen.']);
   });
 
   it('points to the other pages when there are no drones or groups yet', async () => {
     const page = await load([], []);
 
     expect(page.querySelector('form')).toBeNull();
-    expect(page.querySelector('a[href="/drones"]')?.textContent).toBe('Add a drone');
-    expect(page.querySelector('a[href="/student-groups"]')?.textContent).toBe('Add a student group');
+    expect(page.querySelector('a[href="/drones"]')?.textContent).toBe('Drohne hinzufügen');
+    expect(page.querySelector('a[href="/student-groups"]')?.textContent).toBe('Gruppe hinzufügen');
   });
 
-  it('reads the choice back on the loan slip before it is sent', async () => {
+  it('reads the choice back next to the button before it is sent', async () => {
     const page = await load();
-    const slip = () => [...page.querySelectorAll('.slip dd')].map((value) => value.textContent?.trim());
-    expect(slip()).toEqual(['Not chosen yet', 'Not chosen yet', '0', '0']);
+    const summary = () => [...page.querySelectorAll('.summary span')].map((part) => part.textContent?.trim());
+    expect(summary()).toEqual(['Drohne und Gruppe wählen', '0 Akkus, 0 Propeller']);
 
     pick(page, 'drones', '7');
-    pick(page, 'groups', '3');
-    type(page, 'loan-batteries', '4');
     fixture.detectChanges();
+    expect(summary()).toEqual(['TELLO-07 – Gruppe wählen', '0 Akkus, 0 Propeller']);
 
-    expect(slip()).toEqual(['TELLO-07', 'Group 3', '4', '0']);
+    pick(page, 'groups', '3');
+    type(page, 'loan-batteries', '1');
+    fixture.detectChanges();
+    expect(summary()).toEqual(['TELLO-07 für Group 3', '1 Akku, 0 Propeller']);
+  });
+
+  it('keeps loaned drones in a collapsed list, still selectable (the backend decides)', async () => {
+    const page = await load();
+
+    const loaned = page.querySelector('details.drone-group[data-group="loaned"]') as HTMLDetailsElement;
+    expect(loaned.open).toBe(false);
+    expect(loaned.querySelector('summary')?.textContent).toContain('Ausgeliehen (1)');
+    expect((loaned.querySelector('input[value="2"]') as HTMLInputElement).disabled).toBe(false);
   });
 });
 
@@ -242,13 +253,13 @@ describe('New loan page opened from a drone bay', () => {
     const page = await open('7');
 
     expect((page.querySelector('fieldset.drones input:checked') as HTMLInputElement | null)?.value).toBe('7');
-    expect(page.querySelector('.slip dd')?.textContent?.trim()).toBe('TELLO-07');
+    expect(page.querySelector('.summary-who')?.textContent?.trim()).toBe('TELLO-07 – Gruppe wählen');
   });
 
   it('chooses nothing when the backend does not list that drone', async () => {
     const page = await open('99');
 
     expect(page.querySelector('fieldset.drones input:checked')).toBeNull();
-    expect(page.querySelector('.slip dd')?.textContent?.trim()).toBe('Not chosen yet');
+    expect(page.querySelector('.summary-who')?.textContent?.trim()).toBe('Drohne und Gruppe wählen');
   });
 });

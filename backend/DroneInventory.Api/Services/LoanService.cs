@@ -16,9 +16,9 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
         int droneId, int studentGroupId, int batteries, int propellers, CancellationToken cancellationToken = default)
     {
         var drone = await db.Drones.FindAsync([droneId], cancellationToken)
-            ?? throw new NotFoundException($"Drone {droneId} does not exist.");
+            ?? throw new NotFoundException($"Die Drohne {droneId} gibt es nicht.");
         var group = await db.StudentGroups.FindAsync([studentGroupId], cancellationToken)
-            ?? throw new NotFoundException($"Student group {studentGroupId} does not exist.");
+            ?? throw new NotFoundException($"Die Schülergruppe {studentGroupId} gibt es nicht.");
 
         var loan = new Loan(drone, group, batteries, propellers, time.GetUtcNow().UtcDateTime);
 
@@ -55,7 +55,7 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
             .Include(l => l.StudentGroup)
             .Include(l => l.Items)
             .SingleOrDefaultAsync(l => l.Id == loanId, cancellationToken)
-            ?? throw new NotFoundException($"Loan {loanId} does not exist.");
+            ?? throw new NotFoundException($"Die Ausleihe {loanId} gibt es nicht.");
 
         loan.Return(time.GetUtcNow().UtcDateTime);
         try
@@ -66,7 +66,7 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
         {
             // Another request returned the loan between our read and our save; its
             // ReturnDate stays (Status is a concurrency token, design.md §4c).
-            throw new ConflictException($"Loan {loanId} has already been returned.");
+            throw new ConflictException($"Die Ausleihe {loanId} wurde bereits zurückgegeben.");
         }
 
         return loan;
@@ -94,5 +94,5 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
     }
 
     private static ConflictException AlreadyLoaned(Drone drone) =>
-        new($"Drone \"{drone.Name}\" already has an active loan.");
+        new($"Die Drohne \"{drone.Name}\" ist bereits ausgeliehen.");
 }

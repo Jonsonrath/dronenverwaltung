@@ -1,7 +1,7 @@
 <header class="page-head">
   <div>
-    <h1>Active loans</h1>
-    <p class="lead">Drones that are out right now.</p>
+    <h1>Aktive Ausleihen</h1>
+    <p class="lead">Was gerade unterwegs ist.</p>
   </div>
 </header>
 
@@ -10,48 +10,53 @@
 }
 @if (returned(); as loan) {
   <p class="added" role="status">
-    {{ loan.droneName }} returned by {{ loan.studentGroupName }}. It is available again.
+    {{ loan.droneName }} von {{ loan.studentGroupName }} zurückgegeben. Sie ist wieder verfügbar.
   </p>
 }
 
 @if (loans.error()) {
   <div class="alert" role="alert">
-    <p>The active loans could not be loaded. Check that the backend is running, then try again.</p>
-    <button class="button" type="button" (click)="loans.reload()">Try again</button>
+    <p>Die aktiven Ausleihen konnten nicht geladen werden. Läuft das Backend? Dann erneut versuchen.</p>
+    <button class="button" type="button" (click)="loans.reload()">Erneut versuchen</button>
   </div>
 } @else if (loans.hasValue()) {
   @if (loans.value().length === 0) {
-    <p class="empty">No drone is loaned right now. <a routerLink="/loans/new">Loan a drone</a></p>
+    <p class="empty">Gerade ist keine Drohne ausgeliehen. <a routerLink="/loans/new">Drohne ausleihen</a></p>
   } @else {
     <div class="table-scroll">
       <table class="table">
         <thead>
           <tr>
-            <th scope="col">Group</th>
-            <th scope="col">Drone</th>
-            <th scope="col" class="number">Batteries</th>
-            <th scope="col" class="number">Propellers</th>
-            <th scope="col">Loan date</th>
-            <th scope="col"><span class="visually-hidden">Action</span></th>
+            <th scope="col">Drohne</th>
+            <th scope="col">Gruppe</th>
+            <th scope="col" class="number">Akkus</th>
+            <th scope="col" class="number">Propeller</th>
+            <th scope="col">Ausgeliehen am</th>
+            <th scope="col">Dauer</th>
+            <th scope="col"><span class="visually-hidden">Aktion</span></th>
           </tr>
         </thead>
         <tbody>
           @for (loan of loans.value(); track loan.id) {
             <tr>
-              <td class="group">{{ loan.studentGroupName }}</td>
               <td class="drone">{{ loan.droneName }}</td>
-              <td class="number" data-label="Batteries">{{ loan.batteries }}</td>
-              <td class="number" data-label="Propellers">{{ loan.propellers }}</td>
-              <td class="date" data-label="Loaned on">{{ loan.loanDate | date: 'dd.MM.yyyy' }}</td>
+              <td class="group">{{ loan.studentGroupName }}</td>
+              <td class="number" data-label="Akkus">{{ loan.batteries }}</td>
+              <td class="number" data-label="Propeller">{{ loan.propellers }}</td>
+              <td class="date" data-label="Ausgeliehen am">{{ loan.loanDate | date: 'dd.MM.yyyy' }}</td>
+              <td class="since" data-label="Dauer">
+                <!-- Marked when the loan has been running for more than a day. -->
+                <span class="duration" [class.is-long]="daysOut(loan) >= 1">{{ duration(loan) }}</span>
+              </td>
               <td class="action">
                 <button
                   class="button"
                   type="button"
                   [disabled]="returningId() === loan.id"
-                  [attr.aria-label]="'Return ' + loan.droneName"
+                  [attr.aria-label]="loan.droneName + ' zurückgeben'"
                   (click)="returnLoan(loan)"
                 >
-                  {{ returningId() === loan.id ? 'Returning…' : 'Return' }}
+                  {{ returningId() === loan.id ? 'Wird zurückgegeben…' : 'Zurückgeben' }}
                 </button>
               </td>
             </tr>
@@ -61,5 +66,5 @@
     </div>
   }
 } @else {
-  <p class="loading" aria-live="polite">Loading active loans…</p>
+  <p class="loading" aria-live="polite">Aktive Ausleihen werden geladen…</p>
 }

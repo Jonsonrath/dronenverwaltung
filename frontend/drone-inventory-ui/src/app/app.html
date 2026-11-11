@@ -12,10 +12,11 @@
     <span>Drone Lending</span>
   </a>
 
-  <nav class="tabs" aria-label="Main">
+  <nav class="tabs" aria-label="Hauptnavigation">
     @for (link of links; track link.path) {
       <a
         class="tab"
+        [class.tab-main]="link.main"
         [routerLink]="link.path"
         routerLinkActive="is-active"
         [routerLinkActiveOptions]="{ exact: true }"
@@ -51,6 +52,7 @@
           }
         </svg>
         <span class="tab-label">{{ link.label }}</span>
+        <span class="tab-short" aria-hidden="true">{{ link.short }}</span>
       </a>
     }
   </nav>

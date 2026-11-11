@@ -1,4 +1,4 @@
-/* Shared by the active loans page and the loan history: one plate per loan (design §5, §7). */
+/* Shared by the active loans page and the loan history: one plate per loan (design §5, §7, §8). */
 
 .table {
   border-collapse: separate;
@@ -15,7 +15,6 @@
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   background: var(--surface);
-  transition: background-color var(--ease);
 }
 
 .table td:first-child {
@@ -28,15 +27,15 @@
   border-radius: 0 var(--radius) var(--radius) 0;
 }
 
-.table tbody tr:hover td {
-  background: var(--raised);
-}
-
-.group,
+/* The drone is what a loan is about: it comes first and is the loudest. */
 .drone {
   font-family: var(--font-display);
   font-size: var(--text-md);
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.group {
   white-space: nowrap;
 }
 
@@ -53,7 +52,7 @@
   clip-path: inset(50%);
 }
 
-/* Phone: one block per loan – group and drone on top, the values below with labels. */
+/* Phone: one block per loan – drone and group on top, the values below with labels. */
 @media (max-width: 40rem) {
   .table,
   .table tbody {
@@ -70,9 +69,8 @@
 
   tr {
     display: grid;
-    /* Three label columns; the last one takes the rest, so full-width rows can stretch. */
     grid-template-columns: auto auto 1fr;
-    gap: var(--space-1) var(--space-5);
+    gap: var(--space-2) var(--space-5);
     margin-bottom: var(--space-3);
     padding: var(--space-4);
     border: 1px solid var(--line);
@@ -90,21 +88,17 @@
     text-align: left;
   }
 
-  .table tbody tr:hover td {
-    background: none;
+  .table .drone {
+    grid-column: 1 / -1;
+    font-size: var(--text-lg);
+    line-height: 1.15;
   }
 
   .table .group {
     grid-column: 1 / -1;
-  }
-
-  .table .drone {
-    grid-column: 1 / -1;
-    margin-bottom: var(--space-2);
+    margin-top: calc(-1 * var(--space-1));
+    margin-bottom: var(--space-1);
     color: var(--muted);
-    font-family: var(--font);
-    font-size: var(--text-base);
-    font-weight: 500;
   }
 
   .table td[data-label]::before {

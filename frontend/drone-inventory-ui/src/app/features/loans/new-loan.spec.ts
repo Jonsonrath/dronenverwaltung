@@ -210,6 +210,55 @@ describe('New loan page', () => {
     expect(summary()).toEqual(['TELLO-07 für Group 3', '1 Akku, 0 Propeller']);
   });
 
+  // Change support-damaged-drones, task 2.2: damaged drones in their own collapsed group (MODIFIED REQ-004).
+  describe('damaged drones', () => {
+    const withDamaged: Drone[] = [
+      ...drones,
+      { id: 11, name: 'TELLO-11', description: '', status: 'Damaged', damageReason: 'Propeller gebrochen' },
+    ];
+
+    it('lists damaged drones in their own collapsed group, still selectable (the backend decides)', async () => {
+      const page = await load(withDamaged);
+
+      expect(droneNames(page, 'available')).toEqual(['TELLO-07']);
+      expect(droneNames(page, 'loaned')).toEqual(['TELLO-02']);
+      expect(droneNames(page, 'damaged')).toEqual(['TELLO-11']);
+      const damaged = page.querySelector('details.drone-group[data-group="damaged"]') as HTMLDetailsElement;
+      expect(damaged.open).toBe(false);
+      expect(damaged.querySelector('summary')?.textContent).toContain('Defekt (1)');
+      expect(damaged.querySelector('.tag')?.textContent?.trim()).toBe('Defekt');
+      expect(damaged.querySelector('.damage')?.textContent?.trim()).toBe('Defekt: Propeller gebrochen');
+      expect((damaged.querySelector('input[value="11"]') as HTMLInputElement).disabled).toBe(false);
+    });
+
+    it('has no damaged group when no drone is damaged', async () => {
+      const page = await load();
+
+      expect(page.querySelector('details.drone-group[data-group="damaged"]')).toBeNull();
+    });
+
+    it('REQ-004: shows the backend message when the drone is damaged (409)', async () => {
+      const page = await load(withDamaged);
+      pick(page, 'drones', '11');
+      pick(page, 'groups', '3');
+
+      await submit(page);
+      const request = http.expectOne({ method: 'POST', url: '/api/loans' });
+      expect(request.request.body).toEqual({ droneId: 11, studentGroupId: 3, batteries: 0, propellers: 0 });
+      request.flush(
+        { status: 409, detail: 'Die Drohne "TELLO-11" ist defekt: Propeller gebrochen' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await settle();
+      fixture.detectChanges();
+
+      expect(page.querySelector('form [role="alert"]')?.textContent).toContain(
+        'Die Drohne "TELLO-11" ist defekt: Propeller gebrochen',
+      );
+      expect(page.querySelector('[role="status"]')).toBeNull();
+    });
+  });
+
   it('keeps loaned drones in a collapsed list, still selectable (the backend decides)', async () => {
     const page = await load();
 

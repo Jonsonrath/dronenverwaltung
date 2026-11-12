@@ -27,19 +27,22 @@ export class NewLoan {
   protected readonly drones = rxResource({ stream: () => this.droneApi.list() });
   protected readonly groups = rxResource({ stream: () => this.studentGroupApi.list() });
 
-  // The status comes from the backend. Loaned drones are listed in a collapsed element, but
-  // stay selectable: the backend decides and answers 409 (REQ-005) – no rule is enforced here.
+  // The status comes from the backend. Loaned and damaged drones are listed in collapsed elements,
+  // but stay selectable: the backend decides and answers 409 (REQ-005, REQ-004) – no rule is enforced here.
   protected readonly availableDrones = computed(() =>
     this.drones.hasValue() ? this.drones.value().filter((d) => d.status === 'Available') : [],
   );
   protected readonly loanedDrones = computed(() =>
     this.drones.hasValue() ? this.drones.value().filter((d) => d.status === 'Loaned') : [],
   );
+  protected readonly damagedDrones = computed(() =>
+    this.drones.hasValue() ? this.drones.value().filter((d) => d.status === 'Damaged') : [],
+  );
 
   /** Radio values are strings; the ids are converted to numbers when the loan is sent. */
   protected readonly newLoan = signal({ droneId: '', studentGroupId: '', batteries: 0, propellers: 0 });
 
-  /** Message from the backend, e.g. 409 drone already loaned or 422 negative quantity. */
+  /** Message from the backend, e.g. 409 drone already loaned or damaged, 422 negative quantity. */
   protected readonly saveError = signal('');
 
   /** The loan that was created last, for the confirmation text. */

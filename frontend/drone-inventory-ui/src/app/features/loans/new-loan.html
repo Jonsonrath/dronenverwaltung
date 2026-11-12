@@ -13,17 +13,29 @@
         class="choice"
         [class.is-available]="drone.status === 'Available'"
         [class.is-loaned]="drone.status === 'Loaned'"
+        [class.is-damaged]="drone.status === 'Damaged'"
       >
         <input type="radio" [value]="drone.id.toString()" [formField]="loanForm.droneId" />
         <app-drone-glyph [out]="drone.status === 'Loaned'" />
         <span class="name">{{ drone.name }}</span>
-        @if (drone.status === 'Loaned') {
-          <span class="tag tag-loaned">Ausgeliehen</span>
-        } @else {
-          <span class="tag tag-available">Verfügbar</span>
+        @switch (drone.status) {
+          @case ('Loaned') {
+            <span class="tag tag-loaned">Ausgeliehen</span>
+          }
+          @case ('Damaged') {
+            <span class="tag tag-damaged">Defekt</span>
+          }
+          @default {
+            <span class="tag tag-available">Verfügbar</span>
+          }
         }
-        @if (drone.description) {
-          <span class="description">{{ drone.description }}</span>
+        @if (drone.damageReason || drone.description) {
+          <span class="description">
+            @if (drone.damageReason) {
+              <span class="damage">Defekt: {{ drone.damageReason }}</span>
+            }
+            {{ drone.description }}
+          </span>
         }
       </label>
     }
@@ -65,6 +77,15 @@
           <summary>Ausgeliehen ({{ loanedDrones().length }})</summary>
           <p class="group-hint">Erst nach der Rückgabe wieder ausleihbar.</p>
           <ng-container [ngTemplateOutlet]="choices" [ngTemplateOutletContext]="{ $implicit: loanedDrones() }" />
+        </details>
+      }
+
+      <!-- Same for damaged drones: the backend answers 409 with the reason (MODIFIED REQ-004). -->
+      @if (damagedDrones().length > 0) {
+        <details class="drone-group" data-group="damaged">
+          <summary>Defekt ({{ damagedDrones().length }})</summary>
+          <p class="group-hint">Erst nach der Reparatur wieder ausleihbar.</p>
+          <ng-container [ngTemplateOutlet]="choices" [ngTemplateOutletContext]="{ $implicit: damagedDrones() }" />
         </details>
       }
     </fieldset>

@@ -150,7 +150,7 @@ describe('Drones page', () => {
 
       await fillAndSubmit(page, 'TELLO-07', 'SSID: TELLO-9FA21B');
       const create = http.expectOne({ method: 'POST', url: '/api/drones' });
-      expect(create.request.body).toEqual({ name: 'TELLO-07', description: 'SSID: TELLO-9FA21B' });
+      expect(create.request.body).toEqual({ name: 'TELLO-07', description: 'SSID: TELLO-9FA21B', ssid: '' });
       await answer(create, tello07);
 
       // The list is loaded again and shows the new drone.
@@ -259,7 +259,7 @@ describe('Drones page', () => {
 
       await submitEdit(page, 'TELLO-07', 'Propellerschutz erneuert');
       const request = http.expectOne({ method: 'PUT', url: '/api/drones/7' });
-      expect(request.request.body).toEqual({ name: 'TELLO-07', description: 'Propellerschutz erneuert' });
+      expect(request.request.body).toEqual({ name: 'TELLO-07', description: 'Propellerschutz erneuert', ssid: '' });
       const edited = { ...tello07, name: 'TELLO-07', description: 'Propellerschutz erneuert' };
       request.flush(edited);
       await settle();
@@ -300,6 +300,116 @@ describe('Drones page', () => {
 
       http.expectNone({ method: 'PUT', url: '/api/drones/7' });
       expect(editSheet(page).querySelector('.field-error')?.textContent).toContain('Name eingeben.');
+    });
+  });
+
+  // Change drone-ssid: "Drone SSID (REQ-024)" – SSID field in both sheets, SSID in the bay.
+  describe('drone SSID', () => {
+    const settle = () => new Promise((resolve) => setTimeout(resolve));
+    const duplicate =
+      'Eine Drohne mit der SSID "tello-9fa21b" gibt es bereits (Groß- und Kleinschreibung wird nicht unterschieden).';
+
+    function type(page: HTMLElement, selector: string, value: string) {
+      const input = page.querySelector(selector) as HTMLInputElement;
+      input.value = value;
+      input.dispatchEvent(new Event('input'));
+    }
+
+    async function submit(page: HTMLElement, formSelector: string) {
+      page.querySelector(formSelector)!.dispatchEvent(new Event('submit', { cancelable: true }));
+      await settle();
+      fixture.detectChanges();
+    }
+
+    it('REQ-024: shows the SSID under the name and nothing for a drone without SSID', async () => {
+      const page = await respond([
+        { id: 7, name: 'TELLO-07', description: '', status: 'Available', ssid: 'TELLO-9FA21B' },
+        { id: 8, name: 'TELLO-08', description: '', status: 'Available', ssid: null },
+      ]);
+
+      const ssids = [...page.querySelectorAll('.drone-list li')].map((row) => row.querySelector('.ssid')?.textContent?.trim());
+      expect(ssids).toEqual(['SSID TELLO-9FA21B', undefined]);
+    });
+
+    it('REQ-024: sends the SSID of a new drone to the backend', async () => {
+      const page = await respond([]);
+      (page.querySelector('.page-head button') as HTMLButtonElement).click();
+
+      type(page, '#drone-name', 'TELLO-07');
+      type(page, '#drone-ssid', ' TELLO-9FA21B ');
+      await submit(page, 'form');
+      const create = http.expectOne({ method: 'POST', url: '/api/drones' });
+
+      // Trimming is the backend's job (REQ-024); the field is sent as typed.
+      expect(create.request.body).toEqual({ name: 'TELLO-07', description: '', ssid: ' TELLO-9FA21B ' });
+      create.flush({ id: 7, name: 'TELLO-07', description: '', status: 'Available', ssid: 'TELLO-9FA21B' }, { status: 201, statusText: 'Created' });
+      await settle();
+      fixture.detectChanges();
+      http.expectOne({ method: 'GET', url: '/api/drones' }).flush([]);
+      await settle();
+      fixture.detectChanges();
+      expect((page.querySelector('#drone-ssid') as HTMLInputElement).value).toBe('');
+    });
+
+    it('REQ-024: shows the backend message for the SSID of another drone (409) when adding', async () => {
+      const page = await respond([]);
+      (page.querySelector('.page-head button') as HTMLButtonElement).click();
+
+      type(page, '#drone-name', 'TELLO-08');
+      type(page, '#drone-ssid', 'tello-9fa21b');
+      await submit(page, 'form');
+      http
+        .expectOne({ method: 'POST', url: '/api/drones' })
+        .flush({ status: 409, detail: duplicate }, { status: 409, statusText: 'Conflict' });
+      await settle();
+      fixture.detectChanges();
+
+      expect(page.querySelector('form [role="alert"]')?.textContent).toContain(duplicate);
+      http.expectNone({ method: 'GET', url: '/api/drones' });
+    });
+
+    it('REQ-024: the edit sheet shows the SSID and sends the changed one', async () => {
+      const page = await respond([{ id: 7, name: 'TELLO-07', description: '', status: 'Available', ssid: 'TELLO-9FA21B' }]);
+      (page.querySelector('button[aria-label="TELLO-07 bearbeiten"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect((page.querySelector('#edit-drone-ssid') as HTMLInputElement).value).toBe('TELLO-9FA21B');
+
+      type(page, '#edit-drone-ssid', 'TELLO-1A2B3C');
+      await submit(page, 'form.edit-form');
+      const request = http.expectOne({ method: 'PUT', url: '/api/drones/7' });
+
+      expect(request.request.body).toEqual({ name: 'TELLO-07', description: '', ssid: 'TELLO-1A2B3C' });
+      request.flush({ id: 7, name: 'TELLO-07', description: '', status: 'Available', ssid: 'TELLO-1A2B3C' });
+      await settle();
+      fixture.detectChanges();
+      http.expectOne({ method: 'GET', url: '/api/drones' }).flush([]);
+    });
+
+    it('REQ-024: a drone without SSID opens the edit sheet with an empty SSID field', async () => {
+      const page = await respond([{ id: 8, name: 'TELLO-08', description: '', status: 'Available' }]);
+
+      (page.querySelector('button[aria-label="TELLO-08 bearbeiten"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect((page.querySelector('#edit-drone-ssid') as HTMLInputElement).value).toBe('');
+    });
+
+    it('REQ-024: shows the backend message for the SSID of another drone (409) in the edit sheet', async () => {
+      const page = await respond([{ id: 8, name: 'TELLO-08', description: '', status: 'Available', ssid: null }]);
+      (page.querySelector('button[aria-label="TELLO-08 bearbeiten"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      type(page, '#edit-drone-ssid', 'tello-9fa21b');
+      await submit(page, 'form.edit-form');
+      http
+        .expectOne({ method: 'PUT', url: '/api/drones/8' })
+        .flush({ status: 409, detail: duplicate }, { status: 409, statusText: 'Conflict' });
+      await settle();
+      fixture.detectChanges();
+
+      const sheet = page.querySelector('dialog[aria-labelledby="edit-drone-heading"]') as HTMLDialogElement;
+      expect(sheet.querySelector('[role="alert"]')?.textContent).toContain(duplicate);
+      expect(sheet.open).toBe(true);
     });
   });
 });

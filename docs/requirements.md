@@ -173,13 +173,25 @@ Returned loans SHALL never be deleted. The system SHALL list past (returned) loa
 - WHEN it is deleted
 - THEN the request is rejected as a conflict and the loan stays
 
+### REQ-013 Edit drone
+*Added with the OpenSpec change `edit-drones` (12.11.2026).* The system SHALL allow changing the name and the description of a drone. The same rules as for a new drone apply (not empty, unique). Loans stay assigned to the drone.
+
+**Scenario: Rename a drone**
+- GIVEN a drone "TELO-07" exists
+- WHEN it is renamed to "TELLO-07"
+- THEN it keeps its id and its loans and has the name "TELLO-07"
+
+**Scenario: Name of another drone**
+- GIVEN the drones "TELLO-02" and "TELLO-07" exist
+- WHEN "TELLO-07" is renamed to "tello-02"
+- THEN the request is rejected as a conflict
+
 ## Planned Requirements (draft, specs in review)
 
-*Feature backlog of 12.11.2026.* Each line is its own OpenSpec change under `openspec/changes/`; the full requirement with SHALL and scenarios is in that change's delta spec. When a change is implemented, its requirements move into the list above.
+*Feature backlog of 12.11.2026.* REQ-013 is implemented (see above). Each line is its own OpenSpec change under `openspec/changes/`; the full requirement with SHALL and scenarios is in that change's delta spec. When a change is implemented, its requirements move into the list above.
 
 | ID | Requirement | OpenSpec change | Assignment |
 |---|---|---|---|
-| REQ-013 | Edit drone (name, description) | `edit-drones` | – |
 | REQ-014 | Report drone damage | `support-damaged-drones` | change request 1 |
 | REQ-015 | Repair drone | `support-damaged-drones` | change request 1 |
 | REQ-016 | Add student to group | `student-group-members` | change request 3 |

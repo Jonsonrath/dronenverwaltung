@@ -88,10 +88,11 @@ public class StudentGroupService(DroneInventoryDbContext db)
         {
             await db.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException exception) when (exception.IsForeignKeyViolation())
         {
             // A loan for this group was created between the check and the delete;
             // the foreign key Loan -> StudentGroup (Restrict) refused the delete.
+            // Any other database error is not about loans and is passed on unchanged.
             throw HasLoans(group);
         }
     }

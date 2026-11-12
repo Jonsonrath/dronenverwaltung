@@ -90,6 +90,44 @@ describe('Student groups page', () => {
     expect(badges).toEqual(['keine Drohne', 'hat TELLO-02']);
   });
 
+  describe('drone badges before the active loans are known', () => {
+    const groups: StudentGroup[] = [{ id: 1, name: 'Group 1' }];
+    const loansRequest = () => http.expectOne((r) => r.url === '/api/loans' && r.params.get('status') === 'Active');
+    const badges = (page: HTMLElement) => page.querySelectorAll('.groups li .has-drone, .groups li .no-drone').length;
+
+    async function groupsOnly() {
+      fixture.detectChanges();
+      http.expectOne('/api/student-groups').flush(groups);
+      await settle();
+      fixture.detectChanges();
+      return fixture.nativeElement as HTMLElement;
+    }
+
+    it('shows no badge while the active loans are still loading', async () => {
+      const page = await groupsOnly();
+
+      expect(page.querySelector('.groups li .name')?.textContent?.trim()).toBe('Group 1');
+      expect(badges(page)).toBe(0);
+
+      // Once they arrive, the group gets its badge.
+      loansRequest().flush([]);
+      await settle();
+      fixture.detectChanges();
+      expect(page.querySelector('.groups li .no-drone')?.textContent?.trim()).toBe('keine Drohne');
+    });
+
+    it('shows no badge when the active loans could not be loaded', async () => {
+      const page = await groupsOnly();
+
+      loansRequest().flush(null, { status: 500, statusText: 'Error' });
+      await settle();
+      fixture.detectChanges();
+
+      expect(page.querySelector('.groups li .name')?.textContent?.trim()).toBe('Group 1');
+      expect(badges(page)).toBe(0);
+    });
+  });
+
   it('REQ-003: shows a message when there are no student groups', async () => {
     const page = await respond([]);
 

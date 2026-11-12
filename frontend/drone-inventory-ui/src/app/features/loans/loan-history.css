@@ -6,3 +6,22 @@
     grid-template-columns: auto 1fr;
   }
 }
+
+/* Returned of loaned (REQ-022). */
+.accessory {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Something did not come back: an outlined mark like a long loan, no new color
+   (red stays reserved for backend errors). */
+.missing {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 0.1em 0.6em;
+  border: 1.5px solid var(--text);
+  border-radius: 999px;
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}

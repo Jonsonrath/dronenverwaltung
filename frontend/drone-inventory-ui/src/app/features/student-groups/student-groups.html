@@ -29,7 +29,7 @@
             <!-- Which drone a group has is read from the active loans the backend lists. -->
             @if (dronesByGroup().get(group.id); as drones) {
               <span class="tag tag-loaned has-drone">hat {{ drones.join(', ') }}</span>
-            } @else {
+            } @else if (loansLoaded()) {
               <span class="no-drone">keine Drohne</span>
             }
           </li>

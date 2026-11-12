@@ -22,6 +22,12 @@ export class StudentGroups {
   // Only to show which drone a group has right now. If this request fails, the badges are left out.
   private readonly activeLoans = rxResource({ stream: () => this.loanApi.list('Active') });
 
+  /**
+   * True once the active loans arrived. Before that – still loading or failed – no badge is shown:
+   * "keine Drohne" would be a claim the page cannot back up.
+   */
+  protected readonly loansLoaded = computed(() => this.activeLoans.hasValue());
+
   /** Names of the drones each group has right now, by group id – read from the active loans. */
   protected readonly dronesByGroup = computed(() => {
     const drones = new Map<number, string[]>();

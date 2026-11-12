@@ -3,6 +3,7 @@
 The example from the assignment, run completely through the user interface against the real backend and database.
 
 - **Run 2 – 12.11.2026:** task 4.1 (#59) of the OpenSpec change `improve-frontend-design`, through the redesigned German UI, including rename and delete of student groups (`manage-student-groups`).
+- **Run 3 – 12.11.2026:** the feature backlog (REQ-013 … REQ-024), see the section at the end.
 - **Run 1 – 05.11.2026:** task 8.1 (#24) of the OpenSpec change `initial-drone-lending-system`, through the first English UI. Result: all 10 steps passed (see the git history of this file).
 
 ## Setup
@@ -49,3 +50,25 @@ The steps were driven with a Playwright script in Chrome (not part of the reposi
 ## How to repeat it
 
 Follow the steps above by hand; it takes about three minutes. Start with an empty database so that the drone list, active loans and history begin empty.
+
+## Run 3 – feature backlog (REQ-013 … REQ-024), 12.11.2026
+
+Same setup (own empty database file, Chrome 1280 × 860, then 400 px). Driven with a Playwright script (not part of the repository); `main` at 65631ce.
+
+| # | Step in the UI | Expected (spec) | Result |
+|---|---|---|---|
+| 1 | *Drohnen* → add "TELO-07" with SSID "TELLO-9FA21B" and "TELLO-11" without SSID | bay shows "SSID TELLO-9FA21B" (REQ-024) | ✅ |
+| 2 | **Bearbeiten** TELLO-11, SSID "tello-9fa21b" | backend 409 "… SSID … gibt es bereits" in the sheet (REQ-024) | ✅ |
+| 3 | **Bearbeiten** TELO-07 → name "TELLO-07" | "TELLO-07 gespeichert." (REQ-013) | ✅ |
+| 4 | **Defekt melden** TELLO-11, "Propeller gebrochen" | status **Defekt**, reason in the bay (REQ-014, REQ-002) | ✅ |
+| 5 | *Schülergruppen* → Group 3, **+ Schüler hinzufügen** Anna Berger and Ben Huber (4AHIF) | both listed in Group 3 (REQ-016, REQ-017) | ✅ |
+| 6 | Anna Berger → **Verantwortlich machen** | Group 3 shows "verantwortlich" (REQ-020) | ✅ |
+| 7 | **Löschen** Group 3 | 409 "… hat noch Schüler …" (REQ-012) | ✅ |
+| 8 | *Neue Ausleihe* → damaged TELLO-11 for Group 3 | 409 "… ist defekt …" (REQ-004) | ✅ |
+| 9 | *Neue Ausleihe* → TELLO-07, Group 3, 4 Akkus, 8 Propeller | bar shows Anna Berger; active loan lists her (REQ-021) | ✅ |
+| 10 | *Aktive Ausleihen* → **Zurückgeben**: 3 Akkus, Schaden "Kamera ausgefallen" | "… zurückgegeben und als defekt markiert." (REQ-022, REQ-023) | ✅ |
+| 11 | *Verlauf* | "3 von 4", report "Kamera ausgefallen" (REQ-022, REQ-023) | ✅ |
+| 12 | *Drohnen* → TELLO-07 **Defekt**; TELLO-11 **Repariert** | TELLO-11 **Verfügbar** (REQ-015) | ✅ |
+| 13 | Every page at 400 px | no horizontal scrolling | ✅ |
+
+No browser errors were logged. Automated tests in the same state: `dotnet test` 305 passed, `npx ng test --watch=false` 135 passed, `npx ng build` without errors, no pending EF model changes.

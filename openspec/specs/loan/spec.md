@@ -6,7 +6,7 @@ Records which StudentGroup has loaned which Drone together with how many batteri
 ## Requirements
 
 ### Requirement: Loan drone (REQ-004)
-The system SHALL allow loaning an available Drone to an existing StudentGroup. The new Loan SHALL have status Active, the current date and time as LoanDate set by the system, and no ReturnDate. Afterwards the Drone SHALL be Loaned.
+The system SHALL allow loaning an available and undamaged Drone to an existing StudentGroup. The new Loan SHALL have status Active, the current date and time as LoanDate set by the system, and no ReturnDate. Afterwards the Drone SHALL be Loaned. A Loan request for a damaged Drone SHALL be rejected as a conflict.
 
 #### Scenario: Loan an available drone
 - **GIVEN** the Drone "TELLO-07" is Available
@@ -14,6 +14,19 @@ The system SHALL allow loaning an available Drone to an existing StudentGroup. T
 - **WHEN** "TELLO-07" is loaned to "Group 3"
 - **THEN** an active Loan for "TELLO-07" and "Group 3" is created with the current date as LoanDate and no ReturnDate
 - **AND** "TELLO-07" is Loaned
+
+#### Scenario: Damaged drone cannot be loaned
+- **GIVEN** the Drone "TELLO-07" is damaged and has no active Loan
+- **AND** the StudentGroup "Group 3" exists
+- **WHEN** "TELLO-07" is loaned to "Group 3"
+- **THEN** the request is rejected as a conflict
+- **AND** no Loan is created
+- **AND** "TELLO-07" stays Damaged
+
+#### Scenario: Repaired drone can be loaned
+- **GIVEN** the Drone "TELLO-07" was damaged and has been repaired
+- **WHEN** "TELLO-07" is loaned to "Group 3"
+- **THEN** an active Loan for "TELLO-07" and "Group 3" is created
 
 #### Scenario: Unknown drone rejected
 - **GIVEN** the StudentGroup "Group 3" exists
@@ -137,3 +150,73 @@ Returned Loans SHALL never be deleted. The system SHALL list all returned Loans 
 - **GIVEN** a Loan was created and returned
 - **WHEN** the application is stopped and started again
 - **THEN** the Loan is still listed in the loan history
+
+### Requirement: Responsible student on loans (REQ-021)
+When a Loan is created, the system SHALL store the name of the StudentGroup's responsible Student at that time with the Loan. Active Loans and the loan history SHALL show this name. Later changes of the responsible Student, of the Student or of the StudentGroup SHALL NOT change the name stored with an existing Loan. A StudentGroup without a responsible Student SHALL still be able to loan a Drone; the Loan then has no responsible Student.
+
+#### Scenario: Loan stores the responsible student
+- **GIVEN** "Anna Berger" is responsible for "Group 3"
+- **WHEN** "TELLO-07" is loaned to "Group 3"
+- **THEN** the active Loan is listed with the responsible Student "Anna Berger"
+
+#### Scenario: Group without responsible student
+- **GIVEN** "Group 86" has no responsible Student
+- **WHEN** "TELLO-02" is loaned to "Group 86"
+- **THEN** an active Loan is created without a responsible Student
+
+#### Scenario: History keeps the name at loan time
+- **GIVEN** "TELLO-07" was loaned to "Group 3" while "Anna Berger" was responsible
+- **AND** "Ben Huber" has become responsible and "Anna Berger" has been removed
+- **WHEN** the Loan is returned and the loan history is requested
+- **THEN** the Loan is listed with the responsible Student "Anna Berger"
+
+### Requirement: Record returned accessories (REQ-022)
+When a Loan is returned, the system SHALL record the number of returned batteries and returned propellers. A number that is not given SHALL count as the loaned quantity. Each returned number SHALL be a whole number from 0 to the loaned quantity; otherwise the return SHALL be rejected as invalid input and the Loan SHALL stay active. The loan history SHALL list the returned quantities and the missing quantities (loaned minus returned).
+
+#### Scenario: Complete return
+- **GIVEN** "TELLO-07" is loaned to "Group 3" with 4 batteries and 8 propellers
+- **WHEN** the Loan is returned without returned quantities
+- **THEN** the Loan is listed in the history with 4 of 4 batteries and 8 of 8 propellers returned and nothing missing
+
+#### Scenario: Missing battery
+- **GIVEN** "TELLO-07" is loaned to "Group 3" with 4 batteries and 8 propellers
+- **WHEN** the Loan is returned with 3 batteries and 8 propellers
+- **THEN** the Loan is listed in the history with 1 battery missing and no propeller missing
+
+#### Scenario: More returned than loaned
+- **GIVEN** "TELLO-07" is loaned to "Group 3" with 4 batteries
+- **WHEN** the Loan is returned with 5 batteries
+- **THEN** the request is rejected as invalid input
+- **AND** the Loan stays active
+
+#### Scenario: Negative returned quantity
+- **GIVEN** "TELLO-07" is loaned to "Group 3" with 8 propellers
+- **WHEN** the Loan is returned with -1 propellers
+- **THEN** the request is rejected as invalid input
+- **AND** the Loan stays active
+
+### Requirement: Report damage on return (REQ-023)
+When a Loan is returned, the system SHALL accept an optional damage report. If a report is given, the Loan SHALL keep it and the Drone SHALL be damaged with the report as its damage reason. A report that is empty or consists only of whitespace SHALL count as no report. The loan history SHALL list the damage report of each returned Loan.
+
+#### Scenario: Return with damage report
+- **GIVEN** "TELLO-07" is loaned to "Group 3"
+- **WHEN** the Loan is returned with the damage report "Propeller gebrochen"
+- **THEN** the Loan is listed in the history with the damage report "Propeller gebrochen"
+- **AND** "TELLO-07" has status Damaged with the damage reason "Propeller gebrochen"
+
+#### Scenario: Return without damage report
+- **GIVEN** "TELLO-07" is loaned to "Group 3" and is not damaged
+- **WHEN** the Loan is returned without a damage report
+- **THEN** the Loan has no damage report
+- **AND** "TELLO-07" is Available
+
+#### Scenario: Whitespace-only report
+- **GIVEN** "TELLO-07" is loaned to "Group 3" and is not damaged
+- **WHEN** the Loan is returned with the damage report "   "
+- **THEN** the Loan has no damage report
+- **AND** "TELLO-07" is Available
+
+#### Scenario: Damaged drone cannot be loaned after the return
+- **GIVEN** the Loan of "TELLO-07" was returned with the damage report "Propeller gebrochen"
+- **WHEN** "TELLO-07" is loaned to "Group 1"
+- **THEN** the request is rejected as a conflict

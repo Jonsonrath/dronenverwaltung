@@ -88,3 +88,14 @@ Content-Type: application/json
 POST {{DroneInventory.Api_HostAddress}}/api/loans/1/return
 
 ###
+
+### Return with returned accessories (REQ-022): 3 of 4 batteries → 200; more than loaned or negative → 422
+POST {{DroneInventory.Api_HostAddress}}/api/loans/2/return
+Content-Type: application/json
+
+{
+  "batteries": 3,
+  "propellers": 8
+}
+
+###

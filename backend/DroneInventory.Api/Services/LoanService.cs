@@ -9,8 +9,8 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
     /// <summary>
     /// Loans a drone to a student group with batteries and propellers (REQ-004, REQ-006).
     /// Throws NotFoundException for an unknown drone or group, ValidationException
-    /// for a negative quantity and ConflictException if the drone already has an
-    /// active loan (REQ-005). The LoanDate is set by the system.
+    /// for a negative quantity and ConflictException if the drone is damaged (MODIFIED REQ-004)
+    /// or already has an active loan (REQ-005). The LoanDate is set by the system.
     /// </summary>
     public async Task<Loan> CreateAsync(
         int droneId, int studentGroupId, int batteries, int propellers, CancellationToken cancellationToken = default)
@@ -21,6 +21,12 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
             ?? throw new NotFoundException($"Die Schülergruppe {studentGroupId} gibt es nicht.");
 
         var loan = new Loan(drone, group, batteries, propellers, time.GetUtcNow().UtcDateTime);
+
+        // Damage is checked before the active loan (support-damaged-drones design §4).
+        if (drone.DamageReason is not null)
+        {
+            throw new ConflictException($"Die Drohne \"{drone.Name}\" ist defekt: {drone.DamageReason}");
+        }
 
         if (await db.Loans.AnyAsync(l => l.DroneId == droneId && l.Status == LoanStatus.Active, cancellationToken))
         {
@@ -47,8 +53,14 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
     /// ReturnDate; the drone becomes available again because it has no active loan.
     /// Throws NotFoundException for an unknown loan and ConflictException if the loan
     /// has already been returned. The loan itself is kept (REQ-010).
+    /// Returned batteries / propellers (REQ-022): null counts as the loaned quantity, a
+    /// number outside 0..loaned quantity throws ValidationException and the loan stays active.
     /// </summary>
-    public async Task<Loan> ReturnAsync(int loanId, CancellationToken cancellationToken = default)
+    public async Task<Loan> ReturnAsync(
+        int loanId,
+        int? returnedBatteries = null,
+        int? returnedPropellers = null,
+        CancellationToken cancellationToken = default)
     {
         var loan = await db.Loans
             .Include(l => l.Drone)
@@ -57,7 +69,7 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
             .SingleOrDefaultAsync(l => l.Id == loanId, cancellationToken)
             ?? throw new NotFoundException($"Die Ausleihe {loanId} gibt es nicht.");
 
-        loan.Return(time.GetUtcNow().UtcDateTime);
+        loan.Return(time.GetUtcNow().UtcDateTime, returnedBatteries, returnedPropellers);
         try
         {
             await db.SaveChangesAsync(cancellationToken);

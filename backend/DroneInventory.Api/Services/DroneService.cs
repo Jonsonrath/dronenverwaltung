@@ -44,8 +44,7 @@ public class DroneService(DroneInventoryDbContext db)
     public async Task<(Drone Drone, DroneStatus Status)> UpdateAsync(
         int id, string name, string? description, string? ssid = null, CancellationToken cancellationToken = default)
     {
-        var drone = await db.Drones.FirstOrDefaultAsync(d => d.Id == id, cancellationToken)
-            ?? throw new NotFoundException($"Die Drohne {id} gibt es nicht.");
+        var drone = await FindAsync(id, cancellationToken);
         drone.Edit(name, description, ssid);
 
         // Only other drones count: changing the spelling of the own name is allowed.
@@ -66,8 +65,33 @@ public class DroneService(DroneInventoryDbContext db)
             throw Duplicate(drone, exception);
         }
 
-        var isLoaned = await db.Loans.AnyAsync(l => l.DroneId == id && l.Status == LoanStatus.Active, cancellationToken);
-        return (drone, DroneStatusRules.Derive(isLoaned, drone.DamageReason));
+        return (drone, await StatusOfAsync(drone, cancellationToken));
+    }
+
+    /// <summary>
+    /// Marks a drone as damaged (REQ-014); a new reason replaces the old one. A loaned drone
+    /// stays loaned, its loan is not touched. Throws NotFoundException for an unknown id and
+    /// ValidationException for an empty reason.
+    /// </summary>
+    public async Task<(Drone Drone, DroneStatus Status)> ReportDamageAsync(
+        int id, string? reason, CancellationToken cancellationToken = default)
+    {
+        var drone = await FindAsync(id, cancellationToken);
+        drone.ReportDamage(reason);
+        await db.SaveChangesAsync(cancellationToken);
+        return (drone, await StatusOfAsync(drone, cancellationToken));
+    }
+
+    /// <summary>
+    /// Marks a damaged drone as repaired (REQ-015) and removes the reason. Throws
+    /// NotFoundException for an unknown id and ConflictException if the drone is not damaged.
+    /// </summary>
+    public async Task<(Drone Drone, DroneStatus Status)> RepairAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var drone = await FindAsync(id, cancellationToken);
+        drone.Repair();
+        await db.SaveChangesAsync(cancellationToken);
+        return (drone, await StatusOfAsync(drone, cancellationToken));
     }
 
     /// <summary>
@@ -108,6 +132,16 @@ public class DroneService(DroneInventoryDbContext db)
 
     private static ConflictException DuplicateSsid(Drone drone) =>
         new($"Eine Drohne mit der SSID \"{drone.Ssid}\" gibt es bereits (Groß- und Kleinschreibung wird nicht unterschieden).");
+
+    private async Task<Drone> FindAsync(int id, CancellationToken cancellationToken) =>
+        await db.Drones.FirstOrDefaultAsync(d => d.Id == id, cancellationToken)
+            ?? throw new NotFoundException($"Die Drohne {id} gibt es nicht.");
+
+    private async Task<DroneStatus> StatusOfAsync(Drone drone, CancellationToken cancellationToken)
+    {
+        var isLoaned = await db.Loans.AnyAsync(l => l.DroneId == drone.Id && l.Status == LoanStatus.Active, cancellationToken);
+        return DroneStatusRules.Derive(isLoaned, drone.DamageReason);
+    }
 
     private static ConflictException DuplicateName(Drone drone) =>
         new($"Eine Drohne mit dem Namen \"{drone.Name}\" gibt es bereits (Groß- und Kleinschreibung wird nicht unterschieden).");

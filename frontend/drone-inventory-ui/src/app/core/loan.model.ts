@@ -12,6 +12,18 @@ export interface Loan {
   loanDate: string;
   returnDate: string | null;
   status: LoanStatus;
+  /**
+   * Returned accessories (REQ-022). Null while the loan is active and for loans returned
+   * before returned quantities were recorded – those count as complete.
+   */
+  returnedBatteries?: number | null;
+  returnedPropellers?: number | null;
+}
+
+/** Optional body of POST /api/loans/{id}/return (REQ-022). Missing numbers count as the loaned quantity. */
+export interface ReturnLoanRequest {
+  batteries?: number;
+  propellers?: number;
 }
 
 /** Body of POST /api/loans (REQ-004, REQ-006). Missing quantities count as 0. */

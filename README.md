@@ -47,7 +47,7 @@ SQLite
 
 | Begriff | Bedeutung |
 |---|---|
-| `Drone` | Fluggerät, das ausgeliehen werden kann (Id, Name, Description) |
+| `Drone` | Fluggerät, das ausgeliehen werden kann (Id, Name, Description, DamageReason) |
 | `StudentGroup` | Schülergruppe, die ausleiht und verantwortlich ist (Id, Name) |
 | `Loan` | Ausleihvorgang mit Gruppe, Drohne, `LoanDate`, `ReturnDate`, Status |
 | `LoanItem` | Zubehörposition einer Ausleihe: Typ (`Battery` \| `Propeller`) und Menge |
@@ -55,18 +55,18 @@ SQLite
 ### Domain Rules
 
 - Eine Drohne hat höchstens eine aktive Ausleihe.
-- Nur verfügbare Drohnen dürfen ausgeliehen werden.
+- Nur verfügbare Drohnen dürfen ausgeliehen werden; eine defekte Drohne nicht.
 - Eine Rückgabe macht die Drohne wieder verfügbar.
 - Zubehörmengen sind nie negativ.
 - Zurückgegebene Ausleihen bleiben gespeichert.
 - Akkus und Propeller werden nur als Menge geführt.
-- Die Verfügbarkeit ergibt sich aus der aktiven Ausleihe (kein eigenes Statusfeld).
+- Der Status ergibt sich aus der aktiven Ausleihe und dem gemeldeten Defekt (kein eigenes Statusfeld): Ausgeliehen, sonst Defekt, sonst Verfügbar.
 
 ## 🖥️ Bedienung
 
 | Seite | Pfad | Was man dort tut | Anforderung |
 |---|---|---|---|
-| Drohnen | `/drones` | Drohnen mit Status (Verfügbar / Ausgeliehen) sehen, neue Drohne hinzufügen, Name und Beschreibung bearbeiten | REQ-001, REQ-002, REQ-013 |
+| Drohnen | `/drones` | Drohnen mit Status (Verfügbar / Ausgeliehen / Defekt) sehen, neue Drohne hinzufügen, Name, SSID und Beschreibung bearbeiten, Defekt melden und als repariert markieren | REQ-001, REQ-002, REQ-013 – REQ-015, REQ-024 |
 | Schülergruppen | `/student-groups` | Gruppen sehen (mit der Drohne, die sie gerade haben), hinzufügen, umbenennen und löschen | REQ-003, REQ-011, REQ-012 |
 | Neue Ausleihe | `/loans/new` | Drohne mit Akkus und Propellern an eine Gruppe ausleihen | REQ-004 – REQ-006 |
 | Aktive Ausleihen | `/loans` | Ausgeliehene Drohnen sehen und zurückgeben | REQ-007 – REQ-009 |
@@ -93,13 +93,16 @@ Ausformuliert mit SHALL und Given/When/Then in [`docs/requirements.md`](docs/req
 | REQ-011 | Schülergruppe umbenennen |
 | REQ-012 | Schülergruppe löschen (nur ohne Ausleihen) |
 | REQ-013 | Drohne bearbeiten (Name, Beschreibung) |
+| REQ-014 | Defekt einer Drohne melden |
+| REQ-015 | Drohne als repariert markieren |
+| REQ-024 | SSID einer Drohne (optional, eindeutig) |
 
 ## 🚫 Out of Scope
 
 - Login, Benutzerkonten, Rollen
 - Einzelinventarisierung von Akkus (BAT-001 …)
 - Reservierungen im Voraus
-- Schadensverwaltung und Rückgabedifferenzen
+- Rückgabedifferenzen
 - Auswertungen, Statistiken, Exporte
 
 Alles Weitere folgt später als eigener Change Request.

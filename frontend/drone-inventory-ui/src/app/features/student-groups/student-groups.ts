@@ -4,11 +4,14 @@ import { form, FormField, FormRoot, required } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { LoanApi } from '../../core/loan-api';
 import { problemMessage } from '../../core/problem-message';
+import { StudentApi } from '../../core/student-api';
 import { StudentGroupApi } from '../../core/student-group-api';
 import { StudentGroup } from '../../core/student-group.model';
+import { Student } from '../../core/student.model';
 
 /**
- * Student group list with the forms to add (REQ-003), rename (REQ-011) and delete (REQ-012) a group.
+ * Student group list with the forms to add (REQ-003), rename (REQ-011) and delete (REQ-012) a group,
+ * and the members of every group with the forms to add, move and remove a student (REQ-016 ... REQ-019).
  * Every rule is checked by the backend; its messages are shown in the sheet that sent the request.
  */
 @Component({
@@ -20,6 +23,7 @@ import { StudentGroup } from '../../core/student-group.model';
 export class StudentGroups {
   private readonly studentGroupApi = inject(StudentGroupApi);
   private readonly loanApi = inject(LoanApi);
+  private readonly studentApi = inject(StudentApi);
 
   protected readonly groups = rxResource({ stream: () => this.studentGroupApi.list() });
 
@@ -50,6 +54,8 @@ export class StudentGroups {
   private readonly addSheet = viewChild.required<ElementRef<HTMLDialogElement>>('addSheet');
   private readonly renameSheet = viewChild.required<ElementRef<HTMLDialogElement>>('renameSheet');
   private readonly deleteSheet = viewChild.required<ElementRef<HTMLDialogElement>>('deleteSheet');
+  private readonly addStudentSheet = viewChild.required<ElementRef<HTMLDialogElement>>('addStudentSheet');
+  private readonly studentSheet = viewChild.required<ElementRef<HTMLDialogElement>>('studentSheet');
 
   /** A click on the dimmed area around a sheet closes it; the dialog element itself is that area. */
   protected closeOnBackdrop(event: MouseEvent) {
@@ -195,6 +201,127 @@ export class StudentGroups {
       this.deleteError.set(problemMessage(error));
     } finally {
       this.deleteBusy.set(false);
+    }
+  }
+
+  // ---- add student (REQ-016) ----
+
+  /** The group that gets a new student. */
+  protected readonly addingTo = signal<StudentGroup | undefined>(undefined);
+
+  protected readonly newStudent = signal({ name: '', class: '' });
+
+  /** Message from the backend when adding failed, e.g. 409 name already in the group or 422 blank name. */
+  protected readonly studentError = signal('');
+
+  protected openAddStudent(group: StudentGroup) {
+    this.addingTo.set(group);
+    this.studentError.set('');
+    this.studentForm().reset({ name: '', class: '' });
+    this.addStudentSheet().nativeElement.showModal();
+  }
+
+  protected closeAddStudent() {
+    this.addStudentSheet().nativeElement.close();
+  }
+
+  // Only a convenience check; the backend validates the name (REQ-016).
+  protected readonly studentForm = form(
+    this.newStudent,
+    (student) => {
+      required(student.name, { message: 'Name eingeben.' });
+    },
+    {
+      submission: {
+        action: async () => {
+          const group = this.addingTo();
+          if (!group) {
+            return undefined;
+          }
+          this.studentError.set('');
+          this.notice.set('');
+          try {
+            const { name, class: schoolClass } = this.newStudent();
+            const student = await firstValueFrom(this.studentApi.add(group.id, { name, class: schoolClass }));
+            this.notice.set(`${student.name} ist jetzt in ${group.name}.`);
+            this.closeAddStudent();
+            this.groups.reload();
+          } catch (error) {
+            this.studentError.set(problemMessage(error));
+          }
+          return undefined;
+        },
+        onInvalid: () => this.studentError.set(''),
+      },
+    },
+  );
+
+  // ---- move (REQ-018) and remove (REQ-019) a student ----
+
+  /** The student whose sheet is open, with the group it is in. */
+  protected readonly managing = signal<{ student: Student; group: StudentGroup } | undefined>(undefined);
+
+  /** The groups the open student can be moved to: all except its own. */
+  protected readonly moveTargets = computed(() => {
+    const managing = this.managing();
+    if (!managing || !this.groups.hasValue()) {
+      return [];
+    }
+    return this.groups.value().filter((group) => group.id !== managing.group.id);
+  });
+
+  /** Message from the backend when moving or removing failed, e.g. 409 name already in the target group. */
+  protected readonly studentActionError = signal('');
+
+  /** True while a move or remove request is on its way, so nothing is sent twice. */
+  protected readonly studentBusy = signal(false);
+
+  protected openStudent(student: Student, group: StudentGroup) {
+    this.managing.set({ student, group });
+    this.studentActionError.set('');
+    this.studentSheet().nativeElement.showModal();
+  }
+
+  protected closeStudent() {
+    this.studentSheet().nativeElement.close();
+  }
+
+  /** Always sent: whether the target group already has the name is decided by the backend (409). */
+  protected async moveTo(target: StudentGroup) {
+    const managing = this.managing();
+    if (!managing) {
+      return;
+    }
+    await this.studentAction(
+      () => firstValueFrom(this.studentApi.move(managing.student.id, { studentGroupId: target.id })),
+      `${managing.student.name} ist jetzt in ${target.name}.`,
+    );
+  }
+
+  protected async removeStudent() {
+    const managing = this.managing();
+    if (!managing) {
+      return;
+    }
+    await this.studentAction(
+      () => firstValueFrom(this.studentApi.remove(managing.student.id)),
+      `${managing.student.name} aus ${managing.group.name} entfernt.`,
+    );
+  }
+
+  private async studentAction(request: () => Promise<unknown>, success: string) {
+    this.studentBusy.set(true);
+    this.studentActionError.set('');
+    this.notice.set('');
+    try {
+      await request();
+      this.notice.set(success);
+      this.closeStudent();
+      this.groups.reload();
+    } catch (error) {
+      this.studentActionError.set(problemMessage(error));
+    } finally {
+      this.studentBusy.set(false);
     }
   }
 }

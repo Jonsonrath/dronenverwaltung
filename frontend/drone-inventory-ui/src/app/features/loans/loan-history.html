@@ -28,11 +28,22 @@
         </thead>
         <tbody>
           @for (loan of loans.value(); track loan.id) {
-            <tr>
+            <tr [class.has-missing]="missingOf(loan, 'batteries') > 0 || missingOf(loan, 'propellers') > 0">
               <td class="drone">{{ loan.droneName }}</td>
               <td class="group">{{ loan.studentGroupName }}</td>
-              <td class="number" data-label="Akkus">{{ loan.batteries }}</td>
-              <td class="number" data-label="Propeller">{{ loan.propellers }}</td>
+              <!-- "3 von 4": returned of loaned (REQ-022), with a mark when something is missing. -->
+              <td class="number accessory" data-label="Akkus">
+                {{ returnedOf(loan, 'batteries') }} von {{ loan.batteries }}
+                @if (missingOf(loan, 'batteries') > 0) {
+                  <span class="missing">{{ missingOf(loan, 'batteries') }} fehlt</span>
+                }
+              </td>
+              <td class="number accessory" data-label="Propeller">
+                {{ returnedOf(loan, 'propellers') }} von {{ loan.propellers }}
+                @if (missingOf(loan, 'propellers') > 0) {
+                  <span class="missing">{{ missingOf(loan, 'propellers') }} fehlt</span>
+                }
+              </td>
               <td class="date" data-label="Ausgeliehen am">{{ loan.loanDate | date: 'dd.MM.yyyy' }}</td>
               <td class="date" data-label="Zurückgegeben am">{{ loan.returnDate | date: 'dd.MM.yyyy' }}</td>
             </tr>

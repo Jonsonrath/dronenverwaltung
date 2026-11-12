@@ -26,6 +26,17 @@ export class QuantityStepper implements FormValueControl<number> {
   /** Id of the number field, so a `<label for>` outside can point to it. */
   readonly inputId = input<string>();
 
+  /**
+   * Optional upper end for "+", e.g. the loaned quantity at a return (REQ-022). Only a
+   * convenience like "−" stopping at 0: a higher number can still be typed, the backend decides.
+   */
+  readonly max = input<number | undefined>(undefined);
+
+  protected atMax(): boolean {
+    const max = this.max();
+    return max !== undefined && this.value() >= max;
+  }
+
   protected decrement() {
     this.value.update((current) => current - 1);
   }

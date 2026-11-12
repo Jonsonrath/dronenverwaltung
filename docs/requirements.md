@@ -18,12 +18,13 @@ The application shall answer:
 
 | Term | Meaning |
 |---|---|
-| `Drone` | An aircraft that can be loaned. Id, Name, Description. |
+| `Drone` | An aircraft that can be loaned. Id, Name, Description, DamageReason (empty = not damaged). |
 | `StudentGroup` | A group of students that loans and is responsible. Id, Name. |
+| `Student` | A member of exactly one student group. Name, Class (optional). |
 | `Loan` | A loan of one drone to one student group. LoanDate, ReturnDate, Status (Active \| Returned). |
 | `LoanItem` | An accessory position of a loan. Type (Battery \| Propeller), Quantity. |
 
-A drone is **Available** if it has no active loan, otherwise **Loaned**. This availability is derived, never entered.
+A drone is **Loaned** if it has an active loan, otherwise **Damaged** if a damage is reported, otherwise **Available**. This status is derived, never entered.
 
 ## Requirements
 
@@ -46,14 +47,24 @@ The system SHALL allow creating a drone with a name and an optional free-text de
 - THEN the drone is rejected
 
 ### REQ-002 List drones
-The system SHALL list all drones with name, status (Available | Loaned) and description.
+The system SHALL list all drones with name, status (Available | Loaned | Damaged), description and, for a damaged drone, the damage reason. *Modified by the OpenSpec change `support-damaged-drones` (12.11.2026).*
 
 **Scenario: Show status of drones**
 - GIVEN "TELLO-02" has an active loan
-- AND "TELLO-07" has no active loan
+- AND "TELLO-07" has no active loan and is not damaged
 - WHEN the drone list is shown
 - THEN "TELLO-02" is shown as Loaned
 - AND "TELLO-07" is shown as Available
+
+**Scenario: Damaged drone**
+- GIVEN "TELLO-11" has no active loan and is damaged with the reason "Propeller gebrochen"
+- WHEN the drone list is shown
+- THEN "TELLO-11" is shown as Damaged with the reason "Propeller gebrochen"
+
+**Scenario: Loaned drone that is damaged**
+- GIVEN "TELLO-02" has an active loan and is damaged with the reason "Kamera ausgefallen"
+- WHEN the drone list is shown
+- THEN "TELLO-02" is shown as Loaned with the reason "Kamera ausgefallen"
 
 ### REQ-003 Create student group
 The system SHALL allow creating a student group with a name.
@@ -72,7 +83,7 @@ The system SHALL allow creating a student group with a name.
 - THEN the student group is rejected
 
 ### REQ-004 Loan drone
-An available drone SHALL be loaned to an existing student group. The loan date SHALL be set by the system.
+An available and undamaged drone SHALL be loaned to an existing student group. The loan date SHALL be set by the system. A loan of a damaged drone SHALL be rejected as a conflict. *Modified by the OpenSpec change `support-damaged-drones` (12.11.2026).*
 
 **Scenario: Loan an available drone**
 - GIVEN the drone "TELLO-07" is available
@@ -80,6 +91,17 @@ An available drone SHALL be loaned to an existing student group. The loan date S
 - WHEN "TELLO-07" is loaned to "Group 3"
 - THEN an active loan is created with the current date as LoanDate
 - AND "TELLO-07" is Loaned
+
+**Scenario: Damaged drone cannot be loaned**
+- GIVEN the drone "TELLO-07" is damaged and has no active loan
+- WHEN "TELLO-07" is loaned to "Group 3"
+- THEN the loan is rejected as a conflict
+- AND "TELLO-07" stays Damaged
+
+**Scenario: Repaired drone can be loaned**
+- GIVEN the drone "TELLO-07" was damaged and has been repaired
+- WHEN "TELLO-07" is loaned to "Group 3"
+- THEN an active loan is created
 
 **Scenario: Unknown drone or group**
 - WHEN a loan is requested for a drone or student group that does not exist
@@ -161,10 +183,10 @@ Returned loans SHALL never be deleted. The system SHALL list past (returned) loa
 - THEN the request is rejected as a conflict
 
 ### REQ-012 Delete student group
-*Added with the OpenSpec change `manage-student-groups` (11.11.2026).* The system SHALL allow deleting a student group that has no loan. A group with an active or returned loan SHALL NOT be deleted, so that the history stays complete.
+*Added with the OpenSpec change `manage-student-groups` (11.11.2026), modified by `student-group-members` (12.11.2026).* The system SHALL allow deleting a student group that has no loan and no student. A group with an active or returned loan SHALL NOT be deleted, so that the history stays complete. A group that still has students SHALL NOT be deleted; they are moved or removed first.
 
 **Scenario: Group without loans**
-- GIVEN a student group "Group 86" without any loan exists
+- GIVEN a student group "Group 86" without any loan and without students exists
 - WHEN it is deleted
 - THEN it is no longer listed
 
@@ -172,6 +194,11 @@ Returned loans SHALL never be deleted. The system SHALL list past (returned) loa
 - GIVEN "Group 3" has an active or returned loan
 - WHEN it is deleted
 - THEN the request is rejected as a conflict and the loan stays
+
+**Scenario: Group with students**
+- GIVEN "Group 86" has no loan and the student "Ben Huber"
+- WHEN it is deleted
+- THEN the request is rejected as a conflict and "Group 86" and "Ben Huber" stay
 
 ### REQ-013 Edit drone
 *Added with the OpenSpec change `edit-drones` (12.11.2026).* The system SHALL allow changing the name and the description of a drone. The same rules as for a new drone apply (not empty, unique). Loans stay assigned to the drone.
@@ -186,32 +213,145 @@ Returned loans SHALL never be deleted. The system SHALL list past (returned) loa
 - WHEN "TELLO-07" is renamed to "tello-02"
 - THEN the request is rejected as a conflict
 
+### REQ-014 Report drone damage
+*Added with the OpenSpec change `support-damaged-drones` (12.11.2026), change request 1.* The system SHALL allow marking a drone as damaged with a reason. The reason SHALL NOT be empty. Reporting again SHALL replace the reason. A loaned drone MAY be marked as damaged; its loan stays unchanged.
+
+**Scenario: Mark an available drone as damaged**
+- GIVEN "TELLO-07" is Available
+- WHEN it is marked as damaged with the reason "Propeller gebrochen"
+- THEN it is Damaged with the reason "Propeller gebrochen"
+
+**Scenario: Mark a loaned drone as damaged**
+- GIVEN "TELLO-07" has an active loan for "Group 3"
+- WHEN it is marked as damaged with the reason "Kamera ausgefallen"
+- THEN it stays Loaned with the reason "Kamera ausgefallen" and the loan is unchanged
+- AND after the return it is Damaged
+
+**Scenario: Empty reason**
+- WHEN a drone is marked as damaged with an empty reason
+- THEN the request is rejected as invalid input
+
+### REQ-015 Repair drone
+*Added with the OpenSpec change `support-damaged-drones` (12.11.2026), change request 1.* The system SHALL allow marking a damaged drone as repaired; the reason SHALL be removed. Repairing a drone that is not damaged SHALL be rejected as a conflict.
+
+**Scenario: Repair a damaged drone**
+- GIVEN "TELLO-07" is damaged and has no active loan
+- WHEN it is marked as repaired
+- THEN it is Available and has no damage reason
+
+**Scenario: Drone not damaged**
+- GIVEN "TELLO-07" is not damaged
+- WHEN it is marked as repaired
+- THEN the request is rejected as a conflict
+
+### REQ-022 Record returned accessories
+*Added with the OpenSpec change `return-differences` (12.11.2026, change request 5).* When a Loan is returned, the system SHALL record the number of returned batteries and returned propellers. A number that is not given SHALL count as the loaned quantity. Each returned number SHALL be a whole number from 0 to the loaned quantity; otherwise the return SHALL be rejected as invalid input and the Loan SHALL stay active. The loan history SHALL list the returned quantities and the missing quantities (loaned minus returned).
+
+**Scenario: Complete return**
+- GIVEN "TELLO-07" is loaned to "Group 3" with 4 batteries and 8 propellers
+- WHEN the Loan is returned without returned quantities
+- THEN the Loan is listed in the history with 4 of 4 batteries and 8 of 8 propellers returned and nothing missing
+
+**Scenario: Missing battery**
+- GIVEN "TELLO-07" is loaned to "Group 3" with 4 batteries and 8 propellers
+- WHEN the Loan is returned with 3 batteries and 8 propellers
+- THEN the Loan is listed in the history with 1 battery missing and no propeller missing
+
+**Scenario: More returned than loaned**
+- GIVEN "TELLO-07" is loaned to "Group 3" with 4 batteries
+- WHEN the Loan is returned with 5 batteries
+- THEN the request is rejected as invalid input
+- AND the Loan stays active
+
+**Scenario: Negative returned quantity**
+- GIVEN "TELLO-07" is loaned to "Group 3" with 8 propellers
+- WHEN the Loan is returned with -1 propellers
+- THEN the request is rejected as invalid input
+- AND the Loan stays active
+
+Loans returned before this change have no returned quantities recorded and count as complete.
+
+### REQ-016 Add student to group
+*Added with the OpenSpec change `student-group-members` (12.11.2026).* The system SHALL allow adding a student with a name and an optional class to a student group. A student belongs to exactly one group. The name SHALL NOT be empty and SHALL be unique within the group (ignoring upper/lower case, also for umlauts, and surrounding spaces); the same name in another group is allowed.
+
+**Scenario: Add a student**
+- GIVEN the student group "Group 3" exists
+- WHEN "Anna Berger" with class "4AHIF" is added to "Group 3"
+- THEN the student is stored with a unique id, the name, the class and the group
+
+**Scenario: Name already in the group**
+- GIVEN "Group 3" has the student "Anna Berger"
+- WHEN " anna berger " is added to "Group 3"
+- THEN the request is rejected as a conflict
+
+### REQ-017 List group members
+*Added with the OpenSpec change `student-group-members` (12.11.2026).* The system SHALL list the students of every student group with id, name and class, ordered by name, as part of the student group list.
+
+**Scenario: Group with students**
+- GIVEN "Group 3" has the students "Ben Huber" and "Anna Berger"
+- WHEN the student group list is requested
+- THEN "Group 3" is listed with "Anna Berger" and "Ben Huber" in this order
+
+### REQ-018 Move student
+*Added with the OpenSpec change `student-group-members` (12.11.2026).* The system SHALL allow moving a student to another student group. The name SHALL stay unique within the target group.
+
+**Scenario: Move a student**
+- GIVEN "Anna Berger" is a student of "Group 3" and "Group 1" exists
+- WHEN "Anna Berger" is moved to "Group 1"
+- THEN she is a student of "Group 1" and no longer of "Group 3"
+
+**Scenario: Name already in the target group**
+- GIVEN "Group 1" already has a student "Anna Berger"
+- WHEN "Anna Berger" of "Group 3" is moved to "Group 1"
+- THEN the request is rejected as a conflict and she stays in "Group 3"
+
+### REQ-019 Remove student
+*Added with the OpenSpec change `student-group-members` (12.11.2026).* The system SHALL allow removing a student. Loans are not affected.
+
+**Scenario: Remove a student**
+- GIVEN "Ben Huber" is a student of "Group 3"
+- WHEN "Ben Huber" is removed
+- THEN "Group 3" is listed without "Ben Huber"
+
+### REQ-024 Drone SSID
+*Added with the OpenSpec change `drone-ssid` (change request 7, 12.11.2026).* The system SHALL allow setting an optional SSID for a drone when it is created or edited, and SHALL list the SSID with each drone. Leading and trailing whitespace SHALL be removed; an empty SSID SHALL count as no SSID. A set SSID SHALL be unique among all drones, ignoring upper/lower case. There is no format check.
+
+**Scenario: Create a drone with SSID**
+- WHEN a drone is created with name "TELLO-07" and SSID " TELLO-9FA21B "
+- THEN the drone is listed with the SSID "TELLO-9FA21B"
+
+**Scenario: Several drones without SSID**
+- GIVEN the drone "TELLO-08" has no SSID
+- WHEN a drone "TELLO-09" is created without SSID
+- THEN both drones are listed without SSID
+
+**Scenario: SSID of another drone**
+- GIVEN the drone "TELLO-07" has the SSID "TELLO-9FA21B"
+- WHEN a drone is created or another drone is edited with the SSID "tello-9fa21b"
+- THEN the request is rejected as a conflict
+
+**Scenario: Change the SSID**
+- GIVEN the drone "TELLO-07" has no SSID
+- WHEN "TELLO-07" is edited with the SSID "TELLO-9FA21B"
+- THEN "TELLO-07" is listed with the SSID "TELLO-9FA21B"
+
 ## Planned Requirements (draft, specs in review)
 
-*Feature backlog of 12.11.2026.* REQ-013 is implemented (see above). Each line is its own OpenSpec change under `openspec/changes/`; the full requirement with SHALL and scenarios is in that change's delta spec. When a change is implemented, its requirements move into the list above.
+*Feature backlog of 12.11.2026.* REQ-013 – REQ-019, REQ-022 and REQ-024 are implemented (see above). Each line is its own OpenSpec change under `openspec/changes/`; the full requirement with SHALL and scenarios is in that change's delta spec. When a change is implemented, its requirements move into the list above.
 
 | ID | Requirement | OpenSpec change | Assignment |
 |---|---|---|---|
-| REQ-014 | Report drone damage | `support-damaged-drones` | change request 1 |
-| REQ-015 | Repair drone | `support-damaged-drones` | change request 1 |
-| REQ-016 | Add student to group | `student-group-members` | change request 3 |
-| REQ-017 | List group members | `student-group-members` | change request 3 |
-| REQ-018 | Move student | `student-group-members` | change request 3 |
-| REQ-019 | Remove student | `student-group-members` | change request 3 |
 | REQ-020 | Set responsible student | `responsible-student` | change request 2 |
 | REQ-021 | Responsible student on loans | `responsible-student` | change request 2 |
-| REQ-022 | Record returned accessories | `return-differences` | change request 5 |
 | REQ-023 | Report damage on return | `damage-report-on-return` | change request 6 |
-| REQ-024 | Drone SSID | `drone-ssid` | change request 7 |
 
-Modified by these changes: REQ-002 and REQ-004 (damaged drones), REQ-012 (groups with students cannot be deleted).
+Modified by the implemented changes: REQ-002 and REQ-004 (damaged drones), REQ-012 (groups with students cannot be deleted).
 
 ## Out of Scope
 
 - Login, user accounts, roles
 - Individual battery inventory (BAT-001 ...)
 - Reservations in advance
-- Damage management and return differences
 - Statistics, reports, exports
 - Editing or deleting drones (student groups: see REQ-011, REQ-012)
 
@@ -222,3 +362,4 @@ These follow later as separate change requests.
 - Drone names and student group names must be unique (ignoring upper/lower case, also for umlauts, and surrounding spaces).
 - A loan with 0 batteries and 0 propellers is allowed (quantities >= 0).
 - LoanDate and ReturnDate are stored as date and time and shown as date.
+- A student belongs to exactly one student group (12.11.2026); student names are unique only within a group.

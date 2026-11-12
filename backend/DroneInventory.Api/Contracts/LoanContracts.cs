@@ -13,6 +13,12 @@ public record CreateLoanRequest(
     int? Batteries,
     int? Propellers);
 
+/// <summary>
+/// Optional body of POST /api/loans/{id}/return (REQ-022). A missing number counts as
+/// the loaned quantity; the range 0..loaned quantity is checked by the domain.
+/// </summary>
+public record ReturnLoanRequest(int? Batteries, int? Propellers);
+
 /// <summary>A loan as returned by the API, flat with drone and group names (design.md §6).</summary>
 public record LoanResponse(
     int Id,
@@ -24,7 +30,9 @@ public record LoanResponse(
     int Propellers,
     DateTime LoanDate,
     DateTime? ReturnDate,
-    LoanStatus Status)
+    LoanStatus Status,
+    int? ReturnedBatteries,
+    int? ReturnedPropellers)
 {
     public static LoanResponse From(Loan loan) => new(
         loan.Id,
@@ -36,5 +44,7 @@ public record LoanResponse(
         loan.Propellers,
         loan.LoanDate,
         loan.ReturnDate,
-        loan.Status);
+        loan.Status,
+        loan.ReturnedBatteries,
+        loan.ReturnedPropellers);
 }

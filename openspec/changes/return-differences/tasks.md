@@ -14,7 +14,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 3. Rules and docs
 
-- [ ] 3.1 AGENTS.md and `openspec/config.yaml`: remove "return differences" from out of scope; `docs/requirements.md` REQ-022; verify `openspec validate return-differences --strict` (#107)
+- [x] 3.1 AGENTS.md and `openspec/config.yaml`: remove "return differences" from out of scope; `docs/requirements.md` REQ-022; verify `openspec validate return-differences --strict` (#107)
 
 ## Workflow follow-up
 

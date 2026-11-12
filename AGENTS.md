@@ -31,7 +31,7 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 - `Drone` (Id, Name, Description)
 - `StudentGroup` (Id, Name)
 - `Loan` (Id, DroneId, StudentGroupId, LoanDate, ReturnDate, Status: Active | Returned)
-- `LoanItem` (Id, LoanId, Type: Battery | Propeller, Quantity)
+- `LoanItem` (Id, LoanId, Type: Battery | Propeller, Quantity, ReturnedQuantity)
 
 `Loan` is the central entity. `LoanItem` only exists inside a `Loan`.
 
@@ -42,6 +42,7 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 - Accessory quantities are integers and never negative.
 - Returned loans are never deleted (history is kept).
 - Batteries and propellers are tracked as quantities only, not as individual items.
+- At the return the returned quantity of each accessory is recorded (0 ... loaned quantity, default: the loaned quantity); missing = loaned − returned is derived, not stored (REQ-022).
 - Drone availability (Available | Loaned) is derived from the active loan. It is NOT stored as its own database field.
 
 ## Rules
@@ -68,7 +69,7 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 - Keep the UI simple. Required views: drone list with status, drone form, student group form, loan form (with batteries/propellers), active loans, return action, loan history.
 
 ## Out of Scope (initial change)
-Login/users/roles, individual battery inventory (BAT-001 ...), reservations, damage management and return differences, statistics/exports. These come later as separate change requests.
+Login/users/roles, individual battery inventory (BAT-001 ...), reservations, damage management, statistics/exports. These come later as separate change requests.
 
 ## Workflow
 - Requirements REQ-001 ... REQ-010 are written with SHALL and at least one Given/When/Then scenario.

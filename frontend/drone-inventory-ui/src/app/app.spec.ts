@@ -30,23 +30,23 @@ describe('App', () => {
   it('shows the five navigation links', async () => {
     const page = await renderAt('/drones');
 
-    const labels = [...page.querySelectorAll('nav a')].map((a) => a.textContent?.trim());
-    expect(labels).toEqual(['Drones', 'Student groups', 'New loan', 'Active loans', 'History']);
+    const labels = [...page.querySelectorAll('nav a .tab-label')].map((a) => a.textContent?.trim());
+    expect(labels).toEqual(['Drohnen', 'Schülergruppen', 'Neue Ausleihe', 'Aktive Ausleihen', 'Verlauf']);
   });
 
   it('opens the drone list by default', async () => {
     const harness = await RouterTestingHarness.create('/');
 
     expect(TestBed.inject(Router).url).toBe('/drones');
-    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe('Drones');
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe('Drohnen');
   });
 
   it.each([
-    ['/drones', 'Drones'],
-    ['/student-groups', 'Student groups'],
-    ['/loans/new', 'New loan'],
-    ['/loans', 'Active loans'],
-    ['/loans/history', 'Loan history'],
+    ['/drones', 'Drohnen'],
+    ['/student-groups', 'Schülergruppen'],
+    ['/loans/new', 'Neue Ausleihe'],
+    ['/loans', 'Aktive Ausleihen'],
+    ['/loans/history', 'Verlauf'],
   ])('shows the page for %s', async (url, heading) => {
     const harness = await RouterTestingHarness.create(url);
 
@@ -56,8 +56,8 @@ describe('App', () => {
   it('marks only the current page as active', async () => {
     const page = await renderAt('/loans/history');
 
-    const active = [...page.querySelectorAll('nav a[aria-current="page"]')].map((a) => a.textContent?.trim());
-    expect(active).toEqual(['History']);
+    const active = [...page.querySelectorAll('nav a[aria-current="page"] .tab-label')].map((a) => a.textContent?.trim());
+    expect(active).toEqual(['Verlauf']);
   });
 
   it('sends unknown URLs to the drone list', async () => {

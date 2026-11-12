@@ -7,7 +7,7 @@ import { QuantityStepper } from './quantity-stepper';
 
 @Component({
   imports: [QuantityStepper, FormField],
-  template: `<app-quantity-stepper label="batteries" inputId="qty" [formField]="accessories.batteries" />`,
+  template: `<app-quantity-stepper label="Akkus" inputId="qty" [formField]="accessories.batteries" />`,
 })
 class Host {
   readonly model = signal({ batteries: 0 });
@@ -28,8 +28,8 @@ describe('QuantityStepper', () => {
     fixture.detectChanges();
   });
 
-  const more = () => element.querySelector('button[aria-label="More batteries"]') as HTMLButtonElement;
-  const fewer = () => element.querySelector('button[aria-label="Fewer batteries"]') as HTMLButtonElement;
+  const more = () => element.querySelector('button[aria-label="Mehr Akkus"]') as HTMLButtonElement;
+  const fewer = () => element.querySelector('button[aria-label="Weniger Akkus"]') as HTMLButtonElement;
   const field = () => element.querySelector('input') as HTMLInputElement;
 
   async function click(button: HTMLButtonElement) {

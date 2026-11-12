@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DroneInventory.Api.Errors;
 
-// Maps domain exceptions to RFC 7807 ProblemDetails. Any other exception is
+// Maps domain exceptions to RFC 7807 ProblemDetails. Title and detail are German: the UI shows them as they are.
+// Any other exception is
 // not handled here and stays a 500.
 public class DomainExceptionHandler(IProblemDetailsService problemDetails) : IExceptionHandler
 {
@@ -13,9 +14,9 @@ public class DomainExceptionHandler(IProblemDetailsService problemDetails) : IEx
     {
         var (status, title) = exception switch
         {
-            NotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
-            ConflictException => (StatusCodes.Status409Conflict, "Conflict"),
-            ValidationException => (StatusCodes.Status422UnprocessableEntity, "Invalid input"),
+            NotFoundException => (StatusCodes.Status404NotFound, "Nicht gefunden"),
+            ConflictException => (StatusCodes.Status409Conflict, "Konflikt"),
+            ValidationException => (StatusCodes.Status422UnprocessableEntity, "Ungültige Eingabe"),
             _ => (0, null),
         };
         if (status == 0)

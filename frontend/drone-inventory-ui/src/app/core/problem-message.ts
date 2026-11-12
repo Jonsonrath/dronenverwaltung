@@ -8,7 +8,7 @@ import { ProblemDetails } from './problem-details.model';
 export function problemMessage(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
     if (error.status === 0) {
-      return 'The backend is not reachable. Check that it is running, then try again.';
+      return 'Das Backend ist nicht erreichbar. Läuft es? Dann erneut versuchen.';
     }
     const problem = error.error as Partial<ProblemDetails> | null;
     if (problem?.detail) {
@@ -22,5 +22,5 @@ export function problemMessage(error: unknown): string {
       return problem.title;
     }
   }
-  return 'Something went wrong. Try again.';
+  return 'Das hat nicht geklappt. Erneut versuchen.';
 }

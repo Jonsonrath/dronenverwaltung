@@ -2,7 +2,7 @@
   <button
     class="step"
     type="button"
-    [attr.aria-label]="'Fewer ' + label()"
+    [attr.aria-label]="'Weniger ' + label()"
     [disabled]="disabled() || value() <= 0"
     (click)="decrement()"
   >
@@ -17,7 +17,7 @@
     [disabled]="disabled()"
     (input)="typed($event)"
   />
-  <button class="step" type="button" [attr.aria-label]="'More ' + label()" [disabled]="disabled()" (click)="increment()">
+  <button class="step" type="button" [attr.aria-label]="'Mehr ' + label()" [disabled]="disabled()" (click)="increment()">
     +
   </button>
 </div>

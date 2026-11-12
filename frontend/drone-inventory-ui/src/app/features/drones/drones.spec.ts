@@ -5,6 +5,14 @@ import { provideRouter } from '@angular/router';
 import { Drone } from '../../core/drone.model';
 import { Drones } from './drones';
 
+// jsdom has no dialog methods; the pages only need "open" and "closed".
+HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+  this.open = true;
+};
+HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+  this.open = false;
+};
+
 // Drone page: list (task 6.1, REQ-002) and the form to add a drone (task 6.2, REQ-001).
 describe('Drones page', () => {
   let fixture: ComponentFixture<Drones>;
@@ -44,8 +52,8 @@ describe('Drones page', () => {
       ['.name', '.tag', '.description'].map((part) => row.querySelector(part)?.textContent?.trim()),
     );
     expect(rows).toEqual([
-      ['TELLO-02', 'Loaned', ''],
-      ['TELLO-07', 'Available', 'SSID: TELLO-9FA21B, rechter Propellerschutz beschädigt'],
+      ['TELLO-02', 'Ausgeliehen', ''],
+      ['TELLO-07', 'Verfügbar', 'SSID: TELLO-9FA21B, rechter Propellerschutz beschädigt'],
     ]);
     expect(page.querySelector('.drone-list li:first-child .tag')?.classList).toContain('tag-loaned');
     expect(page.querySelector('.drone-list li:last-child .tag')?.classList).toContain('tag-available');
@@ -60,7 +68,7 @@ describe('Drones page', () => {
     ]);
 
     expect(page.querySelector('.cabinet-count')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
-      '1 of 2 in the cabinet',
+      '1 von 2 im Schrank',
     );
   });
 
@@ -75,22 +83,22 @@ describe('Drones page', () => {
       a.getAttribute('href'),
     ]);
     expect(links).toEqual([
-      ['Return TELLO-02', '/loans'],
-      ['Loan TELLO-07', '/loans/new?drone=2'],
+      ['TELLO-02 zurückgeben', '/loans'],
+      ['TELLO-07 ausleihen', '/loans/new?drone=2'],
     ]);
   });
 
   it('REQ-002: shows a message when there are no drones', async () => {
     const page = await respond([]);
 
-    expect(page.querySelector('.empty')?.textContent).toContain('No drones yet.');
+    expect(page.querySelector('.empty')?.textContent).toContain('Noch keine Drohnen.');
     expect(page.querySelector('.drone-list')).toBeNull();
   });
 
   it('shows an error with a retry button when the backend fails', async () => {
     const page = await respond(null, 500);
 
-    expect(page.querySelector('[role="alert"]')?.textContent).toContain('could not be loaded');
+    expect(page.querySelector('[role="alert"]')?.textContent).toContain('konnten nicht geladen werden');
 
     (page.querySelector('[role="alert"] button') as HTMLButtonElement).click();
     fixture.detectChanges();
@@ -98,7 +106,7 @@ describe('Drones page', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(page.querySelector('.empty')?.textContent).toContain('No drones yet.');
+    expect(page.querySelector('.empty')?.textContent).toContain('Noch keine Drohnen.');
   });
 
   describe('add a drone', () => {
@@ -125,8 +133,20 @@ describe('Drones page', () => {
       fixture.detectChanges();
     }
 
+    it('opens the form as a sheet from the button in the page head', async () => {
+      const page = await respond([]);
+      const sheet = page.querySelector('dialog') as HTMLDialogElement;
+      expect(sheet.open).toBe(false);
+
+      (page.querySelector('.page-head button') as HTMLButtonElement).click();
+
+      expect(sheet.open).toBe(true);
+      expect(sheet.querySelector('#drone-name')).not.toBeNull();
+    });
+
     it('REQ-001: a new drone is sent to the backend and appears as Available', async () => {
       const page = await respond([]);
+      (page.querySelector('.page-head button') as HTMLButtonElement).click();
 
       await fillAndSubmit(page, 'TELLO-07', 'SSID: TELLO-9FA21B');
       const create = http.expectOne({ method: 'POST', url: '/api/drones' });
@@ -139,8 +159,10 @@ describe('Drones page', () => {
       fixture.detectChanges();
 
       expect(page.querySelector('.drone-list li .name')?.textContent).toBe('TELLO-07');
-      expect(page.querySelector('.drone-list li .tag')?.textContent).toBe('Available');
-      expect(page.querySelector('[role="status"]')?.textContent).toContain('TELLO-07 added.');
+      expect(page.querySelector('.drone-list li .tag')?.textContent).toBe('Verfügbar');
+      expect(page.querySelector('[role="status"]')?.textContent).toContain('TELLO-07 hinzugefügt.');
+      // The sheet closes after the drone was added.
+      expect((page.querySelector('dialog') as HTMLDialogElement).open).toBe(false);
       expect((page.querySelector('#drone-name') as HTMLInputElement).value).toBe('');
     });
 
@@ -151,10 +173,10 @@ describe('Drones page', () => {
       await answer(http.expectOne({ method: 'POST', url: '/api/drones' }), {
         status: 422,
         title: 'Invalid input',
-        detail: 'The name of a drone must not be empty.',
+        detail: 'Der Name einer Drohne darf nicht leer sein.',
       }, 422);
 
-      expect(page.querySelector('form [role="alert"]')?.textContent).toContain('The name of a drone must not be empty.');
+      expect(page.querySelector('form [role="alert"]')?.textContent).toContain('Der Name einer Drohne darf nicht leer sein.');
       // Nothing was added, so the list is not loaded again.
       http.expectNone({ method: 'GET', url: '/api/drones' });
     });
@@ -166,10 +188,10 @@ describe('Drones page', () => {
       await answer(http.expectOne({ method: 'POST', url: '/api/drones' }), {
         status: 409,
         title: 'Conflict',
-        detail: 'A drone with the name "tello-07" already exists (names are compared ignoring case).',
+        detail: 'Eine Drohne mit dem Namen "tello-07" gibt es bereits (Groß- und Kleinschreibung wird nicht unterschieden).',
       }, 409);
 
-      expect(page.querySelector('form [role="alert"]')?.textContent).toContain('already exists');
+      expect(page.querySelector('form [role="alert"]')?.textContent).toContain('gibt es bereits');
       expect((page.querySelector('#drone-name') as HTMLInputElement).value).toBe('tello-07');
     });
 
@@ -178,13 +200,13 @@ describe('Drones page', () => {
       await fillAndSubmit(page, '   ');
       await answer(http.expectOne({ method: 'POST', url: '/api/drones' }), {
         status: 422,
-        detail: 'The name of a drone must not be empty.',
+        detail: 'Der Name einer Drohne darf nicht leer sein.',
       }, 422);
 
       await fillAndSubmit(page, '');
 
       expect(page.querySelector('form [role="alert"]')).toBeNull();
-      expect(page.querySelector('.field-error')?.textContent).toContain('Enter a name.');
+      expect(page.querySelector('.field-error')?.textContent).toContain('Name eingeben.');
     });
 
     it('does not send an empty name and asks for one', async () => {
@@ -193,7 +215,7 @@ describe('Drones page', () => {
       await fillAndSubmit(page, '');
 
       http.expectNone({ method: 'POST', url: '/api/drones' });
-      expect(page.querySelector('.field-error')?.textContent).toContain('Enter a name.');
+      expect(page.querySelector('.field-error')?.textContent).toContain('Name eingeben.');
     });
   });
 });

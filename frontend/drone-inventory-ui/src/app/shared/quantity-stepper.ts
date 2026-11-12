@@ -20,7 +20,7 @@ export class QuantityStepper implements FormValueControl<number> {
   /** Set by Signal Forms while the form is submitting or the field is disabled. */
   readonly disabled = input(false);
 
-  /** What is counted, for the button labels: "batteries" → "Fewer batteries" / "More batteries". */
+  /** What is counted, for the button labels: "Akkus" → "Weniger Akkus" / "Mehr Akkus". */
   readonly label = input.required<string>();
 
   /** Id of the number field, so a `<label for>` outside can point to it. */

@@ -1,13 +1,15 @@
 /*
- * Drones (design §7): the page is the cabinet. One bay per drone – a filled glyph when the drone
- * is in, a dashed outline when it is out. List + form layout: .layout in styles.css.
+ * Drones (design §7, §8): the page is the cabinet. One bay per drone – a filled glyph when the
+ * drone is in, a dashed outline when it is out. The add form is a sheet (.sheet in styles.css).
  */
 
-/* "3 of 4 in the cabinet" with one segment per drone */
+/* "2 von 4 im Schrank" with one segment per drone and a legend for the segments */
 .cabinet {
-  display: grid;
-  gap: var(--space-2);
-  justify-items: end;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .cabinet-count {
@@ -19,7 +21,7 @@
   margin-right: 0.15em;
   color: var(--text);
   font-family: var(--font-display);
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -28,27 +30,46 @@
 .cabinet-bar {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
   gap: 4px;
-  max-width: 20rem;
 }
 
-.cabinet-bar span {
+.cabinet-bar span,
+.key {
   width: 1.5rem;
   height: 0.5rem;
   border-radius: 2px;
   background: var(--status);
 }
 
-.cabinet-bar .is-loaned {
+.cabinet-bar .is-loaned,
+.key.is-loaned {
   background: none;
   box-shadow: inset 0 0 0 1.5px var(--status);
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 0 auto;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+.key {
+  display: inline-block;
+  width: 0.875rem;
+}
+
+.key + .key,
+.legend .key.is-loaned {
+  margin-left: var(--space-2);
 }
 
 /* Bays */
 .drone-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
   gap: var(--space-4);
   margin: 0;
   padding: 0;
@@ -65,16 +86,11 @@
     'description description'
     'action action';
   align-items: start;
-  min-height: 12.5rem;
+  min-height: 13rem;
   padding: var(--space-4);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
-  transition: border-color var(--ease);
-}
-
-.bay:hover {
-  border-color: var(--muted);
 }
 
 /* An empty bay: the drone is out */
@@ -113,37 +129,14 @@ app-drone-glyph {
 
 .bay-action {
   grid-area: action;
-  display: flex;
-  align-items: center;
-  min-height: 2.75rem;
-  margin: var(--space-3) calc(-1 * var(--space-4)) calc(-1 * var(--space-4));
-  padding: 0 var(--space-4);
-  border-top: 1px solid var(--line);
-  border-radius: 0 0 var(--radius) var(--radius);
-  color: var(--text);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  text-decoration: none;
-  transition: background-color var(--ease), color var(--ease);
-}
-
-.bay.is-loaned .bay-action {
-  border-top-style: dashed;
-}
-
-.bay-action:hover {
-  background: var(--raised);
-  color: var(--accent);
+  margin-top: var(--space-4);
 }
 
 /* Phone: one bay per line, glyph on the left */
 @media (max-width: 39.99rem) {
-  .cabinet {
-    justify-items: start;
-  }
-
-  .cabinet-bar {
-    justify-content: flex-start;
+  .legend {
+    margin-left: 0;
+    flex-basis: 100%;
   }
 
   .drone-list {
@@ -153,13 +146,14 @@ app-drone-glyph {
 
   .bay {
     grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto;
     grid-template-areas:
       'glyph name tag'
-      'glyph description description'
-      'action action action';
+      'glyph description action';
+    align-items: center;
     column-gap: var(--space-3);
     min-height: 0;
+    padding: var(--space-3) var(--space-4);
   }
 
   app-drone-glyph {
@@ -169,5 +163,20 @@ app-drone-glyph {
 
   .name {
     font-size: var(--text-md);
+  }
+
+  .description {
+    margin-top: 0;
+  }
+
+  .tag {
+    justify-self: end;
+  }
+
+  .bay-action {
+    justify-self: end;
+    min-height: 2.5rem;
+    margin-top: var(--space-2);
+    padding: var(--space-1) var(--space-4);
   }
 }

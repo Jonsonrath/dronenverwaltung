@@ -1,8 +1,17 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Loan } from '../../core/loan.model';
 import { StudentGroup } from '../../core/student-group.model';
 import { StudentGroups } from './student-groups';
+
+// jsdom has no dialog methods; the pages only need "open" and "closed".
+HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+  this.open = true;
+};
+HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+  this.open = false;
+};
 
 // Task 6.3: student group page – list and form to add a group (REQ-003).
 describe('Student groups page', () => {
@@ -23,8 +32,10 @@ describe('Student groups page', () => {
 
   afterEach(() => http.verify());
 
-  async function respond(body: StudentGroup[] | null, status = 200) {
+  async function respond(body: StudentGroup[] | null, status = 200, activeLoans: Partial<Loan>[] = []) {
     fixture.detectChanges();
+    // Only for the badges "hat TELLO-02": the active loans.
+    http.expectOne((r) => r.url === '/api/loans' && r.params.get('status') === 'Active').flush(activeLoans);
     const request = http.expectOne('/api/student-groups');
     if (status === 200) {
       request.flush(body);
@@ -52,7 +63,7 @@ describe('Student groups page', () => {
     fixture.detectChanges();
   }
 
-  const names = (page: HTMLElement) => [...page.querySelectorAll('.groups li')].map((li) => li.textContent?.trim());
+  const names = (page: HTMLElement) => [...page.querySelectorAll('.groups li .name')].map((name) => name.textContent?.trim());
 
   it('REQ-003: lists the student groups', async () => {
     const page = await respond([
@@ -63,20 +74,86 @@ describe('Student groups page', () => {
     expect(names(page)).toEqual(['Group 1', 'Group 3']);
   });
 
+  it('shows which drone a group has right now, read from the active loans', async () => {
+    const page = await respond(
+      [
+        { id: 1, name: 'Group 1' },
+        { id: 3, name: 'Group 3' },
+      ],
+      200,
+      [{ id: 5, studentGroupId: 3, droneName: 'TELLO-02', status: 'Active' }],
+    );
+
+    const badges = [...page.querySelectorAll('.groups li')].map(
+      (li) => li.querySelector('.has-drone, .no-drone')?.textContent?.trim(),
+    );
+    expect(badges).toEqual(['keine Drohne', 'hat TELLO-02']);
+  });
+
+  describe('drone badges before the active loans are known', () => {
+    const groups: StudentGroup[] = [{ id: 1, name: 'Group 1' }];
+    const loansRequest = () => http.expectOne((r) => r.url === '/api/loans' && r.params.get('status') === 'Active');
+    const badges = (page: HTMLElement) => page.querySelectorAll('.groups li .has-drone, .groups li .no-drone').length;
+
+    async function groupsOnly() {
+      fixture.detectChanges();
+      http.expectOne('/api/student-groups').flush(groups);
+      await settle();
+      fixture.detectChanges();
+      return fixture.nativeElement as HTMLElement;
+    }
+
+    it('shows no badge while the active loans are still loading', async () => {
+      const page = await groupsOnly();
+
+      expect(page.querySelector('.groups li .name')?.textContent?.trim()).toBe('Group 1');
+      expect(badges(page)).toBe(0);
+
+      // Once they arrive, the group gets its badge.
+      loansRequest().flush([]);
+      await settle();
+      fixture.detectChanges();
+      expect(page.querySelector('.groups li .no-drone')?.textContent?.trim()).toBe('keine Drohne');
+    });
+
+    it('shows no badge when the active loans could not be loaded', async () => {
+      const page = await groupsOnly();
+
+      loansRequest().flush(null, { status: 500, statusText: 'Error' });
+      await settle();
+      fixture.detectChanges();
+
+      expect(page.querySelector('.groups li .name')?.textContent?.trim()).toBe('Group 1');
+      expect(badges(page)).toBe(0);
+    });
+  });
+
   it('REQ-003: shows a message when there are no student groups', async () => {
     const page = await respond([]);
 
-    expect(page.querySelector('.empty')?.textContent).toContain('No student groups yet.');
+    expect(page.querySelector('.empty')?.textContent).toContain('Noch keine Schülergruppen.');
   });
 
   it('shows an error with a retry button when the backend fails', async () => {
     const page = await respond(null, 500);
 
-    expect(page.querySelector('[role="alert"]')?.textContent).toContain('could not be loaded');
+    expect(page.querySelector('[role="alert"]')?.textContent).toContain('konnten nicht geladen werden');
+  });
+
+  it('opens the form as a sheet from the button in the page head', async () => {
+    const page = await respond([]);
+    const sheet = page.querySelector('dialog') as HTMLDialogElement;
+    expect(sheet.open).toBe(false);
+
+    (page.querySelector('.page-head button') as HTMLButtonElement).click();
+
+    expect(sheet.open).toBe(true);
+    expect(sheet.querySelector('#group-name')).not.toBeNull();
   });
 
   it('REQ-003: a new group is sent to the backend and appears in the list', async () => {
     const page = await respond([{ id: 1, name: 'Group 1' }]);
+    (page.querySelector('.page-head button') as HTMLButtonElement).click();
 
     await submitName(page, 'Group 3');
     const create = http.expectOne({ method: 'POST', url: '/api/student-groups' });
@@ -92,7 +169,9 @@ describe('Student groups page', () => {
     fixture.detectChanges();
 
     expect(names(page)).toEqual(['Group 1', 'Group 3']);
-    expect(page.querySelector('[role="status"]')?.textContent).toContain('Group 3 added.');
+    expect(page.querySelector('[role="status"]')?.textContent).toContain('Group 3 hinzugefügt.');
+    // The sheet closes after the group was added.
+    expect((page.querySelector('dialog') as HTMLDialogElement).open).toBe(false);
     expect((page.querySelector('#group-name') as HTMLInputElement).value).toBe('');
   });
 
@@ -100,10 +179,10 @@ describe('Student groups page', () => {
     const page = await respond([]);
 
     await submitName(page, '   ');
-    await answerPost({ status: 422, detail: 'The name of a student group must not be empty.' }, 422);
+    await answerPost({ status: 422, detail: 'Der Name einer Schülergruppe darf nicht leer sein.' }, 422);
 
     expect(page.querySelector('form [role="alert"]')?.textContent).toContain(
-      'The name of a student group must not be empty.',
+      'Der Name einer Schülergruppe darf nicht leer sein.',
     );
     http.expectNone({ method: 'GET', url: '/api/student-groups' });
   });
@@ -113,11 +192,11 @@ describe('Student groups page', () => {
 
     await submitName(page, ' group 3 ');
     await answerPost(
-      { status: 409, detail: 'A student group with the name "group 3" already exists (names are compared ignoring case).' },
+      { status: 409, detail: 'Eine Schülergruppe mit dem Namen "group 3" gibt es bereits (Groß- und Kleinschreibung wird nicht unterschieden).' },
       409,
     );
 
-    expect(page.querySelector('form [role="alert"]')?.textContent).toContain('already exists');
+    expect(page.querySelector('form [role="alert"]')?.textContent).toContain('gibt es bereits');
   });
 
   it('does not send an empty name and asks for one', async () => {
@@ -126,6 +205,6 @@ describe('Student groups page', () => {
     await submitName(page, '');
 
     http.expectNone({ method: 'POST', url: '/api/student-groups' });
-    expect(page.querySelector('.field-error')?.textContent).toContain('Enter a name.');
+    expect(page.querySelector('.field-error')?.textContent).toContain('Name eingeben.');
   });
 });

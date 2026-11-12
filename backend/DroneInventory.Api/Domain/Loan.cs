@@ -68,7 +68,7 @@ public class Loan
     {
         if (Status == LoanStatus.Returned)
         {
-            throw new ConflictException($"Loan {Id} has already been returned.");
+            throw new ConflictException($"Die Ausleihe {Id} wurde bereits zurückgegeben.");
         }
 
         Status = LoanStatus.Returned;

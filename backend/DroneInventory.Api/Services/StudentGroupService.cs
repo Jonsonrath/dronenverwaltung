@@ -41,5 +41,5 @@ public class StudentGroupService(DroneInventoryDbContext db)
             .ToListAsync(cancellationToken);
 
     private static ConflictException DuplicateName(StudentGroup group) =>
-        new($"A student group with the name \"{group.Name}\" already exists (names are compared ignoring case).");
+        new($"Eine Schülergruppe mit dem Namen \"{group.Name}\" gibt es bereits (Groß- und Kleinschreibung wird nicht unterschieden).");
 }

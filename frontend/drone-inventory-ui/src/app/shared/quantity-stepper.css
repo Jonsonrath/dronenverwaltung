@@ -16,6 +16,11 @@
   border-color: var(--accent);
 }
 
+/* Keyboard focus in the number field: a ring around the whole control */
+.stepper:has(input:focus-visible) {
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
 .step {
   border: 0;
   background: var(--raised);

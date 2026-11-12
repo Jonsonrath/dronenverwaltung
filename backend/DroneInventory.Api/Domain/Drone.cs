@@ -16,7 +16,7 @@ public class Drone
 
     public Drone(string name, string? description)
     {
-        Name = EntityName.Require(name, "drone");
+        Name = EntityName.Require(name, "einer Drohne");
         NormalizedName = EntityName.Normalize(name);
         Description = description?.Trim() ?? string.Empty;
     }

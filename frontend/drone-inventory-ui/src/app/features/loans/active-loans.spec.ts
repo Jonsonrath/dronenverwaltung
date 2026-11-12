@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { Clock } from '../../core/clock';
 import { Loan } from '../../core/loan.model';
 import { ActiveLoans } from './active-loans';
 
@@ -25,7 +26,13 @@ describe('Active loans page', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [ActiveLoans],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        // "Now" for the durations: 7 days after both loans of the example.
+        { provide: Clock, useValue: { now: () => new Date('2026-08-26T12:00:00Z') } },
+      ],
     });
     fixture = TestBed.createComponent(ActiveLoans);
     http = TestBed.inject(HttpTestingController);
@@ -47,29 +54,45 @@ describe('Active loans page', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('REQ-007: shows group, drone, batteries, propellers and loan date of each active loan', async () => {
+  it('REQ-007: shows drone, group, batteries, propellers, loan date and duration of each active loan', async () => {
     const page = await respond(loans);
 
     const rows = [...page.querySelectorAll('tbody tr')].map((row) =>
       [...row.querySelectorAll('td')].map((cell) => cell.textContent?.trim()),
     );
     expect(rows).toEqual([
-      ['Group 1', 'TELLO-02', '3', '4', '19.08.2026', 'Return'],
-      ['Group 3', 'TELLO-07', '4', '8', '19.08.2026', 'Return'],
+      ['TELLO-02', 'Group 1', '3', '4', '19.08.2026', 'seit 7 Tagen', 'Zurückgeben'],
+      ['TELLO-07', 'Group 3', '4', '8', '19.08.2026', 'seit 7 Tagen', 'Zurückgeben'],
+    ]);
+  });
+
+  it('marks a loan that has been running for more than a day', async () => {
+    const page = await respond([
+      { ...loans[0], loanDate: '2026-08-26T08:00:00Z' },
+      { ...loans[1], loanDate: '2026-08-25T08:00:00Z' },
+    ]);
+
+    const durations = [...page.querySelectorAll('.duration')].map((d) => [
+      d.textContent?.trim(),
+      d.classList.contains('is-long'),
+    ]);
+    expect(durations).toEqual([
+      ['seit heute', false],
+      ['seit 1 Tag', true],
     ]);
   });
 
   it('REQ-007: shows a message when no drone is loaned', async () => {
     const page = await respond([]);
 
-    expect(page.querySelector('.empty')?.textContent).toContain('No drone is loaned right now.');
+    expect(page.querySelector('.empty')?.textContent).toContain('Gerade ist keine Drohne ausgeliehen.');
     expect(page.querySelector('table')).toBeNull();
   });
 
   it('shows an error when the backend fails', async () => {
     const page = await respond(null, 500);
 
-    expect(page.querySelector('[role="alert"]')?.textContent).toContain('could not be loaded');
+    expect(page.querySelector('[role="alert"]')?.textContent).toContain('konnten nicht geladen werden');
   });
 
   describe('return a loan', () => {
@@ -77,7 +100,7 @@ describe('Active loans page', () => {
     const settle = () => new Promise((resolve) => setTimeout(resolve));
 
     async function clickReturn(page: HTMLElement, droneName: string) {
-      (page.querySelector(`button[aria-label="Return ${droneName}"]`) as HTMLButtonElement).click();
+      (page.querySelector(`button[aria-label="${droneName} zurückgeben"]`) as HTMLButtonElement).click();
       await settle();
       fixture.detectChanges();
     }
@@ -104,7 +127,7 @@ describe('Active loans page', () => {
       const drones = [...page.querySelectorAll('tbody .drone')].map((cell) => cell.textContent);
       expect(drones).toEqual(['TELLO-02']);
       expect(page.querySelector('[role="status"]')?.textContent).toContain(
-        'TELLO-07 returned by Group 3. It is available again.',
+        'TELLO-07 von Group 3 zurückgegeben. Sie ist wieder verfügbar.',
       );
     });
 
@@ -113,13 +136,13 @@ describe('Active loans page', () => {
 
       await clickReturn(page, 'TELLO-07');
       http.expectOne('/api/loans/2/return').flush(
-        { status: 409, title: 'Conflict', detail: 'Loan 2 has already been returned.' },
+        { status: 409, title: 'Conflict', detail: 'Die Ausleihe 2 wurde bereits zurückgegeben.' },
         { status: 409, statusText: 'Conflict' },
       );
       // The list is loaded again anyway, because it was outdated.
       await reloadWith([loans[0]]);
 
-      expect(page.querySelector('[role="alert"]')?.textContent).toContain('Loan 2 has already been returned.');
+      expect(page.querySelector('[role="alert"]')?.textContent).toContain('Die Ausleihe 2 wurde bereits zurückgegeben.');
       expect(page.querySelector('[role="status"]')).toBeNull();
       expect(page.querySelectorAll('tbody tr').length).toBe(1);
     });
@@ -129,9 +152,9 @@ describe('Active loans page', () => {
 
       await clickReturn(page, 'TELLO-07');
 
-      const button = page.querySelector('button[aria-label="Return TELLO-07"]') as HTMLButtonElement;
+      const button = page.querySelector('button[aria-label="TELLO-07 zurückgeben"]') as HTMLButtonElement;
       expect(button.disabled).toBe(true);
-      expect(button.textContent?.trim()).toBe('Returning…');
+      expect(button.textContent?.trim()).toBe('Wird zurückgegeben…');
       http.expectOne('/api/loans/2/return').flush(loans[1]);
       await reloadWith([loans[0]]);
     });

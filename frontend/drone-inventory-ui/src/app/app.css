@@ -1,9 +1,10 @@
 /*
- * App shell (design §2, §7):
+ * App shell (design §2, §8):
  * - desktop (>= 64rem): side navigation on the left, content on the right
  * - tablet (40–64rem): top bar
- * - phone (< 40rem): brand on top, tab bar with icons at the bottom (thumb reach at the cabinet)
- * The current page is marked in the accent yellow.
+ * - phone (< 40rem): brand on top, tab bar at the bottom (thumb reach at the cabinet) with the
+ *   main action "Ausleihen" larger in the middle
+ * The current page is marked in the neutral accent (light on dark), never in a status color.
  */
 
 :host {
@@ -64,21 +65,19 @@
   stroke-linejoin: round;
 }
 
-.tab:hover {
-  color: var(--text);
-}
-
+.tab:hover,
 .tab.is-active {
   color: var(--text);
 }
 
-.tab.is-active .icon {
-  color: var(--accent);
+/* The short label is only for the bottom tab bar. */
+.tab-short {
+  display: none;
 }
 
 .page {
   max-width: 76rem;
-  padding: var(--space-8) var(--space-6);
+  padding: var(--space-6);
 }
 
 /* Desktop: side navigation */
@@ -93,9 +92,9 @@
     top: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--space-8);
+    gap: var(--space-6);
     height: 100dvh;
-    padding: var(--space-6) var(--space-4);
+    padding: var(--space-5) var(--space-4);
     border-right: 1px solid var(--line);
     background: var(--surface);
   }
@@ -126,7 +125,7 @@
     font-weight: 600;
   }
 
-  /* Yellow marker on the edge of the current page */
+  /* Light marker on the edge of the current page */
   .tab.is-active::before {
     content: '';
     position: absolute;
@@ -136,8 +135,28 @@
     background: var(--accent);
   }
 
+  /* The main action is a button in the navigation as well. */
+  .tab-main {
+    order: -1;
+    justify-content: center;
+    margin-bottom: var(--space-4);
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: 600;
+  }
+
+  .tab-main:hover,
+  .tab-main.is-active {
+    background: #ffffff;
+    color: var(--on-accent);
+  }
+
+  .tab-main.is-active::before {
+    content: none;
+  }
+
   .page {
-    padding: var(--space-8);
+    padding: var(--space-6) var(--space-8) var(--space-8);
   }
 }
 
@@ -179,9 +198,14 @@
 /* Phone: brand on top, tab bar at the bottom */
 @media (max-width: 39.99rem) {
   .bar {
-    padding: var(--space-3) var(--space-4);
+    padding: var(--space-2) var(--space-4);
     border-bottom: 1px solid var(--line);
     background: var(--surface);
+  }
+
+  .brand-mark {
+    width: 1.75rem;
+    height: 1.75rem;
   }
 
   .tabs {
@@ -189,6 +213,7 @@
     inset: auto 0 0 0;
     z-index: 10;
     display: flex;
+    align-items: flex-end;
     padding: 0 var(--space-1) env(safe-area-inset-bottom);
     border-top: 1px solid var(--line);
     background: var(--surface);
@@ -200,19 +225,61 @@
     justify-content: center;
     gap: var(--space-1);
     min-width: 0;
-    min-height: 4rem;
-    padding: var(--space-2) var(--space-1);
-    font-size: 0.6875rem;
+    height: var(--tabbar);
+    padding: var(--space-2) 0;
+    font-size: 0.8125rem;
     line-height: 1.15;
     text-align: center;
-    white-space: normal;
+  }
+
+  /* Full label for screen readers, short label to see. */
+  .tab-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .tab-short {
+    display: block;
   }
 
   .tab.is-active {
     box-shadow: inset 0 3px 0 var(--accent);
+    font-weight: 600;
+  }
+
+  /* Main action: a light disc that stands out of the bar. */
+  .tab-main,
+  .tab-main.is-active {
+    box-shadow: none;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .tab-main .icon {
+    width: 3.25rem;
+    height: 3.25rem;
+    margin-top: -1.25rem;
+    padding: 0.8rem;
+    border: 4px solid var(--surface);
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--on-accent);
+    stroke-width: 2.25;
+    box-sizing: border-box;
+  }
+
+  .tab-main:focus-visible {
+    box-shadow: none;
+  }
+
+  .tab-main:focus-visible .icon {
+    box-shadow: 0 0 0 2px var(--accent);
   }
 
   .page {
-    padding: var(--space-5) var(--space-4) calc(var(--space-8) + 4rem);
+    padding: var(--space-4) var(--space-4) calc(var(--space-8) + var(--tabbar));
   }
 }

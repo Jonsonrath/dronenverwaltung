@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { form, FormField, FormRoot, required } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
@@ -32,11 +32,30 @@ export class Drones {
   /** Name of the drone that was added last, for the confirmation text. */
   protected readonly added = signal('');
 
+  /** The add form lives in a native dialog: bottom sheet on phones, dialog on desktop (design §8). */
+  private readonly sheet = viewChild.required<ElementRef<HTMLDialogElement>>('sheet');
+
+  protected openSheet() {
+    this.saveError.set('');
+    this.sheet().nativeElement.showModal();
+  }
+
+  protected closeSheet() {
+    this.sheet().nativeElement.close();
+  }
+
+  /** A click on the dimmed area around the sheet closes it; the dialog element itself is that area. */
+  protected closeOnBackdrop(event: MouseEvent) {
+    if (event.target === this.sheet().nativeElement) {
+      this.closeSheet();
+    }
+  }
+
   // Only a convenience check; the backend validates the name (REQ-001).
   protected readonly droneForm = form(
     this.newDrone,
     (drone) => {
-      required(drone.name, { message: 'Enter a name.' });
+      required(drone.name, { message: 'Name eingeben.' });
     },
     {
       submission: {
@@ -47,6 +66,7 @@ export class Drones {
           try {
             const drone = await firstValueFrom(this.droneApi.create({ name, description }));
             this.added.set(drone.name);
+            this.closeSheet();
             this.droneForm().reset({ name: '', description: '' });
             this.drones.reload();
           } catch (error) {

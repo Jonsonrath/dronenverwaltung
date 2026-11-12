@@ -53,5 +53,5 @@ public class DroneService(DroneInventoryDbContext db)
     }
 
     private static ConflictException DuplicateName(Drone drone) =>
-        new($"A drone with the name \"{drone.Name}\" already exists (names are compared ignoring case).");
+        new($"Eine Drohne mit dem Namen \"{drone.Name}\" gibt es bereits (Groß- und Kleinschreibung wird nicht unterschieden).");
 }

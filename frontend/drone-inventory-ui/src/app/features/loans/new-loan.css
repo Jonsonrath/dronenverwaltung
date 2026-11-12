@@ -1,11 +1,11 @@
 /*
- * Loan form (design §4, §7): three steps – tap a drone, tap a group, count the accessories –
- * and a slip that reads the choice back before the button. Tapping only, no keyboard needed.
+ * Loan form (design §4, §7, §8): three steps – tap a drone, tap a group, count the accessories.
+ * The summary with the button is a bar that stays in view (above the bottom navigation on phones).
  */
 
 .loan-form {
   display: grid;
-  gap: var(--space-6);
+  gap: var(--space-5);
 }
 
 .details {
@@ -13,18 +13,6 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
-}
-
-@media (min-width: 64rem) {
-  .loan-form {
-    grid-template-columns: minmax(0, 1fr) 23rem;
-    align-items: start;
-  }
-
-  .details {
-    position: sticky;
-    top: var(--space-6);
-  }
 }
 
 fieldset {
@@ -69,15 +57,54 @@ legend {
 }
 
 /* Drone choices */
-.drone-group + .drone-group {
-  margin-top: var(--space-5);
+.none {
+  margin: 0;
+  color: var(--muted);
 }
 
-.group-label {
-  margin: 0 0 var(--space-2);
+details.drone-group {
+  margin-top: var(--space-4);
+}
+
+summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+  color: var(--muted);
+  font-weight: 500;
+  cursor: pointer;
+  list-style: none;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+/* A chevron that turns when the list is open */
+summary::before {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  margin: 0 0.25rem 0 0.125rem;
+  border: solid currentColor;
+  border-width: 0 2px 2px 0;
+  transform: rotate(-45deg);
+  transition: transform var(--ease);
+}
+
+details[open] > summary::before {
+  transform: rotate(45deg);
+}
+
+summary:hover {
+  color: var(--text);
+}
+
+.group-hint {
+  margin: 0 0 var(--space-3);
   color: var(--muted);
   font-size: var(--text-sm);
-  font-weight: 500;
 }
 
 .choices {
@@ -117,7 +144,7 @@ legend {
 .choice:has(input:checked) {
   border-style: solid;
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+  background: var(--raised);
   box-shadow: inset 0 0 0 1px var(--accent);
 }
 
@@ -153,7 +180,7 @@ app-drone-glyph {
 
 /* Group chips */
 .groups {
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
 }
 
 .chips {
@@ -196,7 +223,6 @@ app-drone-glyph {
   /* Side by side; below each other when a phone is too narrow for two steppers. */
   grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
   gap: var(--space-4);
-  margin-bottom: var(--space-5);
 }
 
 .accessories legend {
@@ -208,48 +234,92 @@ app-drone-glyph {
   margin-bottom: 0;
 }
 
-/* Loan slip */
-.slip {
+/* The bar: summary, button and messages – sticks to the bottom edge while the form scrolls. */
+.loan-bar {
+  position: sticky;
+  bottom: var(--space-4);
+  z-index: 5;
   display: grid;
-  gap: var(--space-2);
-  margin: 0 0 var(--space-4);
-  padding: var(--space-4) 0 0;
-  border-top: 1.5px dashed var(--line);
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--raised);
 }
 
-.slip div {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
-.slip dt {
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
-
-.slip dd {
+.loan-bar .alert,
+.loan-bar .added,
+.loan-bar .field-error {
+  grid-column: 1 / -1;
   margin: 0;
+}
+
+.summary {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.summary-who {
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
   overflow-wrap: anywhere;
 }
 
-.slip dd.is-open {
+/* Something is still missing */
+.summary-who.is-open {
   color: var(--muted);
   font-weight: 400;
 }
 
-.submit {
-  width: 100%;
+.summary-what {
+  color: var(--muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
 }
 
-.field-error {
-  margin-top: var(--space-3);
+.submit {
+  min-width: 8rem;
 }
 
 .empty p {
   margin: 0 auto var(--space-2);
+}
+
+@media (min-width: 64rem) {
+  .loan-form {
+    grid-template-columns: minmax(0, 1fr) 23rem;
+    grid-template-areas:
+      'drones details'
+      'drones bar';
+    grid-template-rows: auto 1fr;
+    align-items: start;
+  }
+
+  .drones {
+    grid-area: drones;
+  }
+
+  .details {
+    grid-area: details;
+  }
+
+  .loan-bar {
+    grid-area: bar;
+  }
+}
+
+/* Phone: the bar spans the screen and sits directly above the bottom navigation. */
+@media (max-width: 39.99rem) {
+  .loan-bar {
+    bottom: calc(var(--tabbar) + 1px + env(safe-area-inset-bottom));
+    margin: 0 calc(-1 * var(--space-4));
+    /* Room for the disc of the main action that stands out of the navigation. */
+    padding: var(--space-3) var(--space-4) calc(var(--space-3) + 1rem);
+    border-width: 1px 0 0;
+    border-radius: 0;
+  }
 }

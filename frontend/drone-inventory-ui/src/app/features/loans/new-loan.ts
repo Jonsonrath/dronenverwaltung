@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { form, FormField, FormRoot, required } from '@angular/forms/signals';
@@ -14,7 +15,7 @@ import { QuantityStepper } from '../../shared/quantity-stepper';
 /** Form to loan a drone with batteries and propellers to a student group (REQ-004, REQ-006). */
 @Component({
   selector: 'app-new-loan',
-  imports: [FormField, FormRoot, RouterLink, QuantityStepper, DroneGlyph],
+  imports: [FormField, FormRoot, RouterLink, NgTemplateOutlet, QuantityStepper, DroneGlyph],
   templateUrl: './new-loan.html',
   styleUrl: './new-loan.css',
 })
@@ -26,20 +27,14 @@ export class NewLoan {
   protected readonly drones = rxResource({ stream: () => this.droneApi.list() });
   protected readonly groups = rxResource({ stream: () => this.studentGroupApi.list() });
 
-  // The status comes from the backend. Loaned drones stay selectable: the backend
-  // decides and answers 409 (REQ-005) – the frontend does not enforce the rule.
+  // The status comes from the backend. Loaned drones are listed in a collapsed element, but
+  // stay selectable: the backend decides and answers 409 (REQ-005) – no rule is enforced here.
   protected readonly availableDrones = computed(() =>
     this.drones.hasValue() ? this.drones.value().filter((d) => d.status === 'Available') : [],
   );
   protected readonly loanedDrones = computed(() =>
     this.drones.hasValue() ? this.drones.value().filter((d) => d.status === 'Loaned') : [],
   );
-
-  /** The two groups of the drone choice, in this order. */
-  protected readonly droneGroups = computed(() => [
-    { key: 'available', label: 'Available', drones: this.availableDrones() },
-    { key: 'loaned', label: 'Loaned right now', drones: this.loanedDrones() },
-  ]);
 
   /** Radio values are strings; the ids are converted to numbers when the loan is sent. */
   protected readonly newLoan = signal({ droneId: '', studentGroupId: '', batteries: 0, propellers: 0 });
@@ -50,7 +45,7 @@ export class NewLoan {
   /** The loan that was created last, for the confirmation text. */
   protected readonly created = signal<Loan | undefined>(undefined);
 
-  /** The chosen drone and group, for the loan slip above the button. */
+  /** The chosen drone and group, for the summary next to the button. */
   protected readonly chosenDrone = computed(() =>
     this.drones.hasValue() ? this.drones.value().find((d) => d.id.toString() === this.newLoan().droneId) : undefined,
   );
@@ -60,7 +55,7 @@ export class NewLoan {
       : undefined,
   );
 
-  /** Id from the link "Loan this drone" on the drones page (`/loans/new?drone=7`), used once. */
+  /** Id from the button "Ausleihen" of a bay on the drones page (`/loans/new?drone=7`), used once. */
   private requestedDroneId = inject(ActivatedRoute).snapshot.queryParamMap.get('drone');
 
   // Preselects that drone as soon as the list is loaded – only if the backend lists it.
@@ -75,11 +70,29 @@ export class NewLoan {
     }
   });
 
+  /** Who gets which drone, or what is still missing – read back next to the button. */
+  protected readonly summary = computed(() => {
+    const drone = this.chosenDrone()?.name;
+    const group = this.chosenGroup()?.name;
+    if (drone && group) {
+      return `${drone} für ${group}`;
+    }
+    if (drone) {
+      return `${drone} – Gruppe wählen`;
+    }
+    return group ? `Drohne wählen – für ${group}` : 'Drohne und Gruppe wählen';
+  });
+
+  /** "4 Akkus, 8 Propeller" – the same wording in the summary and in the confirmation. */
+  protected accessories(batteries: number, propellers: number): string {
+    return `${batteries} ${batteries === 1 ? 'Akku' : 'Akkus'}, ${propellers} Propeller`;
+  }
+
   protected readonly loanForm = form(
     this.newLoan,
     (loan) => {
-      required(loan.droneId, { message: 'Choose a drone.' });
-      required(loan.studentGroupId, { message: 'Choose a student group.' });
+      required(loan.droneId, { message: 'Drohne wählen.' });
+      required(loan.studentGroupId, { message: 'Schülergruppe wählen.' });
     },
     {
       submission: {
@@ -98,7 +111,7 @@ export class NewLoan {
             );
             this.created.set(loan);
             this.loanForm().reset({ droneId: '', studentGroupId: '', batteries: 0, propellers: 0 });
-            // The loaned drone now shows up under "Loaned right now".
+            // The loaned drone now shows up under "Ausgeliehen".
             this.drones.reload();
           } catch (error) {
             this.saveError.set(problemMessage(error));

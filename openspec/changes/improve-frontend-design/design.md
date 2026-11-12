@@ -95,6 +95,19 @@ The app is used standing in front of a cabinet with numbered bays. That is the p
 - **Student groups / loans:** groups as name plates in a grid; every loan is one plate (table on desktop, block on phones); an active loan carries the blue edge, *Return* is outlined in the accent.
 - **Tests:** existing assertions unchanged (`drones.spec.ts` only gets a router provider because of the new links). New: cabinet count, bay links, loan slip, preselection from the link (known and unknown id).
 
+### 8. Feedback round: neutral accent, German, sheets (task 5.2)
+The team tested §7 on a phone. Decisions:
+
+- **No yellow.** `--accent: #F2F3F5`, `--on-accent: #14161A`: primary buttons, the current page, selection, step numbers and the focus ring are light on dark (button text 16.3:1). The only colors left are the two status colors and the error red, so a color always means something. The glyph (filled / dashed) and the status pill (filled / hollow dot) stay.
+- **German UI.** Navigation and titles: *Drohnen*, *Schülergruppen*, *Neue Ausleihe*, *Aktive Ausleihen*, *Verlauf*; status *Verfügbar* / *Ausgeliehen*; one name per action: *Ausleihen*, *Zurückgeben*, *Hinzufügen*. The brand "Drone Lending" and the domain terms in code, API and specs stay English (AGENTS.md). The backend's messages and ProblemDetails titles are German, because the frontend shows them unchanged.
+- **Buttons.** One component: `.button` (quiet) and `.button-primary` (light). The bays of the drones page and *Zurückgeben* on the active loans use `.button`; no text links that act like buttons.
+- **Add forms as sheets.** "+ Drohne hinzufügen" / "+ Gruppe hinzufügen" in the page head open a native `<dialog>` (`showModal`): bottom sheet below 40rem, centered dialog above; Esc, the backdrop and *Abbrechen* close it; it closes after a successful add and the confirmation is shown on the page. Backend messages (409, 422) appear inside the sheet. The side panels of §2 are gone, the lists use the full width.
+- **Loan form.** Loaned drones are in a collapsed `<details>` ("Ausgeliehen (n)") – out of the way, but still selectable, the backend answers 409 (REQ-005). Summary ("TELLO-07 für Gruppe 3", "4 Akkus, 8 Propeller"), the *Ausleihen* button and every message are one bar: `position: sticky` at the bottom of the form, on phones directly above the bottom navigation (`--tabbar`).
+- **Active loans.** Columns: Drohne, Gruppe, Akkus, Propeller, Ausgeliehen am, Dauer. The duration is counted in full days from the loan date ("seit heute", "seit 1 Tag", "seit n Tagen") with the injectable `core/clock`; from one full day on it is outlined in the light accent. Display only – there is no due date and no rule behind it. The history has the same column order.
+- **Student groups.** Each plate shows "hat TELLO-02" or "keine Drohne", joined in the frontend from `GET /api/loans?status=Active`; if that request fails the badges are left out.
+- **Shell.** H1 2rem, short leads. Bottom navigation: short labels (*Drohnen, Gruppen, Ausleihen, Aktiv, Verlauf*) at 13 px with the full labels kept for screen readers; the main action *Neue Ausleihe* is a light disc in the middle (a light button on top of the side navigation on desktop). Legend under "n von m im Schrank".
+- **Checked:** no yellow in any computed color of any page, the open sheet or focused controls (Playwright scan at 400 and 1280 px); visible focus ring on every tab stop; `prefers-reduced-motion` turns the sheet animation and transitions off; no horizontal overflow down to 320 px.
+
 ## Risks / Trade-offs
 
 - [Dark UI hard to read in sunlight on a phone] → AA contrast checked in task 1.1; large tap targets (≥ 44 px); status always as word + bar + color.

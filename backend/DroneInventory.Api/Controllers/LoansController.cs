@@ -56,5 +56,5 @@ public class LoansController(LoanService loans) : ControllerBase
         int id,
         [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] ReturnLoanRequest? request,
         CancellationToken cancellationToken) =>
-        LoanResponse.From(await loans.ReturnAsync(id, request?.Batteries, request?.Propellers, cancellationToken));
+        LoanResponse.From(await loans.ReturnAsync(id, request?.Batteries, request?.Propellers, cancellationToken: cancellationToken));
 }

@@ -62,6 +62,9 @@ namespace DroneInventory.Api.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("DamageReport")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("DroneId")
                         .HasColumnType("INTEGER");
 

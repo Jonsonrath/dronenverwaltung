@@ -46,6 +46,7 @@ public class LoansController(LoanService loans) : ControllerBase
     /// Return a loan (REQ-008, REQ-009). A POST action and not DELETE, because the
     /// loan is kept as history (REQ-010). The optional body holds the returned batteries
     /// and propellers (REQ-022); without it the loaned quantities count as returned.
+    /// An optional damage report in the body damages the drone (REQ-023).
     /// </summary>
     [HttpPost("{id:int}/return")]
     [ProducesResponseType<LoanResponse>(StatusCodes.Status200OK)]
@@ -56,5 +57,5 @@ public class LoansController(LoanService loans) : ControllerBase
         int id,
         [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] ReturnLoanRequest? request,
         CancellationToken cancellationToken) =>
-        LoanResponse.From(await loans.ReturnAsync(id, request?.Batteries, request?.Propellers, cancellationToken));
+        LoanResponse.From(await loans.ReturnAsync(id, request?.Batteries, request?.Propellers, request?.DamageReport, cancellationToken));
 }

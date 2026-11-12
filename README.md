@@ -49,14 +49,14 @@ SQLite
 |---|---|
 | `Drone` | Fluggerät, das ausgeliehen werden kann (Id, Name, Description, DamageReason) |
 | `StudentGroup` | Schülergruppe, die ausleiht und verantwortlich ist (Id, Name, optional ein verantwortlicher Schüler der Gruppe) |
-| `Loan` | Ausleihvorgang mit Gruppe, Drohne, `LoanDate`, `ReturnDate`, Status und dem Namen des verantwortlichen Schülers zum Zeitpunkt der Ausleihe |
+| `Loan` | Ausleihvorgang mit Gruppe, Drohne, `LoanDate`, `ReturnDate`, Status, dem Namen des verantwortlichen Schülers zum Zeitpunkt der Ausleihe und `DamageReport` (Schaden bei der Rückgabe, optional) |
 | `LoanItem` | Zubehörposition einer Ausleihe: Typ (`Battery` \| `Propeller`) und Menge |
 
 ### Domain Rules
 
 - Eine Drohne hat höchstens eine aktive Ausleihe.
 - Nur verfügbare Drohnen dürfen ausgeliehen werden; eine defekte Drohne nicht.
-- Eine Rückgabe macht die Drohne wieder verfügbar.
+- Eine Rückgabe macht die Drohne wieder verfügbar – außer mit Schadensmeldung: dann ist sie defekt und kann nicht ausgeliehen werden.
 - Zubehörmengen sind nie negativ.
 - Zurückgegebene Ausleihen bleiben gespeichert.
 - Akkus und Propeller werden nur als Menge geführt.
@@ -69,8 +69,8 @@ SQLite
 | Drohnen | `/drones` | Drohnen mit Status (Verfügbar / Ausgeliehen / Defekt) sehen, neue Drohne hinzufügen, Name, SSID und Beschreibung bearbeiten, Defekt melden und als repariert markieren | REQ-001, REQ-002, REQ-013 – REQ-015, REQ-024 |
 | Schülergruppen | `/student-groups` | Gruppen sehen (mit der Drohne, die sie gerade haben), hinzufügen, umbenennen und löschen; einen Schüler als verantwortlich markieren | REQ-003, REQ-011, REQ-012, REQ-020 |
 | Neue Ausleihe | `/loans/new` | Drohne mit Akkus und Propellern an eine Gruppe ausleihen (mit dem verantwortlichen Schüler in der Zusammenfassung) | REQ-004 – REQ-006, REQ-021 |
-| Aktive Ausleihen | `/loans` | Ausgeliehene Drohnen mit dem verantwortlichen Schüler sehen und zurückgeben | REQ-007 – REQ-009, REQ-021 |
-| Verlauf | `/loans/history` | Alle zurückgegebenen Ausleihen mit dem verantwortlichen Schüler zum Zeitpunkt der Ausleihe | REQ-010, REQ-021 |
+| Aktive Ausleihen | `/loans` | Ausgeliehene Drohnen mit dem verantwortlichen Schüler sehen und zurückgeben, optional mit Schaden | REQ-007 – REQ-009, REQ-021, REQ-023 |
+| Verlauf | `/loans/history` | Alle zurückgegebenen Ausleihen mit dem verantwortlichen Schüler zum Zeitpunkt der Ausleihe und gemeldetem Schaden | REQ-010, REQ-021, REQ-023 |
 
 Fehlermeldungen (z. B. "Die Drohne … ist bereits ausgeliehen.") kommen immer vom Backend; das Frontend prüft keine Fachregeln.
 
@@ -97,6 +97,7 @@ Ausformuliert mit SHALL und Given/When/Then in [`docs/requirements.md`](docs/req
 | REQ-015 | Drohne als repariert markieren |
 | REQ-020 | Verantwortlichen Schüler einer Gruppe festlegen |
 | REQ-021 | Verantwortlicher Schüler bei der Ausleihe |
+| REQ-023 | Schaden bei der Rückgabe melden |
 | REQ-024 | SSID einer Drohne (optional, eindeutig) |
 
 ## 🚫 Out of Scope

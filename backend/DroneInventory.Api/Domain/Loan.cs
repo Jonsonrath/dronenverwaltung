@@ -36,6 +36,8 @@ public class Loan
     /// A copy, not a foreign key, so the history keeps the name after the student moved or was removed.
     /// </summary>
     public string? ResponsibleStudentName { get; private set; }
+    /// <summary>Damage reported on return (REQ-023); null when there is none.</summary>
+    public string? DamageReport { get; private set; }
 
     /// <summary>Always exactly one Battery and one Propeller item, quantities may be 0.</summary>
     public IReadOnlyCollection<LoanItem> Items => _items;
@@ -84,9 +86,15 @@ public class Loan
     /// batteries and propellers (REQ-022). A number that is not given counts as the loaned
     /// quantity; each number must be 0..loaned quantity. The numbers are validated before
     /// anything changes, so an invalid return leaves the loan active.
+    /// A damage report (REQ-023) is stored and damages the drone with the report as reason;
+    /// an empty or whitespace-only report counts as no report.
     /// Everything else stays unchanged. A loan can only be returned once.
     /// </summary>
-    public void Return(DateTime returnDate, int? returnedBatteries = null, int? returnedPropellers = null)
+    public void Return(
+        DateTime returnDate,
+        int? returnedBatteries = null,
+        int? returnedPropellers = null,
+        string? damageReport = null)
     {
         if (Status == LoanStatus.Returned)
         {
@@ -104,6 +112,13 @@ public class Loan
         propeller.SetReturned(propellers);
         Status = LoanStatus.Returned;
         ReturnDate = returnDate;
+
+        // Same aggregate change, so loan and drone are saved together (design §1).
+        if (!string.IsNullOrWhiteSpace(damageReport))
+        {
+            DamageReport = damageReport.Trim();
+            Drone.ReportDamage(DamageReport);
+        }
     }
 
     private int QuantityOf(LoanItemType type) => Item(type).Quantity;

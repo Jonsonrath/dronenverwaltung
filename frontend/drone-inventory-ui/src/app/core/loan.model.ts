@@ -20,12 +20,18 @@ export interface Loan {
   returnedPropellers?: number | null;
   /** Name of the group's responsible student at loan time (REQ-021); null if the group had none. */
   responsibleStudentName?: string | null;
+  /** Damage reported on return (REQ-023); null when there is none. */
+  damageReport?: string | null;
 }
 
-/** Optional body of POST /api/loans/{id}/return (REQ-022). Missing numbers count as the loaned quantity. */
+/**
+ * Optional body of POST /api/loans/{id}/return (REQ-022). Missing numbers count as the loaned quantity.
+ * A damage report (REQ-023) marks the drone as damaged; the backend treats empty text as no report.
+ */
 export interface ReturnLoanRequest {
   batteries?: number;
   propellers?: number;
+  damageReport?: string;
 }
 
 /** Body of POST /api/loans (REQ-004, REQ-006). Missing quantities count as 0. */

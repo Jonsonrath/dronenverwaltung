@@ -25,6 +25,7 @@
             <th scope="col" class="number">Propeller</th>
             <th scope="col">Ausgeliehen am</th>
             <th scope="col">Zurückgegeben am</th>
+            <th scope="col">Schaden</th>
           </tr>
         </thead>
         <tbody>
@@ -48,6 +49,15 @@
               </td>
               <td class="date" data-label="Ausgeliehen am">{{ loan.loanDate | date: 'dd.MM.yyyy' }}</td>
               <td class="date" data-label="Zurückgegeben am">{{ loan.returnDate | date: 'dd.MM.yyyy' }}</td>
+              <!-- Damage reported on return (REQ-023). -->
+              <td class="damage" data-label="Schaden">
+                @if (loan.damageReport) {
+                  <span class="tag tag-damaged">Defekt</span>
+                  <span class="damage-report">{{ loan.damageReport }}</span>
+                } @else {
+                  <span class="no-damage">–</span>
+                }
+              </td>
             </tr>
           }
         </tbody>

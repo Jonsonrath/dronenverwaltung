@@ -8,7 +8,7 @@ type Accessory = 'batteries' | 'propellers';
 
 /**
  * Every returned loan, most recent return first; returned loans are never deleted (REQ-010).
- * Shows the returned accessories and what is missing (REQ-022).
+ * Shows the returned accessories and what is missing (REQ-022) and the damage report (REQ-023).
  */
 @Component({
   selector: 'app-loan-history',

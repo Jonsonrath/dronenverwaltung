@@ -154,6 +154,25 @@ public class ManageStudentGroupsApiTests : IDisposable
     }
 
     [Fact]
+    public async Task REQ_012_StudentGroupWithStudents_Returns409AndKeepsGroupAndStudent()
+    {
+        await CreateGroup("Group 3");
+        var group = await CreateGroup("Group 86");
+        (await _client.PostAsJsonAsync($"/api/student-groups/{group.Id}/students", new { name = "Ben Huber" }))
+            .EnsureSuccessStatusCode();
+
+        var response = await _client.DeleteAsync($"/api/student-groups/{group.Id}");
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal(409, problem!.Status);
+        Assert.Equal("Die Schülergruppe \"Group 86\" hat noch Schüler und kann nicht gelöscht werden.", problem.Detail);
+        var groups = await _client.GetFromJsonAsync<List<StudentGroupListResponse>>("/api/student-groups");
+        var kept = Assert.Single(groups!, g => g.Name == "Group 86");
+        Assert.Equal("Ben Huber", Assert.Single(kept.Students).Name);
+    }
+
+    [Fact]
     public async Task REQ_012_UnknownStudentGroup_Returns404()
     {
         var response = await _client.DeleteAsync("/api/student-groups/999");

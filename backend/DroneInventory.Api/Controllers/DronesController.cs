@@ -31,4 +31,16 @@ public class DronesController(DroneService drones) : ControllerBase
         // No single-drone endpoint exists, so the response has no Location header.
         return StatusCode(StatusCodes.Status201Created, DroneResponse.From(drone, DroneStatus.Available));
     }
+
+    /// <summary>Edit name and description of a drone (REQ-013).</summary>
+    [HttpPut("{id:int}")]
+    [ProducesResponseType<DroneResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<DroneResponse> Update(int id, UpdateDroneRequest request, CancellationToken cancellationToken)
+    {
+        var (drone, status) = await drones.UpdateAsync(id, request.Name ?? string.Empty, request.Description, cancellationToken);
+        return DroneResponse.From(drone, status);
+    }
 }

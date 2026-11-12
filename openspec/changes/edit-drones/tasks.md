@@ -5,7 +5,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 ## 1. Backend
 
 - [x] 1.1 `Drone.Edit` and `DroneService.UpdateAsync` with the uniqueness check against other drones and the unique-violation fallback (design §2); verify with domain and service tests named `REQ_013_...` (#79)
-- [ ] 1.2 `PUT /api/drones/{id}` with 200 / 404 / 409 / 422 (design §1); verify with an API test for every scenario of REQ-013 (#80)
+- [x] 1.2 `PUT /api/drones/{id}` with 200 / 404 / 409 / 422 (design §1); verify with an API test for every scenario of REQ-013 (#80)
 
 ## 2. Frontend
 

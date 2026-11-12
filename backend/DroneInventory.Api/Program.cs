@@ -30,6 +30,7 @@ builder.Services.AddDbContext<DroneInventoryDbContext>(options =>
 
 builder.Services.AddScoped<DroneService>();
 builder.Services.AddScoped<StudentGroupService>();
+builder.Services.AddScoped<StudentService>();
 builder.Services.AddScoped<LoanService>();
 
 // LoanDate and ReturnDate are taken from TimeProvider so tests can use fixed dates.

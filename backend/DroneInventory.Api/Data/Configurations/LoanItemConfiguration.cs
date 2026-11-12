@@ -12,6 +12,13 @@ public class LoanItemConfiguration : IEntityTypeConfiguration<LoanItem>
 
         // One item per type and loan; quantities are never negative (REQ-006).
         builder.HasIndex(i => new { i.LoanId, i.Type }).IsUnique();
-        builder.ToTable("LoanItems", t => t.HasCheckConstraint("CK_LoanItems_Quantity", "\"Quantity\" >= 0"));
+        builder.ToTable("LoanItems", t =>
+        {
+            t.HasCheckConstraint("CK_LoanItems_Quantity", "\"Quantity\" >= 0");
+            // Returned quantity: null until the return, then 0..Quantity (REQ-022).
+            t.HasCheckConstraint(
+                "CK_LoanItems_ReturnedQuantity",
+                "\"ReturnedQuantity\" IS NULL OR (\"ReturnedQuantity\" >= 0 AND \"ReturnedQuantity\" <= \"Quantity\")");
+        });
     }
 }

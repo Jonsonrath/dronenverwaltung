@@ -93,6 +93,9 @@ namespace DroneInventory.Api.Data.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("ReturnedQuantity")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -105,6 +108,8 @@ namespace DroneInventory.Api.Data.Migrations
                     b.ToTable("LoanItems", null, t =>
                         {
                             t.HasCheckConstraint("CK_LoanItems_Quantity", "\"Quantity\" >= 0");
+
+                            t.HasCheckConstraint("CK_LoanItems_ReturnedQuantity", "\"ReturnedQuantity\" IS NULL OR (\"ReturnedQuantity\" >= 0 AND \"ReturnedQuantity\" <= \"Quantity\")");
                         });
                 });
 

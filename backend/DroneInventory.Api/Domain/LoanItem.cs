@@ -19,6 +19,12 @@ public class LoanItem
 
     public int Quantity { get; private set; }
 
+    /// <summary>
+    /// Null while the loan is active (and for loans returned before REQ-022);
+    /// set by <see cref="Loan.Return"/>. Missing = Quantity - ReturnedQuantity, derived.
+    /// </summary>
+    public int? ReturnedQuantity { get; private set; }
+
     internal LoanItem(LoanItemType type, int quantity)
     {
         if (quantity < 0)
@@ -30,4 +36,16 @@ public class LoanItem
         Type = type;
         Quantity = quantity;
     }
+
+    /// <summary>Accepts 0..Quantity (REQ-022); everything else is invalid input.</summary>
+    internal void ValidateReturned(int returned)
+    {
+        if (returned < 0 || returned > Quantity)
+        {
+            var what = Type == LoanItemType.Battery ? "Akkus" : "Propeller";
+            throw new ValidationException($"Die Anzahl der zurückgegebenen {what} muss zwischen 0 und {Quantity} liegen.");
+        }
+    }
+
+    internal void SetReturned(int returned) => ReturnedQuantity = returned;
 }

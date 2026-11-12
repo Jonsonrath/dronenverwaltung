@@ -5,7 +5,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 ## 1. Backend
 
 - [x] 1.1 Entity `Student`, mapping with unique index (StudentGroupId, NormalizedName), foreign key Restrict, migration `AddStudents` (design §1); verify with domain tests `REQ_016_...` and mapping tests (#90)
-- [ ] 1.2 Add student and members in the group list: `POST /api/student-groups/{groupId}/students`, `students` in `GET /api/student-groups` (design §2); verify with API tests for every scenario of REQ-016 and REQ-017 (#91)
+- [x] 1.2 Add student and members in the group list: `POST /api/student-groups/{groupId}/students`, `students` in `GET /api/student-groups` (design §2); verify with API tests for every scenario of REQ-016 and REQ-017 (#91)
 - [ ] 1.3 Move and remove: `PUT /api/students/{id}/group`, `DELETE /api/students/{id}`; verify with API tests for every scenario of REQ-018 and REQ-019 (#92)
 - [ ] 1.4 Group delete rejects groups with students (design §3, MODIFIED REQ-012); verify with a test for "Student group with students" and all earlier REQ-012 tests unchanged (#93)
 

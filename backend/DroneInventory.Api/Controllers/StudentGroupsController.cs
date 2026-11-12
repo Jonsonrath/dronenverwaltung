@@ -6,15 +6,16 @@ namespace DroneInventory.Api.Controllers;
 
 [ApiController]
 [Route("api/student-groups")]
-public class StudentGroupsController(StudentGroupService groups) : ControllerBase
+public class StudentGroupsController(StudentGroupService groups, StudentService students) : ControllerBase
 {
-    /// <summary>List all student groups, ordered by name (REQ-003).</summary>
+    /// <summary>List all student groups with their students, both ordered by name (REQ-003, REQ-017).</summary>
     [HttpGet]
-    [ProducesResponseType<IReadOnlyList<StudentGroupResponse>>(StatusCodes.Status200OK)]
-    public async Task<IReadOnlyList<StudentGroupResponse>> List(CancellationToken cancellationToken)
+    [ProducesResponseType<IReadOnlyList<StudentGroupListResponse>>(StatusCodes.Status200OK)]
+    public async Task<IReadOnlyList<StudentGroupListResponse>> List(CancellationToken cancellationToken)
     {
         var all = await groups.ListAsync(cancellationToken);
-        return all.Select(StudentGroupResponse.From).ToList();
+        var members = await students.ListByGroupAsync(cancellationToken);
+        return all.Select(g => StudentGroupListResponse.From(g, members[g.Id])).ToList();
     }
 
     /// <summary>Create a student group (REQ-003).</summary>

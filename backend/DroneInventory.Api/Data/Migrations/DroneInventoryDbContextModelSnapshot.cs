@@ -113,6 +113,35 @@ namespace DroneInventory.Api.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("DroneInventory.Api.Domain.Student", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Class")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("StudentGroupId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentGroupId", "NormalizedName")
+                        .IsUnique();
+
+                    b.ToTable("Students");
+                });
+
             modelBuilder.Entity("DroneInventory.Api.Domain.StudentGroup", b =>
                 {
                     b.Property<int>("Id")
@@ -160,6 +189,15 @@ namespace DroneInventory.Api.Data.Migrations
                         .WithMany("Items")
                         .HasForeignKey("LoanId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("DroneInventory.Api.Domain.Student", b =>
+                {
+                    b.HasOne("DroneInventory.Api.Domain.StudentGroup", null)
+                        .WithMany()
+                        .HasForeignKey("StudentGroupId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

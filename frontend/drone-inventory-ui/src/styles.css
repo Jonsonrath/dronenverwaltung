@@ -267,6 +267,11 @@ a:hover {
   --status: var(--loaned);
 }
 
+/* Defekt (support-damaged-drones): neutral and muted, never red – red means a backend error */
+.is-damaged {
+  --status: var(--muted);
+}
+
 .tag {
   display: inline-flex;
   align-items: center;
@@ -299,6 +304,19 @@ a:hover {
 .tag-loaned::before {
   background: none;
   box-shadow: inset 0 0 0 1.5px currentColor;
+}
+
+.tag-damaged {
+  background: color-mix(in srgb, var(--muted) 16%, transparent);
+  color: var(--muted);
+}
+
+/* A crossed mark instead of the dot */
+.tag-damaged::before {
+  border-radius: 0;
+  background:
+    linear-gradient(45deg, transparent 42%, currentColor 42% 58%, transparent 58%),
+    linear-gradient(-45deg, transparent 42%, currentColor 42% 58%, transparent 58%);
 }
 
 /* Messages from the backend (404 / 409 / 422) */

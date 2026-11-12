@@ -11,7 +11,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 2. Frontend
 
-- [ ] 2.1 Drones page: status *Defekt*, reason in the bay, *Defekt melden* (sheet with reason) and *Repariert* (design §5); verify with Vitest tests for both requests and the shown 404 / 409 / 422 messages, `npx ng build` (#87)
+- [x] 2.1 Drones page: status *Defekt*, reason in the bay, *Defekt melden* (sheet with reason) and *Repariert* (design §5); verify with Vitest tests for both requests and the shown 404 / 409 / 422 messages, `npx ng build` (#87)
 - [ ] 2.2 Loan form: damaged drones in their own collapsed group, still selectable; verify that the backend's 409 for a damaged drone is shown, and one run through the real UI (#88)
 
 ## 3. Rules and docs

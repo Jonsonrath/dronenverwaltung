@@ -46,6 +46,29 @@ describe('DroneApi', () => {
     expect(await result).toEqual(edited);
   });
 
+  it('REQ-014: reportDamage() sends POST /api/drones/{id}/damage with the reason', async () => {
+    const damaged: Drone = { id: 7, name: 'TELLO-07', description: '', status: 'Damaged', damageReason: 'Propeller gebrochen' };
+
+    const result = firstValueFrom(api.reportDamage(7, { reason: 'Propeller gebrochen' }));
+    const request = http.expectOne('/api/drones/7/damage');
+    request.flush(damaged);
+
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ reason: 'Propeller gebrochen' });
+    expect(await result).toEqual(damaged);
+  });
+
+  it('REQ-015: repair() sends DELETE /api/drones/{id}/damage', async () => {
+    const repaired: Drone = { id: 7, name: 'TELLO-07', description: '', status: 'Available', damageReason: null };
+
+    const result = firstValueFrom(api.repair(7));
+    const request = http.expectOne('/api/drones/7/damage');
+    request.flush(repaired);
+
+    expect(request.request.method).toBe('DELETE');
+    expect(await result).toEqual(repaired);
+  });
+
   it('REQ-001: create() sends POST /api/drones with name and description', async () => {
     const created: Drone = { id: 7, name: 'TELLO-07', description: 'SSID: TELLO-9FA21B', status: 'Available' };
 

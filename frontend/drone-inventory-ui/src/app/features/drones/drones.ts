@@ -8,7 +8,10 @@ import { Drone } from '../../core/drone.model';
 import { problemMessage } from '../../core/problem-message';
 import { DroneGlyph } from '../../shared/drone-glyph';
 
-/** Drone list with the derived status (REQ-002) and the forms to add (REQ-001) and edit (REQ-013) a drone. */
+/**
+ * Drone list with the derived status (REQ-002), the forms to add (REQ-001) and edit (REQ-013) a drone,
+ * and reporting damage (REQ-014) / repair (REQ-015).
+ */
 @Component({
   selector: 'app-drones',
   imports: [FormField, FormRoot, RouterLink, DroneGlyph],
@@ -92,8 +95,7 @@ export class Drones {
             return undefined;
           }
           this.editError.set('');
-          this.added.set('');
-          this.saved.set('');
+          this.clearNotes();
           try {
             const result = await firstValueFrom(this.droneApi.update(drone.id, this.changes()));
             this.saved.set(result.name);
@@ -109,6 +111,89 @@ export class Drones {
     },
   );
 
+  // ---- damage (REQ-014) and repair (REQ-015) ----
+
+  private readonly damageSheet = viewChild.required<ElementRef<HTMLDialogElement>>('damageSheet');
+
+  /** The drone that is being reported as damaged. */
+  protected readonly reporting = signal<Drone | undefined>(undefined);
+
+  protected readonly damage = signal({ reason: '' });
+
+  /** Message from the backend when reporting failed, e.g. 422 empty reason or 404 unknown drone. */
+  protected readonly damageError = signal('');
+
+  /** Message from the backend when a repair failed, e.g. 409 not damaged or 404 unknown drone. */
+  protected readonly repairError = signal('');
+
+  /** Confirmation after a damage report or repair. */
+  protected readonly damageNote = signal('');
+
+  protected openDamage(drone: Drone) {
+    this.reporting.set(drone);
+    this.damageError.set('');
+    this.damageForm().reset({ reason: drone.damageReason ?? '' });
+    this.damageSheet().nativeElement.showModal();
+  }
+
+  protected closeDamage() {
+    this.damageSheet().nativeElement.close();
+  }
+
+  private clearNotes() {
+    this.added.set('');
+    this.saved.set('');
+    this.damageNote.set('');
+    this.repairError.set('');
+  }
+
+  // Only a convenience check; the backend validates the reason (REQ-014).
+  protected readonly damageForm = form(
+    this.damage,
+    (damage) => {
+      required(damage.reason, { message: 'Grund eingeben.' });
+    },
+    {
+      submission: {
+        action: async () => {
+          const drone = this.reporting();
+          if (!drone) {
+            return undefined;
+          }
+          this.damageError.set('');
+          this.clearNotes();
+          try {
+            const result = await firstValueFrom(this.droneApi.reportDamage(drone.id, this.damage()));
+            this.damageNote.set(`${result.name} als defekt gemeldet.`);
+            this.closeDamage();
+            this.drones.reload();
+          } catch (error) {
+            this.damageError.set(problemMessage(error));
+          }
+          return undefined;
+        },
+        onInvalid: () => this.damageError.set(''),
+      },
+    },
+  );
+
+  /** Ids of the drones whose repair request is running, so the button cannot be pressed twice. */
+  protected readonly repairing = signal<readonly number[]>([]);
+
+  protected async repair(drone: Drone) {
+    this.clearNotes();
+    this.repairing.update((ids) => [...ids, drone.id]);
+    try {
+      const result = await firstValueFrom(this.droneApi.repair(drone.id));
+      this.damageNote.set(`${result.name} ist repariert.`);
+      this.drones.reload();
+    } catch (error) {
+      this.repairError.set(problemMessage(error));
+    } finally {
+      this.repairing.update((ids) => ids.filter((id) => id !== drone.id));
+    }
+  }
+
   // Only a convenience check; the backend validates the name (REQ-001).
   protected readonly droneForm = form(
     this.newDrone,
@@ -119,8 +204,7 @@ export class Drones {
       submission: {
         action: async () => {
           this.saveError.set('');
-          this.added.set('');
-          this.saved.set('');
+          this.clearNotes();
           const { name, description } = this.newDrone();
           try {
             const drone = await firstValueFrom(this.droneApi.create({ name, description }));

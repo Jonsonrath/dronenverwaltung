@@ -47,6 +47,12 @@
   box-shadow: inset 0 0 0 1.5px var(--status);
 }
 
+/* Defekt: muted and hatched, so it differs from the others without a color */
+.cabinet-bar .is-damaged,
+.key.is-damaged {
+  background: repeating-linear-gradient(-45deg, var(--status) 0 2px, transparent 2px 4px);
+}
+
 .legend {
   display: flex;
   align-items: center;
@@ -62,7 +68,8 @@
 }
 
 .key + .key,
-.legend .key.is-loaned {
+.legend .key.is-loaned,
+.legend .key.is-damaged {
   margin-left: var(--space-2);
 }
 
@@ -79,10 +86,11 @@
 .bay {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto auto 1fr auto;
+  grid-template-rows: auto auto auto 1fr auto;
   grid-template-areas:
     'glyph tag'
     'name name'
+    'damage damage'
     'description description'
     'action action';
   align-items: start;
@@ -97,6 +105,16 @@
 .bay.is-loaned {
   border-style: dashed;
   background: none;
+}
+
+/* Damage reason (REQ-014) between name and description; the word "Defekt" carries the meaning, not a color */
+.damage {
+  grid-area: damage;
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 app-drone-glyph {
@@ -127,16 +145,17 @@ app-drone-glyph {
   overflow-wrap: anywhere;
 }
 
-/* The shortcut (Ausleihen / Zurückgeben) and Bearbeiten side by side */
+/* The shortcut (Ausleihen / Zurückgeben), Bearbeiten and Defekt melden / Repariert side by side */
 .bay-actions {
   grid-area: action;
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
   margin-top: var(--space-4);
 }
 
 .bay-actions .button {
-  flex: 1 1 0%;
+  flex: 1 1 auto;
   padding-left: var(--space-3);
   padding-right: var(--space-3);
 }
@@ -155,9 +174,10 @@ app-drone-glyph {
 
   .bay {
     grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto auto auto;
     grid-template-areas:
       'glyph name tag'
+      'glyph damage damage'
       'glyph description description'
       'action action action';
     align-items: center;

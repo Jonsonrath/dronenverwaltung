@@ -12,6 +12,12 @@
   <p class="added" role="status">{{ added() }} hinzugefügt. Sie ist jetzt verfügbar.</p>
 } @else if (saved()) {
   <p class="added" role="status">{{ saved() }} gespeichert.</p>
+} @else if (damageNote()) {
+  <p class="added" role="status">{{ damageNote() }}</p>
+}
+
+@if (repairError()) {
+  <p class="alert" role="alert">{{ repairError() }}</p>
 }
 
 <section class="inventory" aria-label="Drohnen">
@@ -33,11 +39,13 @@
             <span
               [class.is-available]="drone.status === 'Available'"
               [class.is-loaned]="drone.status === 'Loaned'"
+              [class.is-damaged]="drone.status === 'Damaged'"
             ></span>
           }
         </div>
         <p class="legend" aria-hidden="true">
           <span class="key is-available"></span> im Schrank <span class="key is-loaned"></span> ausgeliehen
+          <span class="key is-damaged"></span> defekt
         </p>
       </div>
 
@@ -47,20 +55,30 @@
             class="bay"
             [class.is-available]="drone.status === 'Available'"
             [class.is-loaned]="drone.status === 'Loaned'"
+            [class.is-damaged]="drone.status === 'Damaged'"
           >
             <app-drone-glyph [out]="drone.status === 'Loaned'" />
             <span class="name">{{ drone.name }}</span>
-            @if (drone.status === 'Loaned') {
-              <span class="tag tag-loaned">Ausgeliehen</span>
-            } @else {
-              <span class="tag tag-available">Verfügbar</span>
+            @switch (drone.status) {
+              @case ('Loaned') {
+                <span class="tag tag-loaned">Ausgeliehen</span>
+              }
+              @case ('Damaged') {
+                <span class="tag tag-damaged">Defekt</span>
+              }
+              @default {
+                <span class="tag tag-available">Verfügbar</span>
+              }
+            }
+            @if (drone.damageReason) {
+              <span class="damage">Defekt: {{ drone.damageReason }}</span>
             }
             <span class="description">{{ drone.description }}</span>
             <div class="bay-actions">
               <!-- Shortcuts only: whether a drone can be loaned or returned is decided by the backend. -->
               @if (drone.status === 'Loaned') {
                 <a class="button" routerLink="/loans" [attr.aria-label]="drone.name + ' zurückgeben'">Zurückgeben</a>
-              } @else {
+              } @else if (drone.status === 'Available') {
                 <a
                   class="button"
                   routerLink="/loans/new"
@@ -72,6 +90,26 @@
               <button class="button" type="button" [attr.aria-label]="drone.name + ' bearbeiten'" (click)="openEdit(drone)">
                 Bearbeiten
               </button>
+              @if (drone.damageReason) {
+                <button
+                  class="button"
+                  type="button"
+                  [attr.aria-label]="drone.name + ' repariert'"
+                  [disabled]="repairing().includes(drone.id)"
+                  (click)="repair(drone)"
+                >
+                  Repariert
+                </button>
+              } @else {
+                <button
+                  class="button"
+                  type="button"
+                  [attr.aria-label]="drone.name + ' defekt melden'"
+                  (click)="openDamage(drone)"
+                >
+                  Defekt melden
+                </button>
+              }
             </div>
           </li>
         }
@@ -144,6 +182,33 @@
         <button class="button" type="button" (click)="closeEdit()">Abbrechen</button>
         <button class="button button-primary" type="submit" [disabled]="editForm().submitting()">
           {{ editForm().submitting() ? 'Wird gespeichert…' : 'Speichern' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<dialog #damageSheet class="sheet" aria-labelledby="damage-drone-heading" (click)="closeOnBackdrop($event)">
+  <div class="sheet-body">
+    <h2 id="damage-drone-heading">{{ reporting()?.name }} defekt melden</h2>
+
+    <form class="damage-form" [formRoot]="damageForm">
+      @if (damageError()) {
+        <p class="alert" role="alert">{{ damageError() }}</p>
+      }
+
+      <div class="field">
+        <label for="damage-reason">Grund</label>
+        <textarea id="damage-reason" placeholder="Propeller gebrochen" [formField]="damageForm.reason"></textarea>
+        @if (damageForm.reason().touched() && damageForm.reason().invalid()) {
+          <p class="field-error">{{ damageForm.reason().errors()[0].message }}</p>
+        }
+      </div>
+
+      <div class="sheet-actions">
+        <button class="button" type="button" (click)="closeDamage()">Abbrechen</button>
+        <button class="button button-primary" type="submit" [disabled]="damageForm().submitting()">
+          {{ damageForm().submitting() ? 'Wird gemeldet…' : 'Defekt melden' }}
         </button>
       </div>
     </form>

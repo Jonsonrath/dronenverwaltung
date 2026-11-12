@@ -5,12 +5,12 @@
   </div>
 </header>
 
-@if (returnError()) {
-  <p class="alert" role="alert">{{ returnError() }}</p>
-}
 @if (returned(); as loan) {
   <p class="added" role="status">
     {{ loan.droneName }} von {{ loan.studentGroupName }} zurückgegeben. Sie ist wieder verfügbar.
+    @if (missingText(loan); as missing) {
+      <span class="missing">{{ missing }}</span>
+    }
   </p>
 }
 
@@ -52,11 +52,10 @@
                 <button
                   class="button"
                   type="button"
-                  [disabled]="returningId() === loan.id"
                   [attr.aria-label]="loan.droneName + ' zurückgeben'"
-                  (click)="returnLoan(loan)"
+                  (click)="openReturn(loan)"
                 >
-                  {{ returningId() === loan.id ? 'Wird zurückgegeben…' : 'Zurückgeben' }}
+                  Zurückgeben
                 </button>
               </td>
             </tr>
@@ -68,3 +67,49 @@
 } @else {
   <p class="loading" aria-live="polite">Aktive Ausleihen werden geladen…</p>
 }
+
+<!-- Return (REQ-008, REQ-022): what came back, prefilled with what was loaned. -->
+<dialog #returnSheet class="sheet" aria-labelledby="return-heading" (click)="closeOnBackdrop($event)">
+  <div class="sheet-body">
+    @if (returning(); as loan) {
+      <h2 id="return-heading">{{ loan.droneName }} zurückgeben</h2>
+      <p class="sheet-lead">Ausgeliehen von {{ loan.studentGroupName }}. Wie viel ist zurückgekommen?</p>
+
+      <form class="return-form" (submit)="confirmReturn($event)">
+        @if (returnError()) {
+          <p class="alert" role="alert">{{ returnError() }}</p>
+        }
+
+        <div class="returned">
+          <div class="field">
+            <label for="return-batteries">Akkus <span class="of">von {{ loan.batteries }}</span></label>
+            <app-quantity-stepper
+              label="Akkus"
+              inputId="return-batteries"
+              [max]="loan.batteries"
+              [disabled]="sending()"
+              [(value)]="returnedBatteries"
+            />
+          </div>
+          <div class="field">
+            <label for="return-propellers">Propeller <span class="of">von {{ loan.propellers }}</span></label>
+            <app-quantity-stepper
+              label="Propeller"
+              inputId="return-propellers"
+              [max]="loan.propellers"
+              [disabled]="sending()"
+              [(value)]="returnedPropellers"
+            />
+          </div>
+        </div>
+
+        <div class="sheet-actions">
+          <button class="button" type="button" (click)="closeReturn()">Abbrechen</button>
+          <button class="button button-primary" type="submit" [disabled]="sending()">
+            {{ sending() ? 'Wird zurückgegeben…' : 'Zurückgeben' }}
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</dialog>

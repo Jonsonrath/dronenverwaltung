@@ -89,3 +89,33 @@ describe('QuantityStepper', () => {
     expect(field().id).toBe('qty');
   });
 });
+
+// Change return-differences (task 2.1): + stops at an optional max, e.g. the loaned quantity.
+@Component({
+  imports: [QuantityStepper],
+  template: `<app-quantity-stepper label="Akkus" [max]="4" [(value)]="returned" />`,
+})
+class MaxHost {
+  readonly returned = signal(3);
+}
+
+describe('QuantityStepper with max', () => {
+  it('+ is disabled at max, a higher number can still be typed (the backend decides)', async () => {
+    TestBed.configureTestingModule({ imports: [MaxHost] });
+    const fixture = TestBed.createComponent(MaxHost);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    const more = element.querySelector('button[aria-label="Mehr Akkus"]') as HTMLButtonElement;
+
+    expect(more.disabled).toBe(false);
+    more.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.returned()).toBe(4);
+    expect(more.disabled).toBe(true);
+
+    const field = element.querySelector('input') as HTMLInputElement;
+    field.value = '5';
+    field.dispatchEvent(new Event('input'));
+    expect(fixture.componentInstance.returned()).toBe(5);
+  });
+});

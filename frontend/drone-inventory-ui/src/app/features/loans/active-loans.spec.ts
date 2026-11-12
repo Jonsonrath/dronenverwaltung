@@ -6,7 +6,16 @@ import { Clock } from '../../core/clock';
 import { Loan } from '../../core/loan.model';
 import { ActiveLoans } from './active-loans';
 
-// Active loans page: list (task 7.2, REQ-007) and return action (task 7.3, REQ-008, REQ-009).
+// jsdom has no dialog methods; the page only needs "open" and "closed".
+HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+  this.open = true;
+};
+HTMLDialogElement.prototype.close ??= function (this: HTMLDialogElement) {
+  this.open = false;
+};
+
+// Active loans page: list (task 7.2, REQ-007) and return action (task 7.3, REQ-008, REQ-009;
+// return sheet with the returned accessories: change return-differences task 2.1, REQ-022).
 describe('Active loans page', () => {
   let fixture: ComponentFixture<ActiveLoans>;
   let http: HttpTestingController;
@@ -95,12 +104,30 @@ describe('Active loans page', () => {
     expect(page.querySelector('[role="alert"]')?.textContent).toContain('konnten nicht geladen werden');
   });
 
+  // Return (REQ-008, REQ-009) through the return sheet with the returned accessories (REQ-022).
   describe('return a loan', () => {
     /** Let the async click handler run up to its next pending request. */
     const settle = () => new Promise((resolve) => setTimeout(resolve));
 
-    async function clickReturn(page: HTMLElement, droneName: string) {
+    const sheet = (page: HTMLElement) =>
+      page.querySelector('dialog[aria-labelledby="return-heading"]') as HTMLDialogElement;
+    const field = (page: HTMLElement, id: string) => page.querySelector(`#${id}`) as HTMLInputElement;
+
+    async function openReturn(page: HTMLElement, droneName: string) {
       (page.querySelector(`button[aria-label="${droneName} zurückgeben"]`) as HTMLButtonElement).click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+    }
+
+    function type(page: HTMLElement, id: string, value: string) {
+      field(page, id).value = value;
+      field(page, id).dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+    }
+
+    async function confirm(page: HTMLElement) {
+      sheet(page).querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
       await settle();
       fixture.detectChanges();
     }
@@ -115,26 +142,89 @@ describe('Active loans page', () => {
       fixture.detectChanges();
     }
 
-    it('REQ-008/REQ-009: Return sends POST /api/loans/{id}/return and the list reloads', async () => {
+    it('REQ-022: Zurückgeben opens the sheet prefilled with the loaned quantities and sends nothing yet', async () => {
       const page = await respond(loans);
 
-      await clickReturn(page, 'TELLO-07');
+      await openReturn(page, 'TELLO-07');
+
+      expect(sheet(page).open).toBe(true);
+      expect(sheet(page).querySelector('h2')?.textContent).toBe('TELLO-07 zurückgeben');
+      expect(field(page, 'return-batteries').value).toBe('4');
+      expect(field(page, 'return-propellers').value).toBe('8');
+      // + stops at the loaned quantity (only a convenience, the backend decides).
+      expect((sheet(page).querySelector('button[aria-label="Mehr Akkus"]') as HTMLButtonElement).disabled).toBe(true);
+      http.expectNone('/api/loans/2/return');
+    });
+
+    it('REQ-008/REQ-009/REQ-022: complete return sends the loaned quantities, closes the sheet and the list reloads', async () => {
+      const page = await respond(loans);
+
+      await openReturn(page, 'TELLO-07');
+      await confirm(page);
       const request = http.expectOne('/api/loans/2/return');
       expect(request.request.method).toBe('POST');
-      request.flush({ ...loans[1], status: 'Returned', returnDate: '2026-08-26T14:30:00Z' });
+      expect(request.request.body).toEqual({ batteries: 4, propellers: 8 });
+      request.flush({
+        ...loans[1], status: 'Returned', returnDate: '2026-08-26T14:30:00Z', returnedBatteries: 4, returnedPropellers: 8,
+      });
       await reloadWith([loans[0]]);
 
       const drones = [...page.querySelectorAll('tbody .drone')].map((cell) => cell.textContent);
       expect(drones).toEqual(['TELLO-02']);
-      expect(page.querySelector('[role="status"]')?.textContent).toContain(
-        'TELLO-07 von Group 3 zurückgegeben. Sie ist wieder verfügbar.',
+      expect(sheet(page).open).toBe(false);
+      const status = page.querySelector('[role="status"]')?.textContent;
+      expect(status).toContain('TELLO-07 von Group 3 zurückgegeben. Sie ist wieder verfügbar.');
+      expect(status).not.toContain('Fehlt');
+    });
+
+    it('REQ-022: missing battery – sends the changed number and the confirmation names what is missing', async () => {
+      const page = await respond(loans);
+
+      await openReturn(page, 'TELLO-07');
+      (sheet(page).querySelector('button[aria-label="Weniger Akkus"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      await confirm(page);
+      const request = http.expectOne('/api/loans/2/return');
+      expect(request.request.body).toEqual({ batteries: 3, propellers: 8 });
+      request.flush({
+        ...loans[1], status: 'Returned', returnDate: '2026-08-26T14:30:00Z', returnedBatteries: 3, returnedPropellers: 8,
+      });
+      await reloadWith([loans[0]]);
+
+      expect(page.querySelector('[role="status"] .missing')?.textContent).toBe('Fehlt: 1 Akku.');
+    });
+
+    it('REQ-022: shows the backend message (422) in the sheet and keeps it open', async () => {
+      const page = await respond(loans);
+
+      await openReturn(page, 'TELLO-07');
+      type(page, 'return-batteries', '5');
+      await confirm(page);
+      const request = http.expectOne('/api/loans/2/return');
+      expect(request.request.body).toEqual({ batteries: 5, propellers: 8 });
+      request.flush(
+        {
+          status: 422,
+          title: 'Unprocessable Entity',
+          detail: 'Die Anzahl der zurückgegebenen Akkus muss zwischen 0 und 4 liegen.',
+        },
+        { status: 422, statusText: 'Unprocessable Entity' },
       );
+      await reloadWith(loans);
+
+      expect(sheet(page).open).toBe(true);
+      expect(sheet(page).querySelector('[role="alert"]')?.textContent).toContain(
+        'Die Anzahl der zurückgegebenen Akkus muss zwischen 0 und 4 liegen.',
+      );
+      expect(page.querySelector('[role="status"]')).toBeNull();
+      expect(page.querySelectorAll('tbody tr').length).toBe(2);
     });
 
     it('REQ-008: shows the backend message when the loan was already returned (409)', async () => {
       const page = await respond(loans);
 
-      await clickReturn(page, 'TELLO-07');
+      await openReturn(page, 'TELLO-07');
+      await confirm(page);
       http.expectOne('/api/loans/2/return').flush(
         { status: 409, title: 'Conflict', detail: 'Die Ausleihe 2 wurde bereits zurückgegeben.' },
         { status: 409, statusText: 'Conflict' },
@@ -142,21 +232,36 @@ describe('Active loans page', () => {
       // The list is loaded again anyway, because it was outdated.
       await reloadWith([loans[0]]);
 
-      expect(page.querySelector('[role="alert"]')?.textContent).toContain('Die Ausleihe 2 wurde bereits zurückgegeben.');
+      expect(sheet(page).querySelector('[role="alert"]')?.textContent).toContain(
+        'Die Ausleihe 2 wurde bereits zurückgegeben.',
+      );
       expect(page.querySelector('[role="status"]')).toBeNull();
       expect(page.querySelectorAll('tbody tr').length).toBe(1);
     });
 
-    it('disables the button while the return is being sent', async () => {
+    it('disables the confirm button while the return is being sent', async () => {
       const page = await respond(loans);
 
-      await clickReturn(page, 'TELLO-07');
+      await openReturn(page, 'TELLO-07');
+      await confirm(page);
 
-      const button = page.querySelector('button[aria-label="TELLO-07 zurückgeben"]') as HTMLButtonElement;
+      const button = sheet(page).querySelector('button[type="submit"]') as HTMLButtonElement;
       expect(button.disabled).toBe(true);
       expect(button.textContent?.trim()).toBe('Wird zurückgegeben…');
       http.expectOne('/api/loans/2/return').flush(loans[1]);
       await reloadWith([loans[0]]);
+    });
+
+    it('Abbrechen closes the sheet without a request', async () => {
+      const page = await respond(loans);
+
+      await openReturn(page, 'TELLO-07');
+      const cancel = [...sheet(page).querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Abbrechen')!;
+      cancel.click();
+      fixture.detectChanges();
+
+      expect(sheet(page).open).toBe(false);
+      http.expectNone('/api/loans/2/return');
     });
   });
 });

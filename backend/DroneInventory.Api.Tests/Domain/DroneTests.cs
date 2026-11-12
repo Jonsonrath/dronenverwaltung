@@ -126,6 +126,17 @@ public class DroneTests
         Assert.Null(drone.DamageReason);
     }
 
+    // Task 1.2: the one place of the status derivation (MODIFIED REQ-002).
+    [Theory]
+    [InlineData(false, null, DroneStatus.Available)]
+    [InlineData(false, "Propeller gebrochen", DroneStatus.Damaged)]
+    [InlineData(true, null, DroneStatus.Loaned)]
+    [InlineData(true, "Kamera ausgefallen", DroneStatus.Loaned)]
+    public void REQ_002_StatusIsLoanedThenDamagedThenAvailable(bool hasActiveLoan, string? damageReason, DroneStatus expected)
+    {
+        Assert.Equal(expected, DroneStatusRules.Derive(hasActiveLoan, damageReason));
+    }
+
     [Fact]
     public void REQ_015_RepairRemovesTheReason()
     {

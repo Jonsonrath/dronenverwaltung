@@ -13,7 +13,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 3. Docs
 
-- [ ] 3.1 `docs/requirements.md` REQ-024 and the README; verify `openspec validate drone-ssid --strict` (#115)
+- [x] 3.1 `docs/requirements.md` REQ-024 and the README; verify `openspec validate drone-ssid --strict` (#115)
 
 ## Workflow follow-up
 

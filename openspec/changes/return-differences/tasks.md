@@ -10,7 +10,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 ## 2. Frontend
 
 - [x] 2.1 Return sheet with two steppers on the active loans page (design §4); verify with Vitest tests for the request body, the 422 message and the confirmation (#105)
-- [ ] 2.2 History shows returned and missing accessories; verify with Vitest tests, `npx ng build`, and one run through the real UI (#106)
+- [x] 2.2 History shows returned and missing accessories; verify with Vitest tests, `npx ng build`, and one run through the real UI (#106)
 
 ## 3. Rules and docs
 

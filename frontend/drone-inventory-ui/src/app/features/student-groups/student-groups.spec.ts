@@ -488,7 +488,7 @@ describe('Student groups page', () => {
       ].map((name) => name.textContent?.trim());
 
     function openAnna(page: HTMLElement) {
-      (page.querySelector('button[aria-label="Anna Berger verschieben oder entfernen"]') as HTMLButtonElement).click();
+      (page.querySelector('button[aria-label="Anna Berger bearbeiten"]') as HTMLButtonElement).click();
       fixture.detectChanges();
     }
 
@@ -614,6 +614,104 @@ describe('Student groups page', () => {
       expect(sheet(page).open).toBe(false);
       http.expectNone({ method: 'PUT', url: '/api/students/7/group' });
       http.expectNone({ method: 'DELETE', url: '/api/students/7' });
+    });
+  });
+
+  // Change responsible-student: mark, change and clear the responsible student (REQ-020).
+  describe('responsible student', () => {
+    const anna = { id: 7, name: 'Anna Berger', class: '', studentGroupId: 3 };
+    const ben = { id: 8, name: 'Ben Huber', class: '', studentGroupId: 3 };
+    const group3 = (responsibleStudentId: number | null): StudentGroup => ({
+      id: 3,
+      name: 'Group 3',
+      students: [anna, ben],
+      responsibleStudentId,
+    });
+
+    const sheet = (page: HTMLElement) => page.querySelector('dialog[aria-labelledby="student-heading"]') as HTMLDialogElement;
+
+    /** Names of the members that carry the "verantwortlich" tag. */
+    const responsibleNames = (page: HTMLElement) =>
+      [...page.querySelectorAll('.member')]
+        .filter((member) => member.querySelector('.responsible-tag'))
+        .map((member) => member.querySelector('.member-name')?.textContent?.trim());
+
+    function open(page: HTMLElement, name: string) {
+      (page.querySelector(`button[aria-label="${name} bearbeiten"]`) as HTMLButtonElement).click();
+      fixture.detectChanges();
+    }
+
+    async function reloadWith(body: StudentGroup[]) {
+      await settle();
+      fixture.detectChanges();
+      http.expectOne({ method: 'GET', url: '/api/student-groups' }).flush(body);
+      await settle();
+      fixture.detectChanges();
+    }
+
+    it('REQ-020: marks the responsible student on the plate', async () => {
+      const page = await respond([group3(7)]);
+
+      expect(responsibleNames(page)).toEqual(['Anna Berger']);
+    });
+
+    it('REQ-020: sends the request to mark a responsible student and shows the reloaded list', async () => {
+      const page = await respond([group3(null)]);
+      open(page, 'Anna Berger');
+
+      (sheet(page).querySelector('.make-responsible') as HTMLButtonElement).click();
+      await settle();
+      const request = http.expectOne({ method: 'PUT', url: '/api/student-groups/3/responsible' });
+      expect(request.request.body).toEqual({ studentId: 7 });
+      request.flush({ id: 3, name: 'Group 3', responsibleStudentId: 7 });
+      await reloadWith([group3(7)]);
+
+      expect(responsibleNames(page)).toEqual(['Anna Berger']);
+      expect(page.querySelector('[role="status"]')?.textContent).toContain('Anna Berger ist jetzt verantwortlich für Group 3.');
+      expect(sheet(page).open).toBe(false);
+    });
+
+    it('REQ-020: changes the responsible student to another one', async () => {
+      const page = await respond([group3(7)]);
+      open(page, 'Ben Huber');
+
+      (sheet(page).querySelector('.make-responsible') as HTMLButtonElement).click();
+      await settle();
+      http.expectOne({ method: 'PUT', url: '/api/student-groups/3/responsible' }).flush({ id: 3, name: 'Group 3', responsibleStudentId: 8 });
+      await reloadWith([group3(8)]);
+
+      expect(responsibleNames(page)).toEqual(['Ben Huber']);
+    });
+
+    it('REQ-020: clears the responsible student', async () => {
+      const page = await respond([group3(7)]);
+      open(page, 'Anna Berger');
+
+      (sheet(page).querySelector('.clear-responsible') as HTMLButtonElement).click();
+      await settle();
+      http.expectOne({ method: 'DELETE', url: '/api/student-groups/3/responsible' }).flush({ id: 3, name: 'Group 3', responsibleStudentId: null });
+      await reloadWith([group3(null)]);
+
+      expect(responsibleNames(page)).toEqual([]);
+      expect(page.querySelector('[role="status"]')?.textContent).toContain('Anna Berger ist nicht mehr verantwortlich für Group 3.');
+    });
+
+    it('REQ-020: shows the backend message when the student is not in the group (422)', async () => {
+      const page = await respond([group3(null)]);
+      open(page, 'Anna Berger');
+
+      (sheet(page).querySelector('.make-responsible') as HTMLButtonElement).click();
+      await settle();
+      http.expectOne({ method: 'PUT', url: '/api/student-groups/3/responsible' }).flush(
+        { status: 422, detail: '"Anna Berger" gehört nicht zur Gruppe "Group 3".' },
+        { status: 422, statusText: 'Unprocessable Entity' },
+      );
+      await settle();
+      fixture.detectChanges();
+
+      expect(sheet(page).querySelector('[role="alert"]')?.textContent).toContain('"Anna Berger" gehört nicht zur Gruppe "Group 3".');
+      expect(sheet(page).open).toBe(true);
+      http.expectNone({ method: 'GET', url: '/api/student-groups' });
     });
   });
 });

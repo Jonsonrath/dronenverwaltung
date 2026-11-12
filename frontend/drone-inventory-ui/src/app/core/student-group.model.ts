@@ -6,6 +6,8 @@ export interface StudentGroup {
   name: string;
   /** Members ordered by name (REQ-017); only in the list from GET /api/student-groups. */
   students?: Student[];
+  /** Id of the responsible student (REQ-020); null or missing if none. */
+  responsibleStudentId?: number | null;
 }
 
 /** Body of POST /api/student-groups (REQ-003). */

@@ -7,7 +7,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 - [x] 1.1 `Drone.DamageReason`, `ReportDamage` / `Repair` in the domain and migration `AddDroneDamage` (design §1); verify with domain tests `REQ_014_...` / `REQ_015_...` and a mapping test that the column is nullable (#83)
 - [x] 1.2 Status derivation Loaned / Damaged / Available in one place and `damageReason` in the drone list (design §2, MODIFIED REQ-002); verify with tests for every scenario of REQ-002 (#84)
 - [x] 1.3 `POST` / `DELETE /api/drones/{id}/damage` (design §3); verify with API tests for every scenario of REQ-014 and REQ-015 (#85)
-- [ ] 1.4 Reject loans of damaged drones in `LoanService.CreateAsync` with 409 (design §4, MODIFIED REQ-004); verify with tests for "Damaged drone cannot be loaned" and "Repaired drone can be loaned" (#86)
+- [x] 1.4 Reject loans of damaged drones in `LoanService.CreateAsync` with 409 (design §4, MODIFIED REQ-004); verify with tests for "Damaged drone cannot be loaned" and "Repaired drone can be loaned" (#86)
 
 ## 2. Frontend
 

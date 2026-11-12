@@ -88,6 +88,29 @@
   overflow-wrap: anywhere;
 }
 
+.member-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.responsible-tag {
+  padding: 0 var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.responsible-note {
+  margin: 0 0 var(--space-2);
+  color: var(--muted);
+}
+
 .member-class {
   flex: none;
   color: var(--muted);

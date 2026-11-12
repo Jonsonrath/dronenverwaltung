@@ -13,5 +13,11 @@ public class StudentGroupConfiguration : IEntityTypeConfiguration<StudentGroup>
 
         // Student group names are unique, ignoring case and surrounding whitespace (REQ-003).
         builder.HasIndex(g => g.NormalizedName).IsUnique();
+
+        // Removing the responsible student clears it in the database too (REQ-020, design §1).
+        builder.HasOne<Student>()
+            .WithMany()
+            .HasForeignKey(g => g.ResponsibleStudentId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

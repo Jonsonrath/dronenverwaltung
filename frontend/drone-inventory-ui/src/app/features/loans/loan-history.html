@@ -20,10 +20,12 @@
           <tr>
             <th scope="col">Drohne</th>
             <th scope="col">Gruppe</th>
+            <th scope="col">Verantwortlich</th>
             <th scope="col" class="number">Akkus</th>
             <th scope="col" class="number">Propeller</th>
             <th scope="col">Ausgeliehen am</th>
             <th scope="col">Zurückgegeben am</th>
+            <th scope="col">Schaden</th>
           </tr>
         </thead>
         <tbody>
@@ -31,6 +33,7 @@
             <tr [class.has-missing]="missingOf(loan, 'batteries') > 0 || missingOf(loan, 'propellers') > 0">
               <td class="drone">{{ loan.droneName }}</td>
               <td class="group">{{ loan.studentGroupName }}</td>
+              <td class="responsible" data-label="Verantwortlich">{{ loan.responsibleStudentName ?? '–' }}</td>
               <!-- "3 von 4": returned of loaned (REQ-022), with a mark when something is missing. -->
               <td class="number accessory" data-label="Akkus">
                 {{ returnedOf(loan, 'batteries') }} von {{ loan.batteries }}
@@ -46,6 +49,15 @@
               </td>
               <td class="date" data-label="Ausgeliehen am">{{ loan.loanDate | date: 'dd.MM.yyyy' }}</td>
               <td class="date" data-label="Zurückgegeben am">{{ loan.returnDate | date: 'dd.MM.yyyy' }}</td>
+              <!-- Damage reported on return (REQ-023). -->
+              <td class="damage" data-label="Schaden">
+                @if (loan.damageReport) {
+                  <span class="tag tag-damaged">Defekt</span>
+                  <span class="damage-report">{{ loan.damageReport }}</span>
+                } @else {
+                  <span class="no-damage">–</span>
+                }
+              </td>
             </tr>
           }
         </tbody>

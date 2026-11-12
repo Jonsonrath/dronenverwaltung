@@ -13,7 +13,8 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 /**
  * The drones that are out right now (REQ-007) and the action to return them (REQ-008).
- * "Zurückgeben" opens a sheet for the returned batteries and propellers (REQ-022).
+ * "Zurückgeben" opens a sheet for the returned batteries and propellers (REQ-022)
+ * and an optional damage report (REQ-023).
  */
 @Component({
   selector: 'app-active-loans',
@@ -33,6 +34,9 @@ export class ActiveLoans {
   /** Returned accessories, prefilled with the loaned quantities (REQ-022). */
   protected readonly returnedBatteries = signal(0);
   protected readonly returnedPropellers = signal(0);
+
+  /** Optional damage report (REQ-023); sent as typed, the backend decides what counts as a report. */
+  protected readonly damageReport = signal('');
 
   /** True while the return is being sent, so it cannot be sent twice. */
   protected readonly sending = signal(false);
@@ -64,6 +68,7 @@ export class ActiveLoans {
     this.returning.set(loan);
     this.returnedBatteries.set(loan.batteries);
     this.returnedPropellers.set(loan.propellers);
+    this.damageReport.set('');
     this.returnError.set('');
     this.returnSheet().nativeElement.showModal();
   }
@@ -107,6 +112,8 @@ export class ActiveLoans {
         this.loanApi.returnLoan(loan.id, {
           batteries: this.returnedBatteries(),
           propellers: this.returnedPropellers(),
+          // An untouched field is left out; anything typed (even blanks) goes to the backend.
+          ...(this.damageReport() ? { damageReport: this.damageReport() } : {}),
         }),
       );
       this.returned.set(result);

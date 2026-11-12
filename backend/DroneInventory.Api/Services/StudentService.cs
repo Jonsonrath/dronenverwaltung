@@ -55,6 +55,11 @@ public class StudentService(DroneInventoryDbContext db)
             throw DuplicateName(group, student);
         }
 
+        // A student who leaves the group is no longer its responsible student (REQ-020, design §3).
+        var oldGroup = await db.StudentGroups.FirstOrDefaultAsync(
+            g => g.ResponsibleStudentId == student.Id && g.Id != group.Id, cancellationToken);
+        oldGroup?.ClearResponsible();
+
         student.MoveTo(group.Id);
         try
         {
@@ -74,7 +79,10 @@ public class StudentService(DroneInventoryDbContext db)
         return student;
     }
 
-    /// <summary>Removes a student (REQ-019). Loans are not affected. Throws NotFoundException for an unknown id.</summary>
+    /// <summary>
+    /// Removes a student (REQ-019). Loans are not affected. If the student was responsible for the group,
+    /// the foreign key (Set Null) clears it (REQ-020). Throws NotFoundException for an unknown id.
+    /// </summary>
     public async Task RemoveAsync(int id, CancellationToken cancellationToken = default)
     {
         var student = await FindAsync(id, cancellationToken);

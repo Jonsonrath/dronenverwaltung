@@ -29,6 +29,7 @@ describe('Active loans page', () => {
     {
       id: 2, droneId: 7, droneName: 'TELLO-07', studentGroupId: 3, studentGroupName: 'Group 3',
       batteries: 4, propellers: 8, loanDate: '2026-08-19T08:15:00Z', returnDate: null, status: 'Active',
+      responsibleStudentName: 'Anna Berger',
     },
   ];
 
@@ -63,15 +64,16 @@ describe('Active loans page', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('REQ-007: shows drone, group, batteries, propellers, loan date and duration of each active loan', async () => {
+  // REQ-021: the responsible student at loan time; "–" when the group had none.
+  it('REQ-007/REQ-021: shows drone, group, responsible student, batteries, propellers, loan date and duration of each active loan', async () => {
     const page = await respond(loans);
 
     const rows = [...page.querySelectorAll('tbody tr')].map((row) =>
       [...row.querySelectorAll('td')].map((cell) => cell.textContent?.trim()),
     );
     expect(rows).toEqual([
-      ['TELLO-02', 'Group 1', '3', '4', '19.08.2026', 'seit 7 Tagen', 'Zurückgeben'],
-      ['TELLO-07', 'Group 3', '4', '8', '19.08.2026', 'seit 7 Tagen', 'Zurückgeben'],
+      ['TELLO-02', 'Group 1', '–', '3', '4', '19.08.2026', 'seit 7 Tagen', 'Zurückgeben'],
+      ['TELLO-07', 'Group 3', 'Anna Berger', '4', '8', '19.08.2026', 'seit 7 Tagen', 'Zurückgeben'],
     ]);
   });
 
@@ -250,6 +252,59 @@ describe('Active loans page', () => {
       expect(button.textContent?.trim()).toBe('Wird zurückgegeben…');
       http.expectOne('/api/loans/2/return').flush(loans[1]);
       await reloadWith([loans[0]]);
+    });
+
+    // Change damage-report-on-return: "Report damage on return (REQ-023)".
+    it('REQ-023: return with damage report – sends the report and confirms that the drone is marked as damaged', async () => {
+      const page = await respond(loans);
+
+      await openReturn(page, 'TELLO-07');
+      expect(field(page, 'return-damage').value).toBe('');
+      type(page, 'return-damage', 'Propeller gebrochen');
+      await confirm(page);
+      const request = http.expectOne('/api/loans/2/return');
+      expect(request.request.body).toEqual({ batteries: 4, propellers: 8, damageReport: 'Propeller gebrochen' });
+      request.flush({
+        ...loans[1], status: 'Returned', returnDate: '2026-08-26T14:30:00Z', returnedBatteries: 4, returnedPropellers: 8,
+        damageReport: 'Propeller gebrochen',
+      });
+      await reloadWith([loans[0]]);
+
+      const status = page.querySelector('[role="status"]')?.textContent;
+      expect(status).toContain('TELLO-07 zurückgegeben und als defekt markiert.');
+      expect(status).not.toContain('wieder verfügbar');
+    });
+
+    it('REQ-023: whitespace-only report is sent as typed – the backend decides, the drone is available', async () => {
+      const page = await respond(loans);
+
+      await openReturn(page, 'TELLO-07');
+      type(page, 'return-damage', '   ');
+      await confirm(page);
+      const request = http.expectOne('/api/loans/2/return');
+      expect(request.request.body).toEqual({ batteries: 4, propellers: 8, damageReport: '   ' });
+      request.flush({
+        ...loans[1], status: 'Returned', returnDate: '2026-08-26T14:30:00Z', returnedBatteries: 4, returnedPropellers: 8,
+        damageReport: null,
+      });
+      await reloadWith([loans[0]]);
+
+      expect(page.querySelector('[role="status"]')?.textContent).toContain(
+        'TELLO-07 von Group 3 zurückgegeben. Sie ist wieder verfügbar.',
+      );
+    });
+
+    it('REQ-023: the damage field is empty again when the next return is opened', async () => {
+      const page = await respond(loans);
+
+      await openReturn(page, 'TELLO-07');
+      type(page, 'return-damage', 'Propeller gebrochen');
+      (sheet(page).querySelector('.sheet-actions .button:not(.button-primary)') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      await openReturn(page, 'TELLO-02');
+
+      expect(field(page, 'return-damage').value).toBe('');
+      http.expectNone('/api/loans/2/return');
     });
 
     it('Abbrechen closes the sheet without a request', async () => {

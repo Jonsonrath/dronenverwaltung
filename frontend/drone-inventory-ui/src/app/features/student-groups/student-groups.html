@@ -40,10 +40,15 @@
                     <button
                       class="member-button"
                       type="button"
-                      [attr.aria-label]="student.name + ' verschieben oder entfernen'"
+                      [attr.aria-label]="student.name + ' bearbeiten'"
                       (click)="openStudent(student, group)"
                     >
-                      <span class="member-name">{{ student.name }}</span>
+                      <span class="member-main">
+                        <span class="member-name">{{ student.name }}</span>
+                        @if (group.responsibleStudentId === student.id) {
+                          <span class="responsible-tag">verantwortlich</span>
+                        }
+                      </span>
                       @if (student.class) {
                         <span class="member-class">{{ student.class }}</span>
                       }
@@ -203,6 +208,18 @@
 
     @if (studentActionError()) {
       <p class="alert" role="alert">{{ studentActionError() }}</p>
+    }
+
+    <h3 class="move-heading">Verantwortlich</h3>
+    @if (isResponsible()) {
+      <p class="responsible-note">Verantwortlich für {{ managing()?.group?.name }}.</p>
+      <button class="button clear-responsible" type="button" [disabled]="studentBusy()" (click)="clearResponsible()">
+        Nicht mehr verantwortlich
+      </button>
+    } @else {
+      <button class="button make-responsible" type="button" [disabled]="studentBusy()" (click)="makeResponsible()">
+        Verantwortlich machen
+      </button>
     }
 
     <h3 class="move-heading">Verschieben nach</h3>

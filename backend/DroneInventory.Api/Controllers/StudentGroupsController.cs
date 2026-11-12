@@ -44,6 +44,28 @@ public class StudentGroupsController(StudentGroupService groups, StudentService 
         return StudentGroupResponse.From(group);
     }
 
+    /// <summary>Mark a student of the group as its responsible student (REQ-020).</summary>
+    [HttpPut("{id:int}/responsible")]
+    [ProducesResponseType<StudentGroupResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<StudentGroupResponse> SetResponsible(
+        int id, SetResponsibleStudentRequest request, CancellationToken cancellationToken)
+    {
+        var group = await groups.SetResponsibleAsync(id, request.StudentId!.Value, cancellationToken);
+        return StudentGroupResponse.From(group);
+    }
+
+    /// <summary>Clear the responsible student of the group (REQ-020).</summary>
+    [HttpDelete("{id:int}/responsible")]
+    [ProducesResponseType<StudentGroupResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<StudentGroupResponse> ClearResponsible(int id, CancellationToken cancellationToken)
+    {
+        var group = await groups.ClearResponsibleAsync(id, cancellationToken);
+        return StudentGroupResponse.From(group);
+    }
+
     /// <summary>Delete a student group that has no loan (REQ-012).</summary>
     [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

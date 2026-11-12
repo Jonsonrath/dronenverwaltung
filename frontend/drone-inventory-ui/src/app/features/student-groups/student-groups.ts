@@ -11,7 +11,8 @@ import { Student } from '../../core/student.model';
 
 /**
  * Student group list with the forms to add (REQ-003), rename (REQ-011) and delete (REQ-012) a group,
- * and the members of every group with the forms to add, move and remove a student (REQ-016 ... REQ-019).
+ * the members of every group with the forms to add, move and remove a student (REQ-016 ... REQ-019)
+ * and the responsible student of a group (REQ-020).
  * Every rule is checked by the backend; its messages are shown in the sheet that sent the request.
  */
 @Component({
@@ -306,6 +307,37 @@ export class StudentGroups {
     await this.studentAction(
       () => firstValueFrom(this.studentApi.remove(managing.student.id)),
       `${managing.student.name} aus ${managing.group.name} entfernt.`,
+    );
+  }
+
+  // ---- responsible student (REQ-020) ----
+
+  /** True if the open student is the responsible student of its group. */
+  protected readonly isResponsible = computed(() => {
+    const managing = this.managing();
+    return !!managing && managing.group.responsibleStudentId === managing.student.id;
+  });
+
+  /** Always sent: whether the student belongs to the group is decided by the backend (422). */
+  protected async makeResponsible() {
+    const managing = this.managing();
+    if (!managing) {
+      return;
+    }
+    await this.studentAction(
+      () => firstValueFrom(this.studentGroupApi.setResponsible(managing.group.id, managing.student.id)),
+      `${managing.student.name} ist jetzt verantwortlich für ${managing.group.name}.`,
+    );
+  }
+
+  protected async clearResponsible() {
+    const managing = this.managing();
+    if (!managing) {
+      return;
+    }
+    await this.studentAction(
+      () => firstValueFrom(this.studentGroupApi.clearResponsible(managing.group.id)),
+      `${managing.student.name} ist nicht mehr verantwortlich für ${managing.group.name}.`,
     );
   }
 

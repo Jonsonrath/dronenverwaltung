@@ -5,7 +5,7 @@ import { Loan } from '../../core/loan.model';
 import { LoanHistory } from './loan-history';
 
 // Task 7.4: loan history page (REQ-010); returned and missing accessories:
-// change return-differences task 2.2 (REQ-022).
+// change return-differences task 2.2 (REQ-022); damage report: damage-report-on-return task 2.1 (REQ-023).
 describe('Loan history page', () => {
   let fixture: ComponentFixture<LoanHistory>;
   let http: HttpTestingController;
@@ -15,7 +15,7 @@ describe('Loan history page', () => {
     {
       id: 2, droneId: 7, droneName: 'TELLO-07', studentGroupId: 3, studentGroupName: 'Group 3',
       batteries: 4, propellers: 8, loanDate: '2026-08-19T08:00:00Z', returnDate: '2026-08-26T14:30:00Z',
-      status: 'Returned',
+      status: 'Returned', responsibleStudentName: 'Anna Berger',
     },
     {
       id: 1, droneId: 2, droneName: 'TELLO-02', studentGroupId: 1, studentGroupName: 'Group 1',
@@ -49,7 +49,8 @@ describe('Loan history page', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('REQ-010: shows each returned loan with drone, group, accessories, loan date and return date', async () => {
+  // REQ-021: the name stored at loan time, "–" when the group had no responsible student.
+  it('REQ-010/REQ-021: shows each returned loan with drone, group, responsible student, accessories, loan date and return date', async () => {
     const page = await respond(history);
 
     const rows = [...page.querySelectorAll('tbody tr')].map((row) =>
@@ -57,8 +58,8 @@ describe('Loan history page', () => {
     );
     // Loans returned before REQ-022 have no returned quantities recorded and count as complete.
     expect(rows).toEqual([
-      ['TELLO-07', 'Group 3', '4 von 4', '8 von 8', '19.08.2026', '26.08.2026'],
-      ['TELLO-02', 'Group 1', '3 von 3', '4 von 4', '19.08.2026', '20.08.2026'],
+      ['TELLO-07', 'Group 3', 'Anna Berger', '4 von 4', '8 von 8', '19.08.2026', '26.08.2026', '–'],
+      ['TELLO-02', 'Group 1', '–', '3 von 3', '4 von 4', '19.08.2026', '20.08.2026', '–'],
     ]);
     expect(page.querySelector('.missing')).toBeNull();
   });
@@ -95,5 +96,15 @@ describe('Loan history page', () => {
     expect(propellers.textContent?.trim()).toBe('8 von 8');
     expect(propellers.querySelector('.missing')).toBeNull();
     expect(page.querySelector('tbody tr')?.classList.contains('has-missing')).toBe(true);
+  });
+  // Change damage-report-on-return: "Report damage on return (REQ-023)".
+  it('REQ-023: return with damage report – the history shows the report in the row', async () => {
+    const page = await respond([{ ...history[0], damageReport: 'Propeller gebrochen' }, history[1]]);
+
+    const [withReport, withoutReport] = [...page.querySelectorAll('tbody td.damage')];
+    expect(withReport.querySelector('.tag-damaged')?.textContent).toBe('Defekt');
+    expect(withReport.querySelector('.damage-report')?.textContent).toBe('Propeller gebrochen');
+    expect(withoutReport.textContent?.trim()).toBe('–');
+    expect(withoutReport.querySelector('.damage-report')).toBeNull();
   });
 });

@@ -27,6 +27,19 @@ export class StudentGroupApi {
   }
 
   /**
+   * Marks a student of the group as responsible (REQ-020). The backend rejects an unknown
+   * group or student (404) and a student of another group (422).
+   */
+  setResponsible(id: number, studentId: number): Observable<StudentGroup> {
+    return this.http.put<StudentGroup>(`/api/student-groups/${id}/responsible`, { studentId });
+  }
+
+  /** Clears the responsible student of the group (REQ-020); 404 for an unknown group. */
+  clearResponsible(id: number): Observable<StudentGroup> {
+    return this.http.delete<StudentGroup>(`/api/student-groups/${id}/responsible`);
+  }
+
+  /**
    * Deletes a student group (REQ-012). The backend rejects an unknown group (404)
    * and a group that has a loan, active or returned (409).
    */

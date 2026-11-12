@@ -73,10 +73,20 @@ export class NewLoan {
     }
   });
 
+  /** "Group 3 (verantwortlich: Anna Berger)" – the group with its responsible student, if it has one (REQ-021). */
+  private readonly groupLabel = computed(() => {
+    const group = this.chosenGroup();
+    if (!group) {
+      return undefined;
+    }
+    const responsible = group.students?.find((student) => student.id === group.responsibleStudentId);
+    return responsible ? `${group.name} (verantwortlich: ${responsible.name})` : group.name;
+  });
+
   /** Who gets which drone, or what is still missing – read back next to the button. */
   protected readonly summary = computed(() => {
     const drone = this.chosenDrone()?.name;
-    const group = this.chosenGroup()?.name;
+    const group = this.groupLabel();
     if (drone && group) {
       return `${drone} für ${group}`;
     }

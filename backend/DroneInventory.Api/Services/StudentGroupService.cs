@@ -103,6 +103,40 @@ public class StudentGroupService(DroneInventoryDbContext db)
         }
     }
 
+    /// <summary>
+    /// Marks a student of the group as responsible, replacing the previous one (REQ-020).
+    /// Throws NotFoundException for an unknown group or student and ValidationException if the
+    /// student belongs to another group; the responsible student stays unchanged then.
+    /// </summary>
+    public async Task<StudentGroup> SetResponsibleAsync(int id, int studentId, CancellationToken cancellationToken = default)
+    {
+        var group = await FindAsync(id, cancellationToken);
+        var student = await db.Students.AsNoTracking().FirstOrDefaultAsync(s => s.Id == studentId, cancellationToken)
+            ?? throw new NotFoundException($"Den Schüler {studentId} gibt es nicht.");
+
+        group.SetResponsible(student);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (exception.IsForeignKeyViolation())
+        {
+            // The student was removed between the check and the save.
+            throw new NotFoundException($"Den Schüler {studentId} gibt es nicht.");
+        }
+
+        return group;
+    }
+
+    /// <summary>Clears the responsible student (REQ-020); also fine if none was set. NotFoundException for an unknown group.</summary>
+    public async Task<StudentGroup> ClearResponsibleAsync(int id, CancellationToken cancellationToken = default)
+    {
+        var group = await FindAsync(id, cancellationToken);
+        group.ClearResponsible();
+        await db.SaveChangesAsync(cancellationToken);
+        return group;
+    }
+
     private Task<bool> HasStudentsAsync(int id, CancellationToken cancellationToken) =>
         db.Students.AnyAsync(s => s.StudentGroupId == id, cancellationToken);
 

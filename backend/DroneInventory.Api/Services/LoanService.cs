@@ -20,7 +20,13 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
         var group = await db.StudentGroups.FindAsync([studentGroupId], cancellationToken)
             ?? throw new NotFoundException($"Die Schülergruppe {studentGroupId} gibt es nicht.");
 
-        var loan = new Loan(drone, group, batteries, propellers, time.GetUtcNow().UtcDateTime);
+        // The name of the responsible student at loan time is copied into the loan (REQ-021).
+        var responsibleStudentName = group.ResponsibleStudentId is { } studentId
+            ? await db.Students.Where(s => s.Id == studentId).Select(s => s.Name).FirstOrDefaultAsync(cancellationToken)
+            : null;
+
+        var loan = new Loan(
+            drone, group, batteries, propellers, time.GetUtcNow().UtcDateTime, responsibleStudentName);
 
         // Damage is checked before the active loan (support-damaged-drones design §4).
         if (drone.DamageReason is not null)
@@ -55,11 +61,14 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
     /// has already been returned. The loan itself is kept (REQ-010).
     /// Returned batteries / propellers (REQ-022): null counts as the loaned quantity, a
     /// number outside 0..loaned quantity throws ValidationException and the loan stays active.
+    /// Damage report (REQ-023): stored on the loan and damages the drone in the same
+    /// SaveChanges; empty or whitespace counts as no report.
     /// </summary>
     public async Task<Loan> ReturnAsync(
         int loanId,
         int? returnedBatteries = null,
         int? returnedPropellers = null,
+        string? damageReport = null,
         CancellationToken cancellationToken = default)
     {
         var loan = await db.Loans
@@ -69,7 +78,7 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
             .SingleOrDefaultAsync(l => l.Id == loanId, cancellationToken)
             ?? throw new NotFoundException($"Die Ausleihe {loanId} gibt es nicht.");
 
-        loan.Return(time.GetUtcNow().UtcDateTime, returnedBatteries, returnedPropellers);
+        loan.Return(time.GetUtcNow().UtcDateTime, returnedBatteries, returnedPropellers, damageReport);
         try
         {
             await db.SaveChangesAsync(cancellationToken);

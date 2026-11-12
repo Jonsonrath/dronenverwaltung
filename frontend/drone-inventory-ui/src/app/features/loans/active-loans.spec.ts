@@ -29,6 +29,7 @@ describe('Active loans page', () => {
     {
       id: 2, droneId: 7, droneName: 'TELLO-07', studentGroupId: 3, studentGroupName: 'Group 3',
       batteries: 4, propellers: 8, loanDate: '2026-08-19T08:15:00Z', returnDate: null, status: 'Active',
+      responsibleStudentName: 'Anna Berger',
     },
   ];
 
@@ -63,15 +64,16 @@ describe('Active loans page', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  it('REQ-007: shows drone, group, batteries, propellers, loan date and duration of each active loan', async () => {
+  // REQ-021: the responsible student at loan time; "–" when the group had none.
+  it('REQ-007/REQ-021: shows drone, group, responsible student, batteries, propellers, loan date and duration of each active loan', async () => {
     const page = await respond(loans);
 
     const rows = [...page.querySelectorAll('tbody tr')].map((row) =>
       [...row.querySelectorAll('td')].map((cell) => cell.textContent?.trim()),
     );
     expect(rows).toEqual([
-      ['TELLO-02', 'Group 1', '3', '4', '19.08.2026', 'seit 7 Tagen', 'Zurückgeben'],
-      ['TELLO-07', 'Group 3', '4', '8', '19.08.2026', 'seit 7 Tagen', 'Zurückgeben'],
+      ['TELLO-02', 'Group 1', '–', '3', '4', '19.08.2026', 'seit 7 Tagen', 'Zurückgeben'],
+      ['TELLO-07', 'Group 3', 'Anna Berger', '4', '8', '19.08.2026', 'seit 7 Tagen', 'Zurückgeben'],
     ]);
   });
 

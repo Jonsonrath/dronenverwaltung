@@ -18,6 +18,8 @@ export interface Loan {
    */
   returnedBatteries?: number | null;
   returnedPropellers?: number | null;
+  /** Name of the group's responsible student at loan time (REQ-021); null if the group had none. */
+  responsibleStudentName?: string | null;
 }
 
 /** Optional body of POST /api/loans/{id}/return (REQ-022). Missing numbers count as the loaned quantity. */

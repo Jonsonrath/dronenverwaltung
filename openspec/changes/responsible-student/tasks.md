@@ -11,7 +11,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 ## 2. Frontend
 
 - [x] 2.1 Group plates: "verantwortlich" mark and *Verantwortlich machen* (design §4); verify with Vitest tests for the request and the 422 message (#100)
-- [ ] 2.2 Loan summary bar, active loans and history show the responsible student; verify with Vitest tests, `npx ng build`, and one run through the real UI (#101)
+- [x] 2.2 Loan summary bar, active loans and history show the responsible student; verify with Vitest tests, `npx ng build`, and one run through the real UI (#101)
 
 ## 3. Docs
 

@@ -210,6 +210,31 @@ describe('New loan page', () => {
     expect(summary()).toEqual(['TELLO-07 für Group 3', '1 Akku, 0 Propeller']);
   });
 
+  it('REQ-021: names the responsible student of the chosen group in the summary', async () => {
+    const page = await load(drones, [
+      { id: 1, name: 'Group 1', students: [], responsibleStudentId: null },
+      {
+        id: 3,
+        name: 'Group 3',
+        students: [
+          { id: 7, name: 'Anna Berger', class: '', studentGroupId: 3 },
+          { id: 8, name: 'Ben Huber', class: '', studentGroupId: 3 },
+        ],
+        responsibleStudentId: 7,
+      },
+    ]);
+    const who = () => page.querySelector('.summary-who')?.textContent?.trim();
+
+    pick(page, 'drones', '7');
+    pick(page, 'groups', '3');
+    fixture.detectChanges();
+    expect(who()).toBe('TELLO-07 für Group 3 (verantwortlich: Anna Berger)');
+
+    pick(page, 'groups', '1');
+    fixture.detectChanges();
+    expect(who()).toBe('TELLO-07 für Group 1');
+  });
+
   // Change support-damaged-drones, task 2.2: damaged drones in their own collapsed group (MODIFIED REQ-004).
   describe('damaged drones', () => {
     const withDamaged: Drone[] = [

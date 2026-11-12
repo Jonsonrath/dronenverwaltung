@@ -35,7 +35,8 @@
   white-space: nowrap;
 }
 
-.group {
+.group,
+.responsible {
   white-space: nowrap;
 }
 
@@ -99,6 +100,10 @@
     margin-top: calc(-1 * var(--space-1));
     margin-bottom: var(--space-1);
     color: var(--muted);
+  }
+
+  .table .responsible {
+    grid-column: 1 / -1;
   }
 
   .table td[data-label]::before {

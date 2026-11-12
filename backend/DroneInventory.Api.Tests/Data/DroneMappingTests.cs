@@ -55,4 +55,35 @@ public class DroneMappingTests : IDisposable
 
         Assert.True(error.IsUniqueConstraintViolation());
     }
+
+    // Change support-damaged-drones, task 1.1: migration AddDroneDamage.
+
+    [Fact]
+    public void REQ_014_DamageReasonColumnIsNullable()
+    {
+        using var context = _database.CreateContext();
+
+        var notNull = context.Database
+            .SqlQueryRaw<long>("SELECT \"notnull\" AS Value FROM pragma_table_info('Drones') WHERE name = 'DamageReason'")
+            .ToList();
+
+        Assert.Equal([0L], notNull);
+        Assert.Contains(context.Database.GetAppliedMigrations(), m => m.EndsWith("_AddDroneDamage"));
+    }
+
+    [Fact]
+    public void REQ_014_StoresAndLoadsDamageReason()
+    {
+        using (var context = _database.CreateContext())
+        {
+            var damaged = new Drone("TELLO-07", null);
+            damaged.ReportDamage("Propeller gebrochen");
+            context.Drones.AddRange(damaged, new Drone("TELLO-08", null));
+            context.SaveChanges();
+        }
+
+        using var readContext = _database.CreateContext();
+        Assert.Equal("Propeller gebrochen", readContext.Drones.Single(d => d.Name == "TELLO-07").DamageReason);
+        Assert.Null(readContext.Drones.Single(d => d.Name == "TELLO-08").DamageReason);
+    }
 }

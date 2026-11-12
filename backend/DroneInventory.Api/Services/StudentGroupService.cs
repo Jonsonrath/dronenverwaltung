@@ -70,9 +70,10 @@ public class StudentGroupService(DroneInventoryDbContext db)
     }
 
     /// <summary>
-    /// Deletes a student group that has no loan (REQ-012). Throws NotFoundException for an unknown
-    /// id and ConflictException if the group has a loan, active or returned: loans are never
-    /// deleted, so the history stays complete.
+    /// Deletes a student group that has no loan and no student (REQ-012). Throws NotFoundException
+    /// for an unknown id and ConflictException if the group has a loan, active or returned (loans are
+    /// never deleted, so the history stays complete), or still has students (they are moved or
+    /// removed first, so no student disappears silently).
     /// </summary>
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
     {
@@ -83,6 +84,11 @@ public class StudentGroupService(DroneInventoryDbContext db)
             throw HasLoans(group);
         }
 
+        if (await HasStudentsAsync(id, cancellationToken))
+        {
+            throw HasStudents(group);
+        }
+
         db.StudentGroups.Remove(group);
         try
         {
@@ -90,12 +96,15 @@ public class StudentGroupService(DroneInventoryDbContext db)
         }
         catch (DbUpdateException exception) when (exception.IsForeignKeyViolation())
         {
-            // A loan for this group was created between the check and the delete;
-            // the foreign key Loan -> StudentGroup (Restrict) refused the delete.
-            // Any other database error is not about loans and is passed on unchanged.
-            throw HasLoans(group);
+            // A loan or a student for this group was created between the check and the delete;
+            // the foreign key Loan -> StudentGroup or Student -> StudentGroup (Restrict) refused
+            // the delete. Any other database error is passed on unchanged.
+            throw await HasStudentsAsync(id, cancellationToken) ? HasStudents(group) : HasLoans(group);
         }
     }
+
+    private Task<bool> HasStudentsAsync(int id, CancellationToken cancellationToken) =>
+        db.Students.AnyAsync(s => s.StudentGroupId == id, cancellationToken);
 
     private async Task<StudentGroup> FindAsync(int id, CancellationToken cancellationToken) =>
         await db.StudentGroups.FirstOrDefaultAsync(g => g.Id == id, cancellationToken)
@@ -103,6 +112,9 @@ public class StudentGroupService(DroneInventoryDbContext db)
 
     private static ConflictException HasLoans(StudentGroup group) =>
         new($"Die Schülergruppe \"{group.Name}\" hat Ausleihen und kann nicht gelöscht werden. Der Verlauf bleibt erhalten.");
+
+    private static ConflictException HasStudents(StudentGroup group) =>
+        new($"Die Schülergruppe \"{group.Name}\" hat noch Schüler und kann nicht gelöscht werden.");
 
     private static ConflictException DuplicateName(StudentGroup group) =>
         new($"Eine Schülergruppe mit dem Namen \"{group.Name}\" gibt es bereits (Groß- und Kleinschreibung wird nicht unterschieden).");

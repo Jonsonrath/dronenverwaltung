@@ -56,6 +56,21 @@ public class StudentGroupServiceTests : IDisposable
         Assert.Same(failure, thrown);
     }
 
+    [Fact]
+    public async Task REQ_012_StudentAddedConcurrently_ThrowsConflictAndKeepsGroupAndStudent()
+    {
+        int groupId = await SeedGroup("Group 86");
+        // Simulates a student added to the group after our checks but before our delete.
+        await using var context = _database.CreateContext(new InsertStudentBeforeSave(_database, groupId));
+
+        var error = await Assert.ThrowsAsync<ConflictException>(() => new StudentGroupService(context).DeleteAsync(groupId));
+
+        Assert.Equal("Die Schülergruppe \"Group 86\" hat noch Schüler und kann nicht gelöscht werden.", error.Message);
+        await using var check = _database.CreateContext();
+        Assert.Single(check.StudentGroups);
+        Assert.Single(check.Students);
+    }
+
     private async Task<int> SeedGroup(string name)
     {
         await using var context = _database.CreateContext();
@@ -75,6 +90,18 @@ public class StudentGroupServiceTests : IDisposable
             var drone = new Drone("TELLO-07", null);
             other.Drones.Add(drone);
             other.Loans.Add(new Loan(drone, group, 4, 8, DateTime.UtcNow));
+            await other.SaveChangesAsync(cancellationToken);
+            return result;
+        }
+    }
+
+    private sealed class InsertStudentBeforeSave(TestDatabase database, int groupId) : SaveChangesInterceptor
+    {
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            await using var other = database.CreateContext();
+            other.Students.Add(new Student(groupId, "Ben Huber", null));
             await other.SaveChangesAsync(cancellationToken);
             return result;
         }

@@ -30,10 +30,11 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 
 - `Drone` (Id, Name, Description, DamageReason)
 - `StudentGroup` (Id, Name)
+- `Student` (Id, Name, Class, StudentGroupId)
 - `Loan` (Id, DroneId, StudentGroupId, LoanDate, ReturnDate, Status: Active | Returned)
 - `LoanItem` (Id, LoanId, Type: Battery | Propeller, Quantity, ReturnedQuantity)
 
-`Loan` is the central entity. `LoanItem` only exists inside a `Loan`.
+`Loan` is the central entity. `LoanItem` only exists inside a `Loan`. A `Student` belongs to exactly one `StudentGroup`.
 
 ### Domain Rules
 - A drone has at most one active loan.
@@ -45,6 +46,8 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 - Batteries and propellers are tracked as quantities only, not as individual items.
 - Drone status (Available | Loaned | Damaged) is derived: Loaned with an active loan, otherwise Damaged if a damage reason is set, otherwise Available. It is NOT stored as its own database field.
 - At the return the returned quantity of each accessory is recorded (0 ... loaned quantity, default: the loaned quantity); missing = loaned − returned is derived, not stored (REQ-022).
+- A student's name is unique within its student group; Class is optional free text.
+- A student group with a loan or with students cannot be deleted.
 
 ## Rules
 - Business logic and validation belong in the backend. Domain rules are enforced there, never only in an Angular form.
@@ -56,7 +59,7 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 ## Backend Conventions
 - Domain rules live in the domain model / services, not in controllers.
 - Compute the drone status from the active loan and the damage reason in one place (`DroneStatusRules.Derive`), never store a status field on `Drone`.
-- HTTP status codes: 201 on create, 404 unknown drone/group/loan, 409 drone already loaned (REQ-005) or damaged (REQ-004), repair of a drone that is not damaged (REQ-015), loan already returned or duplicate drone/group name, 422 invalid input (blank name, blank damage reason, negative quantity).
+- HTTP status codes: 201 on create, 404 unknown drone/group/loan/student, 409 drone already loaned (REQ-005) or damaged (REQ-004), repair of a drone that is not damaged (REQ-015), loan already returned, duplicate drone/group name or student name within a group, group with loans or students (REQ-012), 422 invalid input (blank name, blank damage reason, negative quantity, returned quantity out of range).
 - Never delete a returned `Loan`; the history must stay.
 - Name tests after the requirement they cover, e.g. `REQ_005_RejectsLoanOfAlreadyLoanedDrone`.
 - Do not add features beyond the current task.

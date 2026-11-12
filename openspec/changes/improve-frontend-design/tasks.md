@@ -20,7 +20,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 4. Integration
 
-- [ ] 4.1 Run the assignment's example end to end again through the new UI (as in `docs/end-to-end-check.md`) and update that document and the README if anything changed; verify `dotnet test` and `npx ng test --watch=false` pass and screenshots of all pages at desktop and phone width (#59)
+- [x] 4.1 Run the assignment's example end to end again through the new UI (as in `docs/end-to-end-check.md`) and update that document and the README if anything changed; verify `dotnet test` and `npx ng test --watch=false` pass and screenshots of all pages at desktop and phone width (#59)
 
 ## 5. Second design pass
 

@@ -147,6 +147,32 @@ Returned loans SHALL never be deleted. The system SHALL list past (returned) loa
 - WHEN the loan history is shown
 - THEN the loan is listed with its LoanDate and ReturnDate
 
+### REQ-011 Rename student group
+*Added with the OpenSpec change `manage-student-groups` (11.11.2026).* The system SHALL allow changing the name of a student group. The same rules as for a new group apply (not empty, unique). Loans stay assigned to the group.
+
+**Scenario: Rename a student group**
+- GIVEN a student group "Grupe 3" exists
+- WHEN it is renamed to "Group 3"
+- THEN it keeps its id and its loans and has the name "Group 3"
+
+**Scenario: Name of another group**
+- GIVEN the student groups "Group 1" and "Group 3" exist
+- WHEN "Group 3" is renamed to "group 1"
+- THEN the request is rejected as a conflict
+
+### REQ-012 Delete student group
+*Added with the OpenSpec change `manage-student-groups` (11.11.2026).* The system SHALL allow deleting a student group that has no loan. A group with an active or returned loan SHALL NOT be deleted, so that the history stays complete.
+
+**Scenario: Group without loans**
+- GIVEN a student group "Group 86" without any loan exists
+- WHEN it is deleted
+- THEN it is no longer listed
+
+**Scenario: Group with a loan**
+- GIVEN "Group 3" has an active or returned loan
+- WHEN it is deleted
+- THEN the request is rejected as a conflict and the loan stays
+
 ## Out of Scope
 
 - Login, user accounts, roles
@@ -154,7 +180,7 @@ Returned loans SHALL never be deleted. The system SHALL list past (returned) loa
 - Reservations in advance
 - Damage management and return differences
 - Statistics, reports, exports
-- Editing or deleting drones and student groups
+- Editing or deleting drones (student groups: see REQ-011, REQ-012)
 
 These follow later as separate change requests.
 

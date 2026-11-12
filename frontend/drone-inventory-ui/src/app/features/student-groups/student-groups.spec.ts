@@ -207,4 +207,133 @@ describe('Student groups page', () => {
     http.expectNone({ method: 'POST', url: '/api/student-groups' });
     expect(page.querySelector('.field-error')?.textContent).toContain('Name eingeben.');
   });
+
+  // Change manage-student-groups: rename (REQ-011) and delete (REQ-012) from the group's plate.
+  describe('rename and delete', () => {
+    const groups: StudentGroup[] = [
+      { id: 1, name: 'Group 1' },
+      { id: 3, name: 'Grupe 3' },
+    ];
+
+    const sheet = (page: HTMLElement, heading: string) =>
+      page.querySelector(`dialog[aria-labelledby="${heading}"]`) as HTMLDialogElement;
+
+    function click(page: HTMLElement, label: string) {
+      (page.querySelector(`button[aria-label="${label}"]`) as HTMLButtonElement).click();
+      fixture.detectChanges();
+    }
+
+    async function submitNewName(page: HTMLElement, name: string) {
+      const input = page.querySelector('#group-new-name') as HTMLInputElement;
+      input.value = name;
+      input.dispatchEvent(new Event('input'));
+      page.querySelector('form.rename-form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+      await settle();
+      fixture.detectChanges();
+    }
+
+    async function reloadWith(body: StudentGroup[]) {
+      await settle();
+      fixture.detectChanges();
+      http.expectOne({ method: 'GET', url: '/api/student-groups' }).flush(body);
+      await settle();
+      fixture.detectChanges();
+    }
+
+    it('REQ-011: opens the rename sheet with the current name', async () => {
+      const page = await respond(groups);
+
+      click(page, 'Grupe 3 umbenennen');
+
+      const rename = sheet(page, 'rename-group-heading');
+      expect(rename.open).toBe(true);
+      expect(rename.querySelector('h2')?.textContent).toBe('Grupe 3 umbenennen');
+      expect((page.querySelector('#group-new-name') as HTMLInputElement).value).toBe('Grupe 3');
+    });
+
+    it('REQ-011: sends the new name to the backend and shows the renamed group', async () => {
+      const page = await respond(groups);
+      click(page, 'Grupe 3 umbenennen');
+
+      await submitNewName(page, 'Group 3');
+      const request = http.expectOne({ method: 'PUT', url: '/api/student-groups/3' });
+      expect(request.request.body).toEqual({ name: 'Group 3' });
+      request.flush({ id: 3, name: 'Group 3' });
+      await reloadWith([groups[0], { id: 3, name: 'Group 3' }]);
+
+      expect(names(page)).toEqual(['Group 1', 'Group 3']);
+      expect(page.querySelector('[role="status"]')?.textContent).toContain('Grupe 3 heißt jetzt Group 3.');
+      expect(sheet(page, 'rename-group-heading').open).toBe(false);
+    });
+
+    it('REQ-011: shows the backend message when another group has the name (409)', async () => {
+      const page = await respond(groups);
+      click(page, 'Grupe 3 umbenennen');
+
+      await submitNewName(page, ' group 1 ');
+      http.expectOne({ method: 'PUT', url: '/api/student-groups/3' }).flush(
+        { status: 409, detail: 'Eine Schülergruppe mit dem Namen "group 1" gibt es bereits.' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await settle();
+      fixture.detectChanges();
+
+      const rename = sheet(page, 'rename-group-heading');
+      expect(rename.querySelector('[role="alert"]')?.textContent).toContain('gibt es bereits');
+      expect(rename.open).toBe(true);
+      expect(names(page)).toEqual(['Group 1', 'Grupe 3']);
+      http.expectNone({ method: 'GET', url: '/api/student-groups' });
+    });
+
+    it('REQ-012: deletes a group after the confirmation and removes it from the list', async () => {
+      const page = await respond(groups);
+
+      click(page, 'Grupe 3 löschen');
+      const confirm = sheet(page, 'delete-group-heading');
+      expect(confirm.open).toBe(true);
+      expect(confirm.querySelector('h2')?.textContent).toBe('Grupe 3 löschen?');
+      // Nothing is sent before the confirmation.
+      http.expectNone({ method: 'DELETE', url: '/api/student-groups/3' });
+
+      (confirm.querySelector('.confirm-delete') as HTMLButtonElement).click();
+      await settle();
+      http.expectOne({ method: 'DELETE', url: '/api/student-groups/3' }).flush(null, { status: 204, statusText: 'No Content' });
+      await reloadWith([groups[0]]);
+
+      expect(names(page)).toEqual(['Group 1']);
+      expect(page.querySelector('[role="status"]')?.textContent).toContain('Grupe 3 gelöscht.');
+      expect(confirm.open).toBe(false);
+    });
+
+    it('REQ-012: shows the backend message when the group has loans (409) and keeps the group', async () => {
+      const page = await respond(groups);
+      click(page, 'Grupe 3 löschen');
+      const confirm = sheet(page, 'delete-group-heading');
+
+      (confirm.querySelector('.confirm-delete') as HTMLButtonElement).click();
+      await settle();
+      http.expectOne({ method: 'DELETE', url: '/api/student-groups/3' }).flush(
+        { status: 409, detail: 'Die Schülergruppe "Grupe 3" hat Ausleihen und kann nicht gelöscht werden.' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await settle();
+      fixture.detectChanges();
+
+      expect(confirm.querySelector('[role="alert"]')?.textContent).toContain('hat Ausleihen und kann nicht gelöscht werden');
+      expect(confirm.open).toBe(true);
+      expect(names(page)).toEqual(['Group 1', 'Grupe 3']);
+      http.expectNone({ method: 'GET', url: '/api/student-groups' });
+    });
+
+    it('does not send anything when the confirmation is cancelled', async () => {
+      const page = await respond(groups);
+      click(page, 'Grupe 3 löschen');
+      const confirm = sheet(page, 'delete-group-heading');
+
+      (confirm.querySelector('.sheet-actions .button') as HTMLButtonElement).click();
+
+      expect(confirm.open).toBe(false);
+      http.expectNone({ method: 'DELETE', url: '/api/student-groups/3' });
+    });
+  });
 });

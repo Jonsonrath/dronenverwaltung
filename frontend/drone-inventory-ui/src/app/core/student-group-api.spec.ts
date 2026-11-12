@@ -43,4 +43,23 @@ describe('StudentGroupApi', () => {
     expect(request.request.body).toEqual({ name: 'Group 3' });
     expect(await result).toEqual({ id: 3, name: 'Group 3' });
   });
+
+  it('REQ-011: rename() sends PUT /api/student-groups/{id} with the new name', async () => {
+    const result = firstValueFrom(api.rename(3, { name: 'Group 3' }));
+    const request = http.expectOne('/api/student-groups/3');
+    request.flush({ id: 3, name: 'Group 3' });
+
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ name: 'Group 3' });
+    expect(await result).toEqual({ id: 3, name: 'Group 3' });
+  });
+
+  it('REQ-012: remove() sends DELETE /api/student-groups/{id}', async () => {
+    const result = firstValueFrom(api.remove(86));
+    const request = http.expectOne('/api/student-groups/86');
+    request.flush(null, { status: 204, statusText: 'No Content' });
+
+    expect(request.request.method).toBe('DELETE');
+    await result;
+  });
 });

@@ -67,7 +67,7 @@ SQLite
 | Seite | Pfad | Was man dort tut | Anforderung |
 |---|---|---|---|
 | Drohnen | `/drones` | Drohnen mit Status (Verfügbar / Ausgeliehen) sehen, neue Drohne hinzufügen | REQ-001, REQ-002 |
-| Schülergruppen | `/student-groups` | Gruppen sehen (mit der Drohne, die sie gerade haben) und hinzufügen | REQ-003 |
+| Schülergruppen | `/student-groups` | Gruppen sehen (mit der Drohne, die sie gerade haben), hinzufügen, umbenennen und löschen | REQ-003, REQ-011, REQ-012 |
 | Neue Ausleihe | `/loans/new` | Drohne mit Akkus und Propellern an eine Gruppe ausleihen | REQ-004 – REQ-006 |
 | Aktive Ausleihen | `/loans` | Ausgeliehene Drohnen sehen und zurückgeben | REQ-007 – REQ-009 |
 | Verlauf | `/loans/history` | Alle zurückgegebenen Ausleihen | REQ-010 |
@@ -90,6 +90,8 @@ Ausformuliert mit SHALL und Given/When/Then in [`docs/requirements.md`](docs/req
 | REQ-008 | Ausleihe zurückgeben |
 | REQ-009 | Rückgabedatum speichern |
 | REQ-010 | Ausleihhistorie anzeigen |
+| REQ-011 | Schülergruppe umbenennen |
+| REQ-012 | Schülergruppe löschen (nur ohne Ausleihen) |
 
 ## 🚫 Out of Scope
 
@@ -125,7 +127,7 @@ dronenverwaltung/
 │   └── DroneInventory.Api.Tests/  # xUnit: Domain-, Datenbank-, Service- und API-Tests
 ├── frontend/drone-inventory-ui/   # Angular: core/ (API-Services, Models), features/ (Seiten)
 ├── docs/
-│   ├── requirements.md            # Anforderungen REQ-001 … REQ-010
+│   ├── requirements.md            # Anforderungen REQ-001 … REQ-012
 │   └── end-to-end-check.md        # Testprotokoll: Beispiel aus dem Auftrag, einmal komplett
 ├── openspec/
 │   ├── specs/       # aktueller Sollzustand
@@ -190,4 +192,5 @@ Jede Codezeile ist rückführbar:
 
 ## 👥 Team
 
-_Teammitglieder hier eintragen._
+Luca Aigner
+Jonathan Rath

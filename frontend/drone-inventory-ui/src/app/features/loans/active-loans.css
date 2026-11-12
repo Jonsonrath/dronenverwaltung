@@ -54,3 +54,36 @@ p.alert {
     width: 100%;
   }
 }
+
+/* Return sheet (REQ-022): two steppers side by side, below each other on a narrow phone. */
+.sheet-lead {
+  margin: calc(-1 * var(--space-3)) 0 var(--space-5);
+  color: var(--muted);
+}
+
+.returned {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.returned .field {
+  margin-bottom: 0;
+}
+
+.of {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.return-form p.alert {
+  margin: 0 0 var(--space-4);
+}
+
+/* What is missing after the return, from the numbers the backend stored: bold, no new color. */
+.missing {
+  display: inline-block;
+  margin-left: var(--space-2);
+  font-weight: 600;
+}

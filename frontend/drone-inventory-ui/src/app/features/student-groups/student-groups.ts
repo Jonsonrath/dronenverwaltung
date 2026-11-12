@@ -4,11 +4,13 @@ import { form, FormField, FormRoot, required } from '@angular/forms/signals';
 import { firstValueFrom } from 'rxjs';
 import { LoanApi } from '../../core/loan-api';
 import { problemMessage } from '../../core/problem-message';
+import { StudentApi } from '../../core/student-api';
 import { StudentGroupApi } from '../../core/student-group-api';
 import { StudentGroup } from '../../core/student-group.model';
 
 /**
- * Student group list with the forms to add (REQ-003), rename (REQ-011) and delete (REQ-012) a group.
+ * Student group list with the forms to add (REQ-003), rename (REQ-011) and delete (REQ-012) a group,
+ * and the members of every group with the form to add a student (REQ-016, REQ-017).
  * Every rule is checked by the backend; its messages are shown in the sheet that sent the request.
  */
 @Component({
@@ -20,6 +22,7 @@ import { StudentGroup } from '../../core/student-group.model';
 export class StudentGroups {
   private readonly studentGroupApi = inject(StudentGroupApi);
   private readonly loanApi = inject(LoanApi);
+  private readonly studentApi = inject(StudentApi);
 
   protected readonly groups = rxResource({ stream: () => this.studentGroupApi.list() });
 
@@ -50,6 +53,7 @@ export class StudentGroups {
   private readonly addSheet = viewChild.required<ElementRef<HTMLDialogElement>>('addSheet');
   private readonly renameSheet = viewChild.required<ElementRef<HTMLDialogElement>>('renameSheet');
   private readonly deleteSheet = viewChild.required<ElementRef<HTMLDialogElement>>('deleteSheet');
+  private readonly addStudentSheet = viewChild.required<ElementRef<HTMLDialogElement>>('addStudentSheet');
 
   /** A click on the dimmed area around a sheet closes it; the dialog element itself is that area. */
   protected closeOnBackdrop(event: MouseEvent) {
@@ -197,4 +201,56 @@ export class StudentGroups {
       this.deleteBusy.set(false);
     }
   }
+
+  // ---- add student (REQ-016) ----
+
+  /** The group that gets a new student. */
+  protected readonly addingTo = signal<StudentGroup | undefined>(undefined);
+
+  protected readonly newStudent = signal({ name: '', class: '' });
+
+  /** Message from the backend when adding failed, e.g. 409 name already in the group or 422 blank name. */
+  protected readonly studentError = signal('');
+
+  protected openAddStudent(group: StudentGroup) {
+    this.addingTo.set(group);
+    this.studentError.set('');
+    this.studentForm().reset({ name: '', class: '' });
+    this.addStudentSheet().nativeElement.showModal();
+  }
+
+  protected closeAddStudent() {
+    this.addStudentSheet().nativeElement.close();
+  }
+
+  // Only a convenience check; the backend validates the name (REQ-016).
+  protected readonly studentForm = form(
+    this.newStudent,
+    (student) => {
+      required(student.name, { message: 'Name eingeben.' });
+    },
+    {
+      submission: {
+        action: async () => {
+          const group = this.addingTo();
+          if (!group) {
+            return undefined;
+          }
+          this.studentError.set('');
+          this.notice.set('');
+          try {
+            const { name, class: schoolClass } = this.newStudent();
+            const student = await firstValueFrom(this.studentApi.add(group.id, { name, class: schoolClass }));
+            this.notice.set(`${student.name} ist jetzt in ${group.name}.`);
+            this.closeAddStudent();
+            this.groups.reload();
+          } catch (error) {
+            this.studentError.set(problemMessage(error));
+          }
+          return undefined;
+        },
+        onInvalid: () => this.studentError.set(''),
+      },
+    },
+  );
 }

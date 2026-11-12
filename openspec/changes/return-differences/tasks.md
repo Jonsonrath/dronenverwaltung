@@ -4,7 +4,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 1. Backend
 
-- [ ] 1.1 `LoanItem.ReturnedQuantity`, `Loan.Return` with returned quantities and validation, migration `AddReturnedQuantities` (design §1, §3); verify with domain tests `REQ_022_...` and that all REQ-008 / REQ-009 tests still pass (#103)
+- [x] 1.1 `LoanItem.ReturnedQuantity`, `Loan.Return` with returned quantities and validation, migration `AddReturnedQuantities` (design §1, §3); verify with domain tests `REQ_022_...` and that all REQ-008 / REQ-009 tests still pass (#103)
 - [ ] 1.2 Optional body for `POST /api/loans/{id}/return`, `returnedBatteries` / `returnedPropellers` in loan responses (design §2); verify with API tests for every scenario of REQ-022 (#104)
 
 ## 2. Frontend

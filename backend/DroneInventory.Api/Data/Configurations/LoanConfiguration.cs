@@ -27,6 +27,10 @@ public class LoanConfiguration : IEntityTypeConfiguration<Loan>
 
         builder.HasMany(l => l.Items).WithOne().HasForeignKey(i => i.LoanId).OnDelete(DeleteBehavior.Cascade);
 
+        // The items belong to the aggregate and are always loaded with it, so Loan.Return
+        // can store the returned quantities (REQ-022).
+        builder.Navigation(l => l.Items).AutoInclude();
+
         // A drone has at most one active loan (REQ-005), guaranteed by the database.
         builder.HasIndex(l => l.DroneId)
             .IsUnique()
@@ -35,5 +39,7 @@ public class LoanConfiguration : IEntityTypeConfiguration<Loan>
 
         builder.Ignore(l => l.Batteries);
         builder.Ignore(l => l.Propellers);
+        builder.Ignore(l => l.ReturnedBatteries);
+        builder.Ignore(l => l.ReturnedPropellers);
     }
 }

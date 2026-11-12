@@ -173,6 +173,27 @@ Returned loans SHALL never be deleted. The system SHALL list past (returned) loa
 - WHEN it is deleted
 - THEN the request is rejected as a conflict and the loan stays
 
+## Planned Requirements (draft, specs in review)
+
+*Feature backlog of 12.11.2026.* Each line is its own OpenSpec change under `openspec/changes/`; the full requirement with SHALL and scenarios is in that change's delta spec. When a change is implemented, its requirements move into the list above.
+
+| ID | Requirement | OpenSpec change | Assignment |
+|---|---|---|---|
+| REQ-013 | Edit drone (name, description) | `edit-drones` | – |
+| REQ-014 | Report drone damage | `support-damaged-drones` | change request 1 |
+| REQ-015 | Repair drone | `support-damaged-drones` | change request 1 |
+| REQ-016 | Add student to group | `student-group-members` | change request 3 |
+| REQ-017 | List group members | `student-group-members` | change request 3 |
+| REQ-018 | Move student | `student-group-members` | change request 3 |
+| REQ-019 | Remove student | `student-group-members` | change request 3 |
+| REQ-020 | Set responsible student | `responsible-student` | change request 2 |
+| REQ-021 | Responsible student on loans | `responsible-student` | change request 2 |
+| REQ-022 | Record returned accessories | `return-differences` | change request 5 |
+| REQ-023 | Report damage on return | `damage-report-on-return` | change request 6 |
+| REQ-024 | Drone SSID | `drone-ssid` | change request 7 |
+
+Modified by these changes: REQ-002 and REQ-004 (damaged drones), REQ-012 (groups with students cannot be deleted).
+
 ## Out of Scope
 
 - Login, user accounts, roles

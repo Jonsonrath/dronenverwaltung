@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { Observable } from 'rxjs';
-import { CreateDroneRequest, Drone, UpdateDroneRequest } from './drone.model';
+import { CreateDroneRequest, Drone, ReportDamageRequest, UpdateDroneRequest } from './drone.model';
 
 /** Backend calls for drones (design.md §6). */
 @Service()
@@ -24,5 +24,18 @@ export class DroneApi {
    */
   update(id: number, request: UpdateDroneRequest): Observable<Drone> {
     return this.http.put<Drone>(`/api/drones/${id}`, request);
+  }
+
+  /**
+   * Marks a drone as damaged (REQ-014); a new reason replaces the old one. The backend rejects
+   * an unknown drone (404) and an empty reason (422).
+   */
+  reportDamage(id: number, request: ReportDamageRequest): Observable<Drone> {
+    return this.http.post<Drone>(`/api/drones/${id}/damage`, request);
+  }
+
+  /** Marks a damaged drone as repaired (REQ-015). The backend rejects an unknown (404) or undamaged drone (409). */
+  repair(id: number): Observable<Drone> {
+    return this.http.delete<Drone>(`/api/drones/${id}/damage`);
   }
 }

@@ -11,20 +11,22 @@ context: |
   - The frontend never accesses the database directly.
   - Business logic and validation live in the backend.
   Domain concepts (Ubiquitous Language, no synonyms): Drone, StudentGroup, Loan, LoanItem
-  - Drone: Id, Name, Description
+  - Drone: Id, Name, Description, DamageReason (null = not damaged)
   - StudentGroup: Id, Name
   - Loan: Id, DroneId, StudentGroupId, LoanDate, ReturnDate, Status (Active | Returned)
   - LoanItem: Id, LoanId, Type (Battery | Propeller), Quantity
   Domain rules:
   - A drone can only have one active loan.
-  - Only available drones can be loaned.
+  - Only available drones can be loaned. A damaged drone cannot be loaned.
+  - A damaged drone keeps its damage reason until it is marked as repaired; reporting again replaces the reason.
   - Returning a loan makes the drone available again.
   - Accessory quantities are integers and must not be negative.
   - Returned loans are never deleted.
   - Batteries and propellers are tracked as quantities only.
-  - Drone availability (Available | Loaned) is derived from the active loan, not stored.
+  - Drone status (Available | Loaned | Damaged) is derived, not stored: Loaned with an active loan,
+    otherwise Damaged if a damage reason is set, otherwise Available.
   Out of scope: login/roles, individual battery inventory, reservations,
-  damage management, return differences, statistics and exports.
+  return differences, statistics and exports.
 
 rules:
   proposal:

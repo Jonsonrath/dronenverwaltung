@@ -302,4 +302,172 @@ describe('Drones page', () => {
       expect(editSheet(page).querySelector('.field-error')?.textContent).toContain('Name eingeben.');
     });
   });
+
+  // Change support-damaged-drones, task 2.1: status Defekt (REQ-002), Defekt melden (REQ-014), Repariert (REQ-015).
+  describe('damage', () => {
+    const tello07: Drone = { id: 7, name: 'TELLO-07', description: '', status: 'Available', damageReason: null };
+    const tello11: Drone = {
+      id: 11,
+      name: 'TELLO-11',
+      description: 'SSID: TELLO-11',
+      status: 'Damaged',
+      damageReason: 'Propeller gebrochen',
+    };
+    const settle = () => new Promise((resolve) => setTimeout(resolve));
+    const damageSheet = (page: HTMLElement) =>
+      page.querySelector('dialog[aria-labelledby="damage-drone-heading"]') as HTMLDialogElement;
+    const button = (page: HTMLElement, label: string) =>
+      page.querySelector(`button[aria-label="${label}"]`) as HTMLButtonElement | null;
+
+    async function submitReason(page: HTMLElement, reason: string) {
+      const input = page.querySelector('#damage-reason') as HTMLTextAreaElement;
+      input.value = reason;
+      input.dispatchEvent(new Event('input'));
+      page.querySelector('form.damage-form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+      await settle();
+      fixture.detectChanges();
+    }
+
+    it('REQ-002: shows a damaged drone as Defekt with its reason, in a muted pill and not red', async () => {
+      const page = await respond([tello07, tello11]);
+
+      const bay = page.querySelector('.drone-list li:last-child')!;
+      expect(bay.querySelector('.tag')?.textContent?.trim()).toBe('Defekt');
+      expect(bay.querySelector('.tag')?.classList).toContain('tag-damaged');
+      expect(bay.classList).toContain('is-damaged');
+      expect(bay.querySelector('.damage')?.textContent?.trim()).toBe('Defekt: Propeller gebrochen');
+      expect(bay.querySelector('.alert')).toBeNull();
+      // No loan shortcut on a damaged bay; Repariert instead of Defekt melden.
+      expect(bay.querySelector('a[aria-label="TELLO-11 ausleihen"]')).toBeNull();
+      expect(button(page, 'TELLO-11 repariert')).not.toBeNull();
+      expect(button(page, 'TELLO-11 defekt melden')).toBeNull();
+      expect(button(page, 'TELLO-07 defekt melden')).not.toBeNull();
+    });
+
+    it('REQ-002: shows a loaned damaged drone as Ausgeliehen together with the reason', async () => {
+      const page = await respond([{ ...tello07, status: 'Loaned', damageReason: 'Kamera ausgefallen' }]);
+
+      const bay = page.querySelector('.drone-list li')!;
+      expect(bay.querySelector('.tag')?.textContent?.trim()).toBe('Ausgeliehen');
+      expect(bay.querySelector('.damage')?.textContent?.trim()).toBe('Defekt: Kamera ausgefallen');
+      expect(button(page, 'TELLO-07 repariert')).not.toBeNull();
+    });
+
+    it('REQ-014: Defekt melden sends the reason and shows the drone as Defekt', async () => {
+      const page = await respond([tello07]);
+      button(page, 'TELLO-07 defekt melden')!.click();
+      fixture.detectChanges();
+      expect(damageSheet(page).open).toBe(true);
+      expect(damageSheet(page).querySelector('h2')?.textContent).toBe('TELLO-07 defekt melden');
+
+      await submitReason(page, 'Propeller gebrochen');
+      const request = http.expectOne({ method: 'POST', url: '/api/drones/7/damage' });
+      expect(request.request.body).toEqual({ reason: 'Propeller gebrochen' });
+      const damaged: Drone = { ...tello07, status: 'Damaged', damageReason: 'Propeller gebrochen' };
+      request.flush(damaged);
+      await settle();
+      fixture.detectChanges();
+      http.expectOne({ method: 'GET', url: '/api/drones' }).flush([damaged]);
+      await settle();
+      fixture.detectChanges();
+
+      expect(damageSheet(page).open).toBe(false);
+      expect(page.querySelector('[role="status"]')?.textContent).toContain('TELLO-07 als defekt gemeldet.');
+      expect(page.querySelector('.drone-list li .tag')?.textContent?.trim()).toBe('Defekt');
+    });
+
+    it('REQ-014: shows the backend message for an empty reason (422) in the sheet', async () => {
+      const page = await respond([tello07]);
+      button(page, 'TELLO-07 defekt melden')!.click();
+      fixture.detectChanges();
+
+      await submitReason(page, '   ');
+      http.expectOne({ method: 'POST', url: '/api/drones/7/damage' }).flush(
+        { status: 422, detail: 'Der Grund für den Defekt darf nicht leer sein.' },
+        { status: 422, statusText: 'Unprocessable Entity' },
+      );
+      await settle();
+      fixture.detectChanges();
+
+      expect(damageSheet(page).querySelector('[role="alert"]')?.textContent).toContain(
+        'Der Grund für den Defekt darf nicht leer sein.',
+      );
+      expect(damageSheet(page).open).toBe(true);
+      http.expectNone({ method: 'GET', url: '/api/drones' });
+    });
+
+    it('REQ-014: shows the backend message for an unknown drone (404) in the sheet', async () => {
+      const page = await respond([tello07]);
+      button(page, 'TELLO-07 defekt melden')!.click();
+      fixture.detectChanges();
+
+      await submitReason(page, 'Propeller gebrochen');
+      http.expectOne({ method: 'POST', url: '/api/drones/7/damage' }).flush(
+        { status: 404, detail: 'Die Drohne 7 gibt es nicht.' },
+        { status: 404, statusText: 'Not Found' },
+      );
+      await settle();
+      fixture.detectChanges();
+
+      expect(damageSheet(page).querySelector('[role="alert"]')?.textContent).toContain('Die Drohne 7 gibt es nicht.');
+    });
+
+    it('does not send an empty reason and asks for one', async () => {
+      const page = await respond([tello07]);
+      button(page, 'TELLO-07 defekt melden')!.click();
+      fixture.detectChanges();
+
+      await submitReason(page, '');
+
+      http.expectNone({ method: 'POST', url: '/api/drones/7/damage' });
+      expect(damageSheet(page).querySelector('.field-error')?.textContent).toContain('Grund eingeben.');
+    });
+
+    it('REQ-015: Repariert sends DELETE and shows the drone as Verfügbar', async () => {
+      const page = await respond([tello11]);
+
+      button(page, 'TELLO-11 repariert')!.click();
+      const request = http.expectOne({ method: 'DELETE', url: '/api/drones/11/damage' });
+      const repaired: Drone = { ...tello11, status: 'Available', damageReason: null };
+      request.flush(repaired);
+      await settle();
+      fixture.detectChanges();
+      http.expectOne({ method: 'GET', url: '/api/drones' }).flush([repaired]);
+      await settle();
+      fixture.detectChanges();
+
+      expect(page.querySelector('[role="status"]')?.textContent).toContain('TELLO-11 ist repariert.');
+      expect(page.querySelector('.drone-list li .tag')?.textContent?.trim()).toBe('Verfügbar');
+      expect(page.querySelector('.drone-list li .damage')).toBeNull();
+    });
+
+    it('REQ-015: shows the backend message when the drone is not damaged (409)', async () => {
+      const page = await respond([tello11]);
+
+      button(page, 'TELLO-11 repariert')!.click();
+      http.expectOne({ method: 'DELETE', url: '/api/drones/11/damage' }).flush(
+        { status: 409, detail: 'Die Drohne "TELLO-11" ist nicht als defekt gemeldet.' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await settle();
+      fixture.detectChanges();
+
+      expect(page.querySelector('[role="alert"]')?.textContent).toContain('ist nicht als defekt gemeldet.');
+      http.expectNone({ method: 'GET', url: '/api/drones' });
+    });
+
+    it('REQ-015: shows the backend message for an unknown drone (404)', async () => {
+      const page = await respond([tello11]);
+
+      button(page, 'TELLO-11 repariert')!.click();
+      http.expectOne({ method: 'DELETE', url: '/api/drones/11/damage' }).flush(
+        { status: 404, detail: 'Die Drohne 11 gibt es nicht.' },
+        { status: 404, statusText: 'Not Found' },
+      );
+      await settle();
+      fixture.detectChanges();
+
+      expect(page.querySelector('[role="alert"]')?.textContent).toContain('Die Drohne 11 gibt es nicht.');
+    });
+  });
 });

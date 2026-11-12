@@ -9,8 +9,8 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
     /// <summary>
     /// Loans a drone to a student group with batteries and propellers (REQ-004, REQ-006).
     /// Throws NotFoundException for an unknown drone or group, ValidationException
-    /// for a negative quantity and ConflictException if the drone already has an
-    /// active loan (REQ-005). The LoanDate is set by the system.
+    /// for a negative quantity and ConflictException if the drone is damaged (MODIFIED REQ-004)
+    /// or already has an active loan (REQ-005). The LoanDate is set by the system.
     /// </summary>
     public async Task<Loan> CreateAsync(
         int droneId, int studentGroupId, int batteries, int propellers, CancellationToken cancellationToken = default)
@@ -21,6 +21,12 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
             ?? throw new NotFoundException($"Die Schülergruppe {studentGroupId} gibt es nicht.");
 
         var loan = new Loan(drone, group, batteries, propellers, time.GetUtcNow().UtcDateTime);
+
+        // Damage is checked before the active loan (support-damaged-drones design §4).
+        if (drone.DamageReason is not null)
+        {
+            throw new ConflictException($"Die Drohne \"{drone.Name}\" ist defekt: {drone.DamageReason}");
+        }
 
         if (await db.Loans.AnyAsync(l => l.DroneId == droneId && l.Status == LoanStatus.Active, cancellationToken))
         {

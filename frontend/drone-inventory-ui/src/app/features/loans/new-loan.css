@@ -137,6 +137,13 @@ summary:hover {
   background: none;
 }
 
+/* Damage reason above the description (support-damaged-drones) */
+.damage {
+  display: block;
+  color: var(--text);
+  font-weight: 600;
+}
+
 .choice:hover {
   border-color: var(--muted);
 }

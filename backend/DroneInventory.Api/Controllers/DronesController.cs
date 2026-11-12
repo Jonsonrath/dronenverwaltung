@@ -43,4 +43,26 @@ public class DronesController(DroneService drones) : ControllerBase
         var (drone, status) = await drones.UpdateAsync(id, request.Name ?? string.Empty, request.Description, cancellationToken: cancellationToken);
         return DroneResponse.From(drone, status);
     }
+
+    /// <summary>Mark a drone as damaged; a new reason replaces the old one (REQ-014).</summary>
+    [HttpPost("{id:int}/damage")]
+    [ProducesResponseType<DroneResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
+    public async Task<DroneResponse> ReportDamage(int id, ReportDamageRequest request, CancellationToken cancellationToken)
+    {
+        var (drone, status) = await drones.ReportDamageAsync(id, request.Reason, cancellationToken);
+        return DroneResponse.From(drone, status);
+    }
+
+    /// <summary>Mark a damaged drone as repaired (REQ-015).</summary>
+    [HttpDelete("{id:int}/damage")]
+    [ProducesResponseType<DroneResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<DroneResponse> Repair(int id, CancellationToken cancellationToken)
+    {
+        var (drone, status) = await drones.RepairAsync(id, cancellationToken);
+        return DroneResponse.From(drone, status);
+    }
 }

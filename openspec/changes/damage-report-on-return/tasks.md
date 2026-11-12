@@ -9,7 +9,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 2. Frontend
 
-- [ ] 2.1 Field *Schaden (optional)* in the return sheet, confirmation text, history column (design §4); verify with Vitest tests for the request body and the shown report, `npx ng build`, and one run through the real UI (returned with damage → drone shows *Defekt*, loan form gets 409) (#110)
+- [x] 2.1 Field *Schaden (optional)* in the return sheet, confirmation text, history column (design §4); verify with Vitest tests for the request body and the shown report, `npx ng build`, and one run through the real UI (returned with damage → drone shows *Defekt*, loan form gets 409) (#110)
 
 ## 3. Docs
 

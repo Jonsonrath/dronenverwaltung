@@ -7,7 +7,11 @@
 
 @if (returned(); as loan) {
   <p class="added" role="status">
-    {{ loan.droneName }} von {{ loan.studentGroupName }} zurückgegeben. Sie ist wieder verfügbar.
+    @if (loan.damageReport) {
+      {{ loan.droneName }} zurückgegeben und als defekt markiert.
+    } @else {
+      {{ loan.droneName }} von {{ loan.studentGroupName }} zurückgegeben. Sie ist wieder verfügbar.
+    }
     @if (missingText(loan); as missing) {
       <span class="missing">{{ missing }}</span>
     }
@@ -68,7 +72,7 @@
   <p class="loading" aria-live="polite">Aktive Ausleihen werden geladen…</p>
 }
 
-<!-- Return (REQ-008, REQ-022): what came back, prefilled with what was loaned. -->
+<!-- Return (REQ-008, REQ-022, REQ-023): what came back, prefilled with what was loaned, and any damage. -->
 <dialog #returnSheet class="sheet" aria-labelledby="return-heading" (click)="closeOnBackdrop($event)">
   <div class="sheet-body">
     @if (returning(); as loan) {
@@ -101,6 +105,17 @@
               [(value)]="returnedPropellers"
             />
           </div>
+        </div>
+
+        <div class="field">
+          <label for="return-damage">Schaden <span class="optional">(optional)</span></label>
+          <textarea
+            id="return-damage"
+            placeholder="Propeller gebrochen"
+            [value]="damageReport()"
+            [disabled]="sending()"
+            (input)="damageReport.set($any($event.target).value)"
+          ></textarea>
         </div>
 
         <div class="sheet-actions">

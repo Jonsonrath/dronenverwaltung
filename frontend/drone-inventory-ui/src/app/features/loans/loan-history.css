@@ -5,6 +5,10 @@
   tr {
     grid-template-columns: auto 1fr;
   }
+
+  .damage {
+    grid-column: 1 / -1;
+  }
 }
 
 /* Returned of loaned (REQ-022). */
@@ -24,4 +28,17 @@
   color: var(--text);
   font-size: var(--text-sm);
   font-weight: 600;
+}
+
+/* Damage reported on return (REQ-023): the muted "Defekt" tag of the drone list, then the report. */
+.damage {
+  min-width: 12rem;
+}
+
+.damage-report {
+  margin-left: var(--space-2);
+}
+
+.no-damage {
+  color: var(--muted);
 }

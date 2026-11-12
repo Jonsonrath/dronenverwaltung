@@ -19,7 +19,10 @@ public record CreateLoanRequest(
 /// </summary>
 public record ReturnLoanRequest(int? Batteries, int? Propellers);
 
-/// <summary>A loan as returned by the API, flat with drone and group names (design.md §6).</summary>
+/// <summary>
+/// A loan as returned by the API, flat with drone and group names (design.md §6) and the name of
+/// the group's responsible student at loan time, null if none (REQ-021).
+/// </summary>
 public record LoanResponse(
     int Id,
     int DroneId,
@@ -32,7 +35,8 @@ public record LoanResponse(
     DateTime? ReturnDate,
     LoanStatus Status,
     int? ReturnedBatteries,
-    int? ReturnedPropellers)
+    int? ReturnedPropellers,
+    string? ResponsibleStudentName = null)
 {
     public static LoanResponse From(Loan loan) => new(
         loan.Id,
@@ -46,5 +50,6 @@ public record LoanResponse(
         loan.ReturnDate,
         loan.Status,
         loan.ReturnedBatteries,
-        loan.ReturnedPropellers);
+        loan.ReturnedPropellers,
+        loan.ResponsibleStudentName);
 }

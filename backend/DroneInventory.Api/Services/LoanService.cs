@@ -20,7 +20,13 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
         var group = await db.StudentGroups.FindAsync([studentGroupId], cancellationToken)
             ?? throw new NotFoundException($"Die Schülergruppe {studentGroupId} gibt es nicht.");
 
-        var loan = new Loan(drone, group, batteries, propellers, time.GetUtcNow().UtcDateTime);
+        // The name of the responsible student at loan time is copied into the loan (REQ-021).
+        var responsibleStudentName = group.ResponsibleStudentId is { } studentId
+            ? await db.Students.Where(s => s.Id == studentId).Select(s => s.Name).FirstOrDefaultAsync(cancellationToken)
+            : null;
+
+        var loan = new Loan(
+            drone, group, batteries, propellers, time.GetUtcNow().UtcDateTime, responsibleStudentName);
 
         // Damage is checked before the active loan (support-damaged-drones design §4).
         if (drone.DamageReason is not null)

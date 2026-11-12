@@ -6,7 +6,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 - [x] 1.1 `StudentGroup.ResponsibleStudentId` (Set Null) and `Loan.ResponsibleStudentName`, migration `AddResponsibleStudent` (design §1); verify with domain and mapping tests `REQ_020_...` / `REQ_021_...` (#97)
 - [x] 1.2 `PUT` / `DELETE /api/student-groups/{id}/responsible`, clearing on move and remove (design §2, §3); verify with API tests for every scenario of REQ-020 (#98)
-- [ ] 1.3 Copy the name when a loan is created and return `responsibleStudentName` in all loan responses; verify with API tests for every scenario of REQ-021 (#99)
+- [x] 1.3 Copy the name when a loan is created and return `responsibleStudentName` in all loan responses; verify with API tests for every scenario of REQ-021 (#99)
 
 ## 2. Frontend
 

@@ -34,6 +34,38 @@ public class DroneService(DroneInventoryDbContext db)
     }
 
     /// <summary>
+    /// Edits name and description of a drone (REQ-013) and returns it with its derived status.
+    /// Throws NotFoundException for an unknown id, ValidationException for an empty name and
+    /// ConflictException if another drone has the name.
+    /// </summary>
+    public async Task<(Drone Drone, DroneStatus Status)> UpdateAsync(
+        int id, string name, string? description, CancellationToken cancellationToken = default)
+    {
+        var drone = await db.Drones.FirstOrDefaultAsync(d => d.Id == id, cancellationToken)
+            ?? throw new NotFoundException($"Die Drohne {id} gibt es nicht.");
+        drone.Edit(name, description);
+
+        // Only other drones count: changing the spelling of the own name is allowed.
+        if (await db.Drones.AnyAsync(d => d.Id != id && d.NormalizedName == drone.NormalizedName, cancellationToken))
+        {
+            throw DuplicateName(drone);
+        }
+
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException exception) when (exception.IsUniqueConstraintViolation())
+        {
+            // Another request took the name between the check and the save.
+            throw DuplicateName(drone);
+        }
+
+        var isLoaned = await db.Loans.AnyAsync(l => l.DroneId == id && l.Status == LoanStatus.Active, cancellationToken);
+        return (drone, isLoaned ? DroneStatus.Loaned : DroneStatus.Available);
+    }
+
+    /// <summary>
     /// All drones, ordered by name, each with its status derived from the loans (REQ-002):
     /// Loaned if it has an active loan, otherwise Available. No status is stored.
     /// </summary>

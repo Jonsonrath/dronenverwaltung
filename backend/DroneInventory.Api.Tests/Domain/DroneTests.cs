@@ -30,6 +30,42 @@ public class DroneTests
         Assert.Throws<ValidationException>(() => new Drone(name, null));
     }
 
+    // Change edit-drones: "Edit drone (REQ-013)".
+
+    [Fact]
+    public void REQ_013_EditChangesNameDescriptionAndNormalizedName()
+    {
+        var drone = new Drone("TELO-07", "rechter Propellerschutz beschädigt");
+
+        drone.Edit("  TELLO-07 ", " Propellerschutz erneuert ");
+
+        Assert.Equal("TELLO-07", drone.Name);
+        Assert.Equal("TELLO-07", drone.NormalizedName);
+        Assert.Equal("Propellerschutz erneuert", drone.Description);
+    }
+
+    [Fact]
+    public void REQ_013_EditWithoutDescriptionStoresEmpty()
+    {
+        var drone = new Drone("TELLO-07", "alt");
+
+        drone.Edit("TELLO-07", null);
+
+        Assert.Equal(string.Empty, drone.Description);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void REQ_013_EditRejectsEmptyNameAndKeepsTheDrone(string name)
+    {
+        var drone = new Drone("TELLO-07", "Beschreibung");
+
+        Assert.Throws<ValidationException>(() => drone.Edit(name, "neu"));
+        Assert.Equal("TELLO-07", drone.Name);
+        Assert.Equal("Beschreibung", drone.Description);
+    }
+
     [Fact]
     public void REQ_001_TrimsName()
     {

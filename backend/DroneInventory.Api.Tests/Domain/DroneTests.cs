@@ -146,4 +146,45 @@ public class DroneTests
 
         Assert.Equal("Die Drohne \"TELLO-07\" ist nicht als defekt gemeldet.", error.Message);
     }
+
+    // Change drone-ssid: "Drone SSID (REQ-024)".
+
+    [Fact]
+    public void REQ_024_CreatesDroneWithTrimmedSsid()
+    {
+        var drone = new Drone("TELLO-07", null, " TELLO-9FA21B ");
+
+        Assert.Equal("TELLO-9FA21B", drone.Ssid);
+        Assert.Equal("TELLO-9FA21B", drone.NormalizedSsid);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void REQ_024_EmptySsidMeansNoSsid(string? ssid)
+    {
+        var drone = new Drone("TELLO-08", null, ssid);
+
+        Assert.Null(drone.Ssid);
+        Assert.Null(drone.NormalizedSsid);
+    }
+
+    [Fact]
+    public void REQ_024_SameNormalizedSsidIgnoringCase()
+    {
+        Assert.Equal(new Drone("A", null, "TELLO-9FA21B").NormalizedSsid, new Drone("B", null, "tello-9fa21b").NormalizedSsid);
+    }
+
+    [Fact]
+    public void REQ_024_EditSetsAndRemovesSsid()
+    {
+        var drone = new Drone("TELLO-07", null);
+
+        drone.Edit("TELLO-07", null, " TELLO-9FA21B ");
+        Assert.Equal(("TELLO-9FA21B", "TELLO-9FA21B"), (drone.Ssid, drone.NormalizedSsid));
+
+        drone.Edit("TELLO-07", null, " ");
+        Assert.Equal((null, null), (drone.Ssid, drone.NormalizedSsid));
+    }
 }

@@ -115,10 +115,104 @@ public class DroneServiceTests : IDisposable
         await Assert.ThrowsAsync<NotFoundException>(() => new DroneService(context).UpdateAsync(999, "TELLO-07", null));
     }
 
-    private async Task<int> Seed(string name, string? description)
+    // Change drone-ssid: "Drone SSID (REQ-024)".
+
+    [Fact]
+    public async Task REQ_024_CreatesDroneWithSsid()
     {
         await using var context = _database.CreateContext();
-        var drone = new Drone(name, description);
+
+        var drone = await new DroneService(context).CreateAsync("TELLO-07", null, " TELLO-9FA21B ");
+
+        await using var check = _database.CreateContext();
+        Assert.Equal("TELLO-9FA21B", (await check.Drones.SingleAsync(d => d.Id == drone.Id)).Ssid);
+    }
+
+    [Fact]
+    public async Task REQ_024_SeveralDronesWithoutSsid()
+    {
+        await using var context = _database.CreateContext();
+        var service = new DroneService(context);
+
+        await service.CreateAsync("TELLO-08", null);
+        await service.CreateAsync("TELLO-09", null, "");
+
+        await using var check = _database.CreateContext();
+        Assert.Equal(2, await check.Drones.CountAsync(d => d.Ssid == null));
+    }
+
+    [Fact]
+    public async Task REQ_024_CreateWithSsidOfAnotherDrone_ThrowsConflict()
+    {
+        await Seed("TELLO-07", null, "TELLO-9FA21B");
+        await using var context = _database.CreateContext();
+
+        var error = await Assert.ThrowsAsync<ConflictException>(
+            () => new DroneService(context).CreateAsync("TELLO-08", null, "tello-9fa21b"));
+
+        Assert.Equal(
+            "Eine Drohne mit der SSID \"tello-9fa21b\" gibt es bereits (Groß- und Kleinschreibung wird nicht unterschieden).",
+            error.Message);
+        await using var check = _database.CreateContext();
+        Assert.Single(check.Drones);
+    }
+
+    [Fact]
+    public async Task REQ_024_EditWithSsidOfAnotherDrone_ThrowsConflictAndKeepsSsid()
+    {
+        await Seed("TELLO-07", null, "TELLO-9FA21B");
+        int id = await Seed("TELLO-08", null);
+        await using var context = _database.CreateContext();
+
+        await Assert.ThrowsAsync<ConflictException>(
+            () => new DroneService(context).UpdateAsync(id, "TELLO-08", null, "tello-9fa21b"));
+
+        await using var check = _database.CreateContext();
+        Assert.Null((await check.Drones.SingleAsync(d => d.Id == id)).Ssid);
+    }
+
+    [Fact]
+    public async Task REQ_024_EditSetsSsidAndKeepsOwnSsid()
+    {
+        int id = await Seed("TELLO-07", null);
+        await using var context = _database.CreateContext();
+        var service = new DroneService(context);
+
+        await service.UpdateAsync(id, "TELLO-07", null, "TELLO-9FA21B");
+        // Saving again with the own SSID in another spelling is no conflict.
+        var (drone, _) = await service.UpdateAsync(id, "TELLO-07", "neu", "tello-9fa21b");
+
+        Assert.Equal("tello-9fa21b", drone.Ssid);
+    }
+
+    [Fact]
+    public async Task REQ_024_SsidTakenConcurrently_ThrowsSsidConflict()
+    {
+        // Another request saves a drone with the same SSID after our check but before our save.
+        await using var context = _database.CreateContext(new InsertDroneBeforeSave(_database, "TELLO-99", "tello-9fa21b"));
+
+        var error = await Assert.ThrowsAsync<ConflictException>(
+            () => new DroneService(context).CreateAsync("TELLO-07", null, "TELLO-9FA21B"));
+
+        Assert.Contains("SSID", error.Message);
+    }
+
+    private sealed class InsertDroneBeforeSave(TestDatabase database, string name, string ssid) : SaveChangesInterceptor
+    {
+        public override async ValueTask<InterceptionResult<int>> SavingChangesAsync(
+            DbContextEventData eventData, InterceptionResult<int> result, CancellationToken cancellationToken = default)
+        {
+            await using var other = database.CreateContext();
+            other.Drones.Add(new Drone(name, null, ssid));
+            await other.SaveChangesAsync(cancellationToken);
+            return result;
+        }
+    }
+
+    private async Task<int> Seed(string name, string? description, string? ssid = null)
+    {
+        await using var context = _database.CreateContext();
+        var drone = new Drone(name, description, ssid);
         context.Drones.Add(drone);
         await context.SaveChangesAsync();
         return drone.Id;

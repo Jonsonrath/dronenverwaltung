@@ -25,7 +25,7 @@ public class DronesController(DroneService drones) : ControllerBase
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<IActionResult> Create(CreateDroneRequest request, CancellationToken cancellationToken)
     {
-        var drone = await drones.CreateAsync(request.Name ?? string.Empty, request.Description, cancellationToken);
+        var drone = await drones.CreateAsync(request.Name ?? string.Empty, request.Description, cancellationToken: cancellationToken);
 
         // A new drone has no loans yet, so its derived status is Available (REQ-001).
         // No single-drone endpoint exists, so the response has no Location header.
@@ -40,7 +40,7 @@ public class DronesController(DroneService drones) : ControllerBase
     [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
     public async Task<DroneResponse> Update(int id, UpdateDroneRequest request, CancellationToken cancellationToken)
     {
-        var (drone, status) = await drones.UpdateAsync(id, request.Name ?? string.Empty, request.Description, cancellationToken);
+        var (drone, status) = await drones.UpdateAsync(id, request.Name ?? string.Empty, request.Description, cancellationToken: cancellationToken);
         return DroneResponse.From(drone, status);
     }
 }

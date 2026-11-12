@@ -14,5 +14,8 @@ public class DroneConfiguration : IEntityTypeConfiguration<Drone>
 
         // Drone names are unique, ignoring case and surrounding whitespace (REQ-001).
         builder.HasIndex(d => d.NormalizedName).IsUnique();
+
+        // A set SSID is unique, ignoring case and surrounding whitespace; many drones may have none (REQ-024).
+        builder.HasIndex(d => d.NormalizedSsid).IsUnique().HasFilter("\"NormalizedSsid\" IS NOT NULL");
     }
 }

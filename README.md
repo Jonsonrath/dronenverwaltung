@@ -49,14 +49,14 @@ SQLite
 |---|---|
 | `Drone` | Fluggerät, das ausgeliehen werden kann (Id, Name, Description, DamageReason) |
 | `StudentGroup` | Schülergruppe, die ausleiht und verantwortlich ist (Id, Name) |
-| `Loan` | Ausleihvorgang mit Gruppe, Drohne, `LoanDate`, `ReturnDate`, Status |
+| `Loan` | Ausleihvorgang mit Gruppe, Drohne, `LoanDate`, `ReturnDate`, Status, `DamageReport` (Schaden bei der Rückgabe, optional) |
 | `LoanItem` | Zubehörposition einer Ausleihe: Typ (`Battery` \| `Propeller`) und Menge |
 
 ### Domain Rules
 
 - Eine Drohne hat höchstens eine aktive Ausleihe.
 - Nur verfügbare Drohnen dürfen ausgeliehen werden; eine defekte Drohne nicht.
-- Eine Rückgabe macht die Drohne wieder verfügbar.
+- Eine Rückgabe macht die Drohne wieder verfügbar – außer mit Schadensmeldung: dann ist sie defekt und kann nicht ausgeliehen werden.
 - Zubehörmengen sind nie negativ.
 - Zurückgegebene Ausleihen bleiben gespeichert.
 - Akkus und Propeller werden nur als Menge geführt.
@@ -69,8 +69,8 @@ SQLite
 | Drohnen | `/drones` | Drohnen mit Status (Verfügbar / Ausgeliehen / Defekt) sehen, neue Drohne hinzufügen, Name, SSID und Beschreibung bearbeiten, Defekt melden und als repariert markieren | REQ-001, REQ-002, REQ-013 – REQ-015, REQ-024 |
 | Schülergruppen | `/student-groups` | Gruppen sehen (mit der Drohne, die sie gerade haben), hinzufügen, umbenennen und löschen | REQ-003, REQ-011, REQ-012 |
 | Neue Ausleihe | `/loans/new` | Drohne mit Akkus und Propellern an eine Gruppe ausleihen | REQ-004 – REQ-006 |
-| Aktive Ausleihen | `/loans` | Ausgeliehene Drohnen sehen und zurückgeben | REQ-007 – REQ-009 |
-| Verlauf | `/loans/history` | Alle zurückgegebenen Ausleihen | REQ-010 |
+| Aktive Ausleihen | `/loans` | Ausgeliehene Drohnen sehen und zurückgeben, optional mit Schaden | REQ-007 – REQ-009, REQ-023 |
+| Verlauf | `/loans/history` | Alle zurückgegebenen Ausleihen mit gemeldetem Schaden | REQ-010, REQ-023 |
 
 Fehlermeldungen (z. B. "Die Drohne … ist bereits ausgeliehen.") kommen immer vom Backend; das Frontend prüft keine Fachregeln.
 
@@ -95,6 +95,7 @@ Ausformuliert mit SHALL und Given/When/Then in [`docs/requirements.md`](docs/req
 | REQ-013 | Drohne bearbeiten (Name, Beschreibung) |
 | REQ-014 | Defekt einer Drohne melden |
 | REQ-015 | Drohne als repariert markieren |
+| REQ-023 | Schaden bei der Rückgabe melden |
 | REQ-024 | SSID einer Drohne (optional, eindeutig) |
 
 ## 🚫 Out of Scope

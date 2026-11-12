@@ -21,7 +21,7 @@ The application shall answer:
 | `Drone` | An aircraft that can be loaned. Id, Name, Description, DamageReason (empty = not damaged). |
 | `StudentGroup` | A group of students that loans and is responsible. Id, Name. |
 | `Student` | A member of exactly one student group. Name, Class (optional). |
-| `Loan` | A loan of one drone to one student group. LoanDate, ReturnDate, Status (Active \| Returned). |
+| `Loan` | A loan of one drone to one student group. LoanDate, ReturnDate, Status (Active \| Returned), DamageReport (empty = no damage reported on return). |
 | `LoanItem` | An accessory position of a loan. Type (Battery \| Propeller), Quantity. |
 
 A drone is **Loaned** if it has an active loan, otherwise **Damaged** if a damage is reported, otherwise **Available**. This status is derived, never entered.
@@ -271,6 +271,34 @@ Returned loans SHALL never be deleted. The system SHALL list past (returned) loa
 
 Loans returned before this change have no returned quantities recorded and count as complete.
 
+### REQ-023 Report damage on return
+*Added with the OpenSpec change `damage-report-on-return` (12.11.2026, change request 6).* When a Loan is returned, the system SHALL accept an optional damage report. If a report is given, the Loan SHALL keep it and the Drone SHALL be damaged with the report as its damage reason. A report that is empty or consists only of whitespace SHALL count as no report. The loan history SHALL list the damage report of each returned Loan.
+
+**Scenario: Return with damage report**
+- GIVEN "TELLO-07" is loaned to "Group 3"
+- WHEN the Loan is returned with the damage report "Propeller gebrochen"
+- THEN the Loan is listed in the history with the damage report "Propeller gebrochen"
+- AND "TELLO-07" has status Damaged with the damage reason "Propeller gebrochen"
+
+**Scenario: Return without damage report**
+- GIVEN "TELLO-07" is loaned to "Group 3" and is not damaged
+- WHEN the Loan is returned without a damage report
+- THEN the Loan has no damage report
+- AND "TELLO-07" is Available
+
+**Scenario: Whitespace-only report**
+- GIVEN "TELLO-07" is loaned to "Group 3" and is not damaged
+- WHEN the Loan is returned with the damage report "   "
+- THEN the Loan has no damage report
+- AND "TELLO-07" is Available
+
+**Scenario: Damaged drone cannot be loaned after the return**
+- GIVEN the Loan of "TELLO-07" was returned with the damage report "Propeller gebrochen"
+- WHEN "TELLO-07" is loaned to "Group 1"
+- THEN the request is rejected as a conflict
+
+Loan and drone are saved together. If the drone was already damaged, the report on return replaces the damage reason (as for every new report, REQ-014).
+
 ### REQ-016 Add student to group
 *Added with the OpenSpec change `student-group-members` (12.11.2026).* The system SHALL allow adding a student with a name and an optional class to a student group. A student belongs to exactly one group. The name SHALL NOT be empty and SHALL be unique within the group (ignoring upper/lower case, also for umlauts, and surrounding spaces); the same name in another group is allowed.
 
@@ -337,13 +365,12 @@ Loans returned before this change have no returned quantities recorded and count
 
 ## Planned Requirements (draft, specs in review)
 
-*Feature backlog of 12.11.2026.* REQ-013 – REQ-019, REQ-022 and REQ-024 are implemented (see above). Each line is its own OpenSpec change under `openspec/changes/`; the full requirement with SHALL and scenarios is in that change's delta spec. When a change is implemented, its requirements move into the list above.
+*Feature backlog of 12.11.2026.* REQ-013 – REQ-019 and REQ-022 – REQ-024 are implemented (see above). Each line is its own OpenSpec change under `openspec/changes/`; the full requirement with SHALL and scenarios is in that change's delta spec. When a change is implemented, its requirements move into the list above.
 
 | ID | Requirement | OpenSpec change | Assignment |
 |---|---|---|---|
 | REQ-020 | Set responsible student | `responsible-student` | change request 2 |
 | REQ-021 | Responsible student on loans | `responsible-student` | change request 2 |
-| REQ-023 | Report damage on return | `damage-report-on-return` | change request 6 |
 
 Modified by the implemented changes: REQ-002 and REQ-004 (damaged drones), REQ-012 (groups with students cannot be deleted).
 

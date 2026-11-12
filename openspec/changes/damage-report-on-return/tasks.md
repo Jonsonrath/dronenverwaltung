@@ -13,7 +13,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 3. Docs
 
-- [ ] 3.1 `docs/requirements.md` REQ-023 and the README; verify `openspec validate damage-report-on-return --strict` (#111)
+- [x] 3.1 `docs/requirements.md` REQ-023 and the README; verify `openspec validate damage-report-on-return --strict` (#111)
 
 ## Workflow follow-up
 

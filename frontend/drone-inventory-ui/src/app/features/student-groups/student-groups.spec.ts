@@ -336,4 +336,136 @@ describe('Student groups page', () => {
       http.expectNone({ method: 'DELETE', url: '/api/student-groups/3' });
     });
   });
+
+  // Change student-group-members: members on the plates (REQ-017) and adding a student (REQ-016).
+  describe('students', () => {
+    const groups: StudentGroup[] = [
+      {
+        id: 3,
+        name: 'Group 3',
+        students: [
+          { id: 7, name: 'Anna Berger', class: '4AHIF', studentGroupId: 3 },
+          { id: 8, name: 'Ben Huber', class: '', studentGroupId: 3 },
+        ],
+      },
+      { id: 86, name: 'Group 86', students: [] },
+    ];
+
+    const plate = (page: HTMLElement, name: string) =>
+      [...page.querySelectorAll('.groups > li')].find((li) => li.querySelector('.name')?.textContent?.trim() === name)!;
+
+    const members = (page: HTMLElement, name: string) =>
+      [...plate(page, name).querySelectorAll('.member')].map((member) =>
+        [member.querySelector('.member-name')?.textContent?.trim(), member.querySelector('.member-class')?.textContent?.trim()],
+      );
+
+    const studentSheet = (page: HTMLElement) =>
+      page.querySelector('dialog[aria-labelledby="add-student-heading"]') as HTMLDialogElement;
+
+    function openAddStudent(page: HTMLElement, groupName: string) {
+      (page.querySelector(`button[aria-label="Schüler zu ${groupName} hinzufügen"]`) as HTMLButtonElement).click();
+      fixture.detectChanges();
+    }
+
+    async function submitStudent(page: HTMLElement, name: string, schoolClass: string) {
+      const nameInput = page.querySelector('#student-name') as HTMLInputElement;
+      nameInput.value = name;
+      nameInput.dispatchEvent(new Event('input'));
+      const classInput = page.querySelector('#student-class') as HTMLInputElement;
+      classInput.value = schoolClass;
+      classInput.dispatchEvent(new Event('input'));
+      page.querySelector('form.student-form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+      await settle();
+      fixture.detectChanges();
+    }
+
+    it('REQ-017: shows the members of every group with their class, in the order of the backend', async () => {
+      const page = await respond(groups);
+
+      expect(members(page, 'Group 3')).toEqual([
+        ['Anna Berger', '4AHIF'],
+        ['Ben Huber', undefined],
+      ]);
+      expect(plate(page, 'Group 86').querySelector('.no-members')?.textContent).toContain('Noch keine Schüler.');
+    });
+
+    it('REQ-016: opens the sheet for the group of the plate', async () => {
+      const page = await respond(groups);
+
+      openAddStudent(page, 'Group 86');
+
+      const sheet = studentSheet(page);
+      expect(sheet.open).toBe(true);
+      expect(sheet.querySelector('h2')?.textContent).toBe('Schüler zu Group 86 hinzufügen');
+    });
+
+    it('REQ-016: sends name and class to the backend and shows the reloaded members', async () => {
+      const page = await respond(groups);
+      openAddStudent(page, 'Group 86');
+
+      await submitStudent(page, 'Clara Wolf', '4AHIF');
+      const request = http.expectOne({ method: 'POST', url: '/api/student-groups/86/students' });
+      expect(request.request.body).toEqual({ name: 'Clara Wolf', class: '4AHIF' });
+      request.flush({ id: 9, name: 'Clara Wolf', class: '4AHIF', studentGroupId: 86 }, { status: 201, statusText: 'Created' });
+      await settle();
+      fixture.detectChanges();
+      http.expectOne({ method: 'GET', url: '/api/student-groups' }).flush([
+        groups[0],
+        { id: 86, name: 'Group 86', students: [{ id: 9, name: 'Clara Wolf', class: '4AHIF', studentGroupId: 86 }] },
+      ]);
+      await settle();
+      fixture.detectChanges();
+
+      expect(members(page, 'Group 86')).toEqual([['Clara Wolf', '4AHIF']]);
+      expect(page.querySelector('[role="status"]')?.textContent).toContain('Clara Wolf ist jetzt in Group 86.');
+      expect(studentSheet(page).open).toBe(false);
+    });
+
+    it('REQ-016: shows the backend message when the group already has the name (409)', async () => {
+      const page = await respond(groups);
+      openAddStudent(page, 'Group 3');
+
+      await submitStudent(page, ' anna berger ', '');
+      http.expectOne({ method: 'POST', url: '/api/student-groups/3/students' }).flush(
+        { status: 409, detail: 'In der Gruppe "Group 3" gibt es bereits einen Schüler "anna berger".' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await settle();
+      fixture.detectChanges();
+
+      const sheet = studentSheet(page);
+      expect(sheet.querySelector('[role="alert"]')?.textContent).toContain('gibt es bereits einen Schüler');
+      expect(sheet.open).toBe(true);
+      http.expectNone({ method: 'GET', url: '/api/student-groups' });
+    });
+
+    it('REQ-016: shows the backend message for a blank name (422)', async () => {
+      const page = await respond(groups);
+      openAddStudent(page, 'Group 3');
+
+      // Only spaces pass the convenience check; the backend decides.
+      await submitStudent(page, '   ', '');
+      http.expectOne({ method: 'POST', url: '/api/student-groups/3/students' }).flush(
+        { status: 422, detail: 'Der Name eines Schülers darf nicht leer sein.' },
+        { status: 422, statusText: 'Unprocessable Entity' },
+      );
+      await settle();
+      fixture.detectChanges();
+
+      expect(studentSheet(page).querySelector('[role="alert"]')?.textContent).toContain(
+        'Der Name eines Schülers darf nicht leer sein.',
+      );
+      http.expectNone({ method: 'GET', url: '/api/student-groups' });
+    });
+
+    it('does not send an empty student name and asks for one', async () => {
+      const page = await respond(groups);
+      openAddStudent(page, 'Group 3');
+
+      await submitStudent(page, '', '4AHIF');
+
+      http.expectNone({ method: 'POST', url: '/api/student-groups/3/students' });
+      expect(studentSheet(page).querySelector('.field-error')?.textContent).toContain('Name eingeben.');
+    });
+  });
 });

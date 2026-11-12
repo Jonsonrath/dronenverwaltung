@@ -24,7 +24,7 @@ context: |
   - Batteries and propellers are tracked as quantities only.
   - Drone availability (Available | Loaned) is derived from the active loan, not stored.
   Out of scope: login/roles, individual battery inventory, reservations,
-  damage management, return differences, statistics and exports.
+  damage management, statistics and exports.
 
 rules:
   proposal:

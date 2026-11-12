@@ -5,7 +5,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 ## 1. Backend
 
 - [x] 1.1 `Loan.DamageReport`, migration `AddLoanDamageReport`, `ReturnAsync` sets the report and damages the drone in one transaction (design §1, §3); verify with service tests `REQ_023_...` (#108)
-- [ ] 1.2 `damageReport` in the return body and in loan responses (design §2); verify with API tests for every scenario of REQ-023 (#109)
+- [x] 1.2 `damageReport` in the return body and in loan responses (design §2); verify with API tests for every scenario of REQ-023 (#109)
 
 ## 2. Frontend
 

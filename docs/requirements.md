@@ -19,9 +19,9 @@ The application shall answer:
 | Term | Meaning |
 |---|---|
 | `Drone` | An aircraft that can be loaned. Id, Name, Description, DamageReason (empty = not damaged). |
-| `StudentGroup` | A group of students that loans and is responsible. Id, Name. |
+| `StudentGroup` | A group of students that loans and is responsible. Id, Name, ResponsibleStudentId (optional, a student of the group). |
 | `Student` | A member of exactly one student group. Name, Class (optional). |
-| `Loan` | A loan of one drone to one student group. LoanDate, ReturnDate, Status (Active \| Returned). |
+| `Loan` | A loan of one drone to one student group. LoanDate, ReturnDate, Status (Active \| Returned), ResponsibleStudentName (copy at loan time, optional). |
 | `LoanItem` | An accessory position of a loan. Type (Battery \| Propeller), Quantity. |
 
 A drone is **Loaned** if it has an active loan, otherwise **Damaged** if a damage is reported, otherwise **Available**. This status is derived, never entered.
@@ -313,6 +313,58 @@ Loans returned before this change have no returned quantities recorded and count
 - WHEN "Ben Huber" is removed
 - THEN "Group 3" is listed without "Ben Huber"
 
+### REQ-020 Set responsible student
+*Added with the OpenSpec change `responsible-student` (change request 2, 12.11.2026).* The system SHALL allow marking one Student of a StudentGroup as its responsible Student, changing it to another Student of the same group, and clearing it. A StudentGroup SHALL have at most one responsible Student. Only a Student of the StudentGroup SHALL be marked as its responsible Student. When the responsible Student is moved to another group or removed, the StudentGroup SHALL have no responsible Student.
+
+**Scenario: Mark a responsible student**
+- GIVEN "Anna Berger" and "Ben Huber" are Students of "Group 3"
+- WHEN "Anna Berger" is marked as responsible for "Group 3"
+- THEN "Group 3" is listed with the responsible Student "Anna Berger"
+
+**Scenario: Change the responsible student**
+- GIVEN "Anna Berger" is responsible for "Group 3"
+- WHEN "Ben Huber" is marked as responsible for "Group 3"
+- THEN "Ben Huber" is the only responsible Student of "Group 3"
+
+**Scenario: Clear the responsible student**
+- GIVEN "Anna Berger" is responsible for "Group 3"
+- WHEN the responsible Student of "Group 3" is cleared
+- THEN "Group 3" has no responsible Student
+
+**Scenario: Student of another group rejected**
+- GIVEN "Clara Wolf" is a Student of "Group 1"
+- WHEN "Clara Wolf" is marked as responsible for "Group 3"
+- THEN the request is rejected as invalid input
+- AND the responsible Student of "Group 3" is unchanged
+
+**Scenario: Responsible student moved or removed**
+- GIVEN "Anna Berger" is responsible for "Group 3"
+- WHEN "Anna Berger" is moved to "Group 1" or removed
+- THEN "Group 3" has no responsible Student
+
+**Scenario: Unknown student group or student**
+- WHEN a responsible Student is set for a StudentGroup that does not exist, or with a Student that does not exist
+- THEN the request is rejected as not found
+
+### REQ-021 Responsible student on loans
+*Added with the OpenSpec change `responsible-student` (change request 2, 12.11.2026).* When a Loan is created, the system SHALL store the name of the StudentGroup's responsible Student at that time with the Loan. Active Loans and the loan history SHALL show this name. Later changes of the responsible Student, of the Student or of the StudentGroup SHALL NOT change the name stored with an existing Loan. A StudentGroup without a responsible Student SHALL still be able to loan a Drone; the Loan then has no responsible Student.
+
+**Scenario: Loan stores the responsible student**
+- GIVEN "Anna Berger" is responsible for "Group 3"
+- WHEN "TELLO-07" is loaned to "Group 3"
+- THEN the active Loan is listed with the responsible Student "Anna Berger"
+
+**Scenario: Group without responsible student**
+- GIVEN "Group 86" has no responsible Student
+- WHEN "TELLO-02" is loaned to "Group 86"
+- THEN an active Loan is created without a responsible Student
+
+**Scenario: History keeps the name at loan time**
+- GIVEN "TELLO-07" was loaned to "Group 3" while "Anna Berger" was responsible
+- AND "Ben Huber" has become responsible and "Anna Berger" has been removed
+- WHEN the Loan is returned and the loan history is requested
+- THEN the Loan is listed with the responsible Student "Anna Berger"
+
 ### REQ-024 Drone SSID
 *Added with the OpenSpec change `drone-ssid` (change request 7, 12.11.2026).* The system SHALL allow setting an optional SSID for a drone when it is created or edited, and SHALL list the SSID with each drone. Leading and trailing whitespace SHALL be removed; an empty SSID SHALL count as no SSID. A set SSID SHALL be unique among all drones, ignoring upper/lower case. There is no format check.
 
@@ -337,12 +389,10 @@ Loans returned before this change have no returned quantities recorded and count
 
 ## Planned Requirements (draft, specs in review)
 
-*Feature backlog of 12.11.2026.* REQ-013 – REQ-019, REQ-022 and REQ-024 are implemented (see above). Each line is its own OpenSpec change under `openspec/changes/`; the full requirement with SHALL and scenarios is in that change's delta spec. When a change is implemented, its requirements move into the list above.
+*Feature backlog of 12.11.2026.* REQ-013 – REQ-022 and REQ-024 are implemented (see above). Each line is its own OpenSpec change under `openspec/changes/`; the full requirement with SHALL and scenarios is in that change's delta spec. When a change is implemented, its requirements move into the list above.
 
 | ID | Requirement | OpenSpec change | Assignment |
 |---|---|---|---|
-| REQ-020 | Set responsible student | `responsible-student` | change request 2 |
-| REQ-021 | Responsible student on loans | `responsible-student` | change request 2 |
 | REQ-023 | Report damage on return | `damage-report-on-return` | change request 6 |
 
 Modified by the implemented changes: REQ-002 and REQ-004 (damaged drones), REQ-012 (groups with students cannot be deleted).

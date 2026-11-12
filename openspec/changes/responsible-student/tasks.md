@@ -15,7 +15,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 3. Docs
 
-- [ ] 3.1 `docs/requirements.md` REQ-020, REQ-021 and the README; verify `openspec validate responsible-student --strict` (#102)
+- [x] 3.1 `docs/requirements.md` REQ-020, REQ-021 and the README; verify `openspec validate responsible-student --strict` (#102)
 
 ## Workflow follow-up
 

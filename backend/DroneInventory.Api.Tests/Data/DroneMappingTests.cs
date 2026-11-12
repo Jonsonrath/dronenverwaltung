@@ -86,4 +86,50 @@ public class DroneMappingTests : IDisposable
         Assert.Equal("Propeller gebrochen", readContext.Drones.Single(d => d.Name == "TELLO-07").DamageReason);
         Assert.Null(readContext.Drones.Single(d => d.Name == "TELLO-08").DamageReason);
     }
+
+    // Change drone-ssid, task 1.1: "Drone SSID (REQ-024)", migration AddDroneSsid.
+
+    [Fact]
+    public void REQ_024_StoresAndLoadsSsid()
+    {
+        using (var context = _database.CreateContext())
+        {
+            context.Drones.Add(new Drone("TELLO-07", null, "TELLO-9FA21B"));
+            context.SaveChanges();
+        }
+
+        using var readContext = _database.CreateContext();
+        var drone = Assert.Single(readContext.Drones);
+        Assert.Equal(("TELLO-9FA21B", "TELLO-9FA21B"), (drone.Ssid, drone.NormalizedSsid));
+        Assert.Contains(readContext.Database.GetAppliedMigrations(), m => m.EndsWith("_AddDroneSsid"));
+    }
+
+    [Fact]
+    public void REQ_024_DatabaseAllowsSeveralDronesWithoutSsid()
+    {
+        using (var context = _database.CreateContext())
+        {
+            context.Drones.Add(new Drone("TELLO-08", null));
+            context.Drones.Add(new Drone("TELLO-09", null, " "));
+            context.SaveChanges();
+        }
+
+        using var readContext = _database.CreateContext();
+        var drones = readContext.Drones.ToList();
+        Assert.Equal(2, drones.Count);
+        Assert.All(drones, d => Assert.Null(d.Ssid));
+    }
+
+    [Fact]
+    public void REQ_024_DatabaseRejectsDuplicateSsidIgnoringCase()
+    {
+        using var context = _database.CreateContext();
+        context.Drones.Add(new Drone("TELLO-07", null, "TELLO-9FA21B"));
+        context.SaveChanges();
+
+        context.Drones.Add(new Drone("TELLO-08", null, "tello-9fa21b"));
+        var error = Assert.Throws<DbUpdateException>(() => context.SaveChanges());
+
+        Assert.True(error.IsUniqueConstraintViolation());
+    }
 }

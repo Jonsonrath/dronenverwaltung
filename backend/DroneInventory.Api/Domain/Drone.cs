@@ -20,22 +20,38 @@ public class Drone
     /// </summary>
     public string? DamageReason { get; private set; }
 
-    public Drone(string name, string? description)
+    /// <summary>Optional Wi-Fi SSID, trimmed; null when not set (REQ-024).</summary>
+    public string? Ssid { get; private set; }
+
+    /// <summary>Upper-case SSID for the filtered unique index; null when not set (REQ-024).</summary>
+    public string? NormalizedSsid { get; private set; }
+
+    public Drone(string name, string? description, string? ssid = null)
     {
         Name = EntityName.Require(name, "einer Drohne");
         NormalizedName = EntityName.Normalize(name);
         Description = description?.Trim() ?? string.Empty;
+        SetSsid(ssid);
     }
 
     /// <summary>
     /// Changes name and description (REQ-013) with the same rules as for a new drone:
     /// throws ValidationException for an empty name. Uniqueness is checked by the service.
+    /// The SSID is replaced as well (REQ-024); null or empty removes it.
     /// </summary>
-    public void Edit(string name, string? description)
+    public void Edit(string name, string? description, string? ssid = null)
     {
         Name = EntityName.Require(name, "einer Drohne");
         NormalizedName = EntityName.Normalize(name);
         Description = description?.Trim() ?? string.Empty;
+        SetSsid(ssid);
+    }
+
+    // Trimmed; empty or whitespace counts as no SSID. No format check (design §2).
+    private void SetSsid(string? ssid)
+    {
+        Ssid = string.IsNullOrWhiteSpace(ssid) ? null : ssid.Trim();
+        NormalizedSsid = Ssid is null ? null : EntityName.Normalize(Ssid);
     }
 
     /// <summary>

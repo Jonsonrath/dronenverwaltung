@@ -38,10 +38,20 @@ namespace DroneInventory.Api.Data.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("NormalizedSsid")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Ssid")
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedName")
                         .IsUnique();
+
+                    b.HasIndex("NormalizedSsid")
+                        .IsUnique()
+                        .HasFilter("\"NormalizedSsid\" IS NOT NULL");
 
                     b.ToTable("Drones");
                 });

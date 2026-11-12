@@ -28,7 +28,7 @@ SQLite
 ## Domain (Ubiquitous Language)
 Use exactly these terms in specs, code, database and conversation. Do not invent synonyms like "Verleih", "Ausgabe" or "Buchung".
 
-- `Drone` (Id, Name, Description)
+- `Drone` (Id, Name, Description, DamageReason)
 - `StudentGroup` (Id, Name)
 - `Loan` (Id, DroneId, StudentGroupId, LoanDate, ReturnDate, Status: Active | Returned)
 - `LoanItem` (Id, LoanId, Type: Battery | Propeller, Quantity)
@@ -37,12 +37,13 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 
 ### Domain Rules
 - A drone has at most one active loan.
-- Only available drones can be loaned.
+- Only available drones can be loaned. A damaged drone cannot be loaned.
+- A drone is damaged while it has a damage reason (`Drone.DamageReason`, null = not damaged). Reporting damage again replaces the reason; marking the drone as repaired removes it. A loaned drone can be reported as damaged; its loan stays unchanged.
 - Returning a loan makes the drone available again.
 - Accessory quantities are integers and never negative.
 - Returned loans are never deleted (history is kept).
 - Batteries and propellers are tracked as quantities only, not as individual items.
-- Drone availability (Available | Loaned) is derived from the active loan. It is NOT stored as its own database field.
+- Drone status (Available | Loaned | Damaged) is derived: Loaned with an active loan, otherwise Damaged if a damage reason is set, otherwise Available. It is NOT stored as its own database field.
 
 ## Rules
 - Business logic and validation belong in the backend. Domain rules are enforced there, never only in an Angular form.
@@ -53,8 +54,8 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 
 ## Backend Conventions
 - Domain rules live in the domain model / services, not in controllers.
-- Compute drone availability from the active loan, never store a status field on `Drone`.
-- HTTP status codes: 201 on create, 404 unknown drone/group/loan, 409 drone already loaned (REQ-005), loan already returned or duplicate drone/group name, 422 invalid input (blank name, negative quantity).
+- Compute the drone status from the active loan and the damage reason in one place (`DroneStatusRules.Derive`), never store a status field on `Drone`.
+- HTTP status codes: 201 on create, 404 unknown drone/group/loan, 409 drone already loaned (REQ-005) or damaged (REQ-004), repair of a drone that is not damaged (REQ-015), loan already returned or duplicate drone/group name, 422 invalid input (blank name, blank damage reason, negative quantity).
 - Never delete a returned `Loan`; the history must stay.
 - Name tests after the requirement they cover, e.g. `REQ_005_RejectsLoanOfAlreadyLoanedDrone`.
 - Do not add features beyond the current task.
@@ -68,7 +69,7 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 - Keep the UI simple. Required views: drone list with status, drone form, student group form, loan form (with batteries/propellers), active loans, return action, loan history.
 
 ## Out of Scope (initial change)
-Login/users/roles, individual battery inventory (BAT-001 ...), reservations, damage management and return differences, statistics/exports. These come later as separate change requests.
+Login/users/roles, individual battery inventory (BAT-001 ...), reservations, return differences, statistics/exports. These come later as separate change requests. (Damage management was added with the change `support-damaged-drones`.)
 
 ## Workflow
 - Requirements REQ-001 ... REQ-010 are written with SHALL and at least one Given/When/Then scenario.

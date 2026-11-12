@@ -16,7 +16,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 3. Rules and docs
 
-- [ ] 3.1 AGENTS.md and `openspec/config.yaml`: add the damage rule and remove "damage management" from out of scope (both skill copies unchanged); `docs/requirements.md` REQ-014, REQ-015 and the modified REQ-002 / REQ-004; verify `openspec validate support-damaged-drones --strict` (#89)
+- [x] 3.1 AGENTS.md and `openspec/config.yaml`: add the damage rule and remove "damage management" from out of scope (both skill copies unchanged); `docs/requirements.md` REQ-014, REQ-015 and the modified REQ-002 / REQ-004; verify `openspec validate support-damaged-drones --strict` (#89)
 
 ## Workflow follow-up
 

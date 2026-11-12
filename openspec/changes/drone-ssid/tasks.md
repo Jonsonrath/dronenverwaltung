@@ -9,7 +9,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 2. Frontend
 
-- [ ] 2.1 SSID field in both drone sheets and SSID in the bay (design §4); verify with Vitest tests for the request bodies and the 409 message, `npx ng build`, and one run through the real UI (#114)
+- [x] 2.1 SSID field in both drone sheets and SSID in the bay (design §4); verify with Vitest tests for the request bodies and the 409 message, `npx ng build`, and one run through the real UI (#114)
 
 ## 3. Docs
 

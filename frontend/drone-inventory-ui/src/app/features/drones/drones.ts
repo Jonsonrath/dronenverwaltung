@@ -25,7 +25,7 @@ export class Drones {
     this.drones.hasValue() ? this.drones.value().filter((drone) => drone.status === 'Available').length : 0,
   );
 
-  protected readonly newDrone = signal({ name: '', description: '' });
+  protected readonly newDrone = signal({ name: '', description: '', ssid: '' });
 
   /** Message from the backend when adding failed, e.g. 409 duplicate name or 422 blank name. */
   protected readonly saveError = signal('');
@@ -59,7 +59,7 @@ export class Drones {
   /** The drone whose name and description are being changed. */
   protected readonly editing = signal<Drone | undefined>(undefined);
 
-  protected readonly changes = signal({ name: '', description: '' });
+  protected readonly changes = signal({ name: '', description: '', ssid: '' });
 
   /** Message from the backend when saving failed, e.g. 409 name of another drone. */
   protected readonly editError = signal('');
@@ -70,7 +70,7 @@ export class Drones {
   protected openEdit(drone: Drone) {
     this.editing.set(drone);
     this.editError.set('');
-    this.editForm().reset({ name: drone.name, description: drone.description });
+    this.editForm().reset({ name: drone.name, description: drone.description, ssid: drone.ssid ?? '' });
     this.editSheet().nativeElement.showModal();
   }
 
@@ -121,12 +121,12 @@ export class Drones {
           this.saveError.set('');
           this.added.set('');
           this.saved.set('');
-          const { name, description } = this.newDrone();
+          const { name, description, ssid } = this.newDrone();
           try {
-            const drone = await firstValueFrom(this.droneApi.create({ name, description }));
+            const drone = await firstValueFrom(this.droneApi.create({ name, description, ssid }));
             this.added.set(drone.name);
             this.closeSheet();
-            this.droneForm().reset({ name: '', description: '' });
+            this.droneForm().reset({ name: '', description: '', ssid: '' });
             this.drones.reload();
           } catch (error) {
             this.saveError.set(problemMessage(error));

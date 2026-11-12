@@ -79,10 +79,11 @@
 .bay {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto auto 1fr auto;
+  grid-template-rows: auto auto auto 1fr auto;
   grid-template-areas:
     'glyph tag'
     'name name'
+    'ssid ssid'
     'description description'
     'action action';
   align-items: start;
@@ -115,6 +116,16 @@ app-drone-glyph {
   font-size: var(--text-lg);
   font-weight: 600;
   line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+/* Under the name, so the SSID can be read off to connect to the drone (REQ-024) */
+.ssid {
+  grid-area: ssid;
+  margin-top: var(--space-1);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-size: var(--text-sm);
   overflow-wrap: anywhere;
 }
 
@@ -155,9 +166,10 @@ app-drone-glyph {
 
   .bay {
     grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-rows: auto auto auto;
+    grid-template-rows: auto auto auto auto;
     grid-template-areas:
       'glyph name tag'
+      'glyph ssid ssid'
       'glyph description description'
       'action action action';
     align-items: center;
@@ -175,7 +187,8 @@ app-drone-glyph {
     font-size: var(--text-md);
   }
 
-  .description {
+  .description,
+  .ssid {
     margin-top: 0;
   }
 

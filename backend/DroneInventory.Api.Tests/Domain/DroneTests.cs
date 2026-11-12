@@ -82,4 +82,68 @@ public class DroneTests
     {
         Assert.Equal(new Drone(first, null).NormalizedName, new Drone(second, null).NormalizedName);
     }
+
+    // Change support-damaged-drones: "Report drone damage (REQ-014)", "Repair drone (REQ-015)".
+
+    [Fact]
+    public void REQ_014_ReportDamageStoresTrimmedReason()
+    {
+        var drone = new Drone("TELLO-07", null);
+
+        drone.ReportDamage(" Propeller gebrochen ");
+
+        Assert.Equal("Propeller gebrochen", drone.DamageReason);
+    }
+
+    [Fact]
+    public void REQ_014_NewDroneIsNotDamaged()
+    {
+        Assert.Null(new Drone("TELLO-07", null).DamageReason);
+    }
+
+    [Fact]
+    public void REQ_014_NewReasonReplacesTheOldOne()
+    {
+        var drone = new Drone("TELLO-07", null);
+        drone.ReportDamage("Propeller gebrochen");
+
+        drone.ReportDamage("Akkufach locker");
+
+        Assert.Equal("Akkufach locker", drone.DamageReason);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void REQ_014_RejectsEmptyReasonAndKeepsTheDrone(string? reason)
+    {
+        var drone = new Drone("TELLO-07", null);
+
+        var error = Assert.Throws<ValidationException>(() => drone.ReportDamage(reason));
+
+        Assert.Equal("Der Grund für den Defekt darf nicht leer sein.", error.Message);
+        Assert.Null(drone.DamageReason);
+    }
+
+    [Fact]
+    public void REQ_015_RepairRemovesTheReason()
+    {
+        var drone = new Drone("TELLO-07", null);
+        drone.ReportDamage("Propeller gebrochen");
+
+        drone.Repair();
+
+        Assert.Null(drone.DamageReason);
+    }
+
+    [Fact]
+    public void REQ_015_RepairOfUndamagedDroneIsAConflict()
+    {
+        var drone = new Drone("TELLO-07", null);
+
+        var error = Assert.Throws<ConflictException>(() => drone.Repair());
+
+        Assert.Equal("Die Drohne \"TELLO-07\" ist nicht als defekt gemeldet.", error.Message);
+    }
 }

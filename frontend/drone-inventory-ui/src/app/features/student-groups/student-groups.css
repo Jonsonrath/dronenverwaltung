@@ -49,15 +49,38 @@
 
 .members {
   display: grid;
-  gap: var(--space-1);
   list-style: none;
 }
 
-.member {
+/* The whole line opens the sheet to move or remove the student (REQ-018, REQ-019). */
+.member-button {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: var(--space-3);
+  width: 100%;
+  min-height: 2.75rem;
+  margin: 0 calc(-1 * var(--space-2));
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
   font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--ease);
+  box-sizing: content-box;
+}
+
+.member-button:hover {
+  background: var(--raised);
+}
+
+.member-button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
 }
 
 .member-name {
@@ -98,5 +121,56 @@
 }
 
 .delete-sheet .alert {
+  color: var(--error);
+}
+
+.student-where,
+.no-targets {
+  color: var(--muted);
+}
+
+.move-heading {
+  margin: var(--space-4) 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+/* Group chips like on the loan form: one tap moves the student. */
+.move-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.target-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--raised);
+  color: var(--text);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color var(--ease);
+}
+
+.target-chip:hover {
+  border-color: var(--muted);
+}
+
+.target-chip:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}
+
+.target-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.student-sheet .alert {
   color: var(--error);
 }

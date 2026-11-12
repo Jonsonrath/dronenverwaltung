@@ -12,7 +12,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 ## 2. Frontend
 
 - [x] 2.1 `StudentApi` and members on the group plates with *Schüler hinzufügen* (design §4); verify with Vitest tests for the request, the reloaded list and the 409 / 422 messages (#94)
-- [ ] 2.2 *Verschieben* and *Entfernen* per student in a sheet; verify with Vitest tests, `npx ng build`, and one run through the real UI incl. deleting a group with students (409 shown) (#95)
+- [x] 2.2 *Verschieben* and *Entfernen* per student in a sheet; verify with Vitest tests, `npx ng build`, and one run through the real UI incl. deleting a group with students (409 shown) (#95)
 
 ## 3. Rules and docs
 

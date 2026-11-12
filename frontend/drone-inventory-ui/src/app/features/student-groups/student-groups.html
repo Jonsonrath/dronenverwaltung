@@ -37,10 +37,17 @@
               <ul class="members" [attr.aria-label]="'Schüler von ' + group.name">
                 @for (student of group.students; track student.id) {
                   <li class="member">
-                    <span class="member-name">{{ student.name }}</span>
-                    @if (student.class) {
-                      <span class="member-class">{{ student.class }}</span>
-                    }
+                    <button
+                      class="member-button"
+                      type="button"
+                      [attr.aria-label]="student.name + ' verschieben oder entfernen'"
+                      (click)="openStudent(student, group)"
+                    >
+                      <span class="member-name">{{ student.name }}</span>
+                      @if (student.class) {
+                        <span class="member-class">{{ student.class }}</span>
+                      }
+                    </button>
                   </li>
                 }
               </ul>
@@ -139,7 +146,10 @@
 <dialog #deleteSheet class="sheet" aria-labelledby="delete-group-heading" (click)="closeOnBackdrop($event)">
   <div class="sheet-body delete-sheet">
     <h2 id="delete-group-heading">{{ deleting()?.name }} löschen?</h2>
-    <p>Die Gruppe verschwindet aus der Liste. Das geht nur, wenn sie noch nie eine Drohne ausgeliehen hat.</p>
+    <p>
+      Die Gruppe verschwindet aus der Liste. Das geht nur, wenn sie noch nie eine Drohne ausgeliehen hat und keine
+      Schüler mehr hat.
+    </p>
 
     @if (deleteError()) {
       <p class="alert" role="alert">{{ deleteError() }}</p>
@@ -183,5 +193,36 @@
         </button>
       </div>
     </form>
+  </div>
+</dialog>
+
+<dialog #studentSheet class="sheet" aria-labelledby="student-heading" (click)="closeOnBackdrop($event)">
+  <div class="sheet-body student-sheet">
+    <h2 id="student-heading">{{ managing()?.student?.name }}</h2>
+    <p class="student-where">In {{ managing()?.group?.name }}</p>
+
+    @if (studentActionError()) {
+      <p class="alert" role="alert">{{ studentActionError() }}</p>
+    }
+
+    <h3 class="move-heading">Verschieben nach</h3>
+    @if (moveTargets().length) {
+      <div class="move-targets">
+        @for (target of moveTargets(); track target.id) {
+          <button class="target-chip" type="button" [disabled]="studentBusy()" (click)="moveTo(target)">
+            {{ target.name }}
+          </button>
+        }
+      </div>
+    } @else {
+      <p class="no-targets">Es gibt keine andere Gruppe.</p>
+    }
+
+    <div class="sheet-actions">
+      <button class="button" type="button" (click)="closeStudent()">Abbrechen</button>
+      <button class="button remove-student" type="button" [disabled]="studentBusy()" (click)="removeStudent()">
+        Entfernen
+      </button>
+    </div>
   </div>
 </dialog>

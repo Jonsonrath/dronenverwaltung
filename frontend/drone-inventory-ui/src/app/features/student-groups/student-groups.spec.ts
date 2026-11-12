@@ -468,4 +468,152 @@ describe('Student groups page', () => {
       expect(studentSheet(page).querySelector('.field-error')?.textContent).toContain('Name eingeben.');
     });
   });
+
+  // Change student-group-members: move (REQ-018) and remove (REQ-019) a student from its sheet.
+  describe('move and remove a student', () => {
+    const anna = { id: 7, name: 'Anna Berger', class: '4AHIF', studentGroupId: 3 };
+    const groups: StudentGroup[] = [
+      { id: 1, name: 'Group 1', students: [] },
+      { id: 3, name: 'Group 3', students: [anna] },
+      { id: 86, name: 'Group 86', students: [] },
+    ];
+
+    const sheet = (page: HTMLElement) => page.querySelector('dialog[aria-labelledby="student-heading"]') as HTMLDialogElement;
+
+    const memberNames = (page: HTMLElement, groupName: string) =>
+      [
+        ...[...page.querySelectorAll('.groups > li')]
+          .find((li) => li.querySelector('.name')?.textContent?.trim() === groupName)!
+          .querySelectorAll('.member-name'),
+      ].map((name) => name.textContent?.trim());
+
+    function openAnna(page: HTMLElement) {
+      (page.querySelector('button[aria-label="Anna Berger verschieben oder entfernen"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+    }
+
+    const chip = (page: HTMLElement, name: string) =>
+      [...sheet(page).querySelectorAll('.target-chip')].find((c) => c.textContent?.trim() === name) as HTMLButtonElement;
+
+    async function reloadWith(body: StudentGroup[]) {
+      await settle();
+      fixture.detectChanges();
+      http.expectOne({ method: 'GET', url: '/api/student-groups' }).flush(body);
+      await settle();
+      fixture.detectChanges();
+    }
+
+    it('REQ-018: opens the sheet with the other groups as targets', async () => {
+      const page = await respond(groups);
+
+      openAnna(page);
+
+      expect(sheet(page).open).toBe(true);
+      expect(sheet(page).querySelector('h2')?.textContent).toBe('Anna Berger');
+      expect([...sheet(page).querySelectorAll('.target-chip')].map((c) => c.textContent?.trim())).toEqual([
+        'Group 1',
+        'Group 86',
+      ]);
+    });
+
+    it('REQ-018: moves the student to the chosen group and shows the reloaded list', async () => {
+      const page = await respond(groups);
+      openAnna(page);
+
+      chip(page, 'Group 1').click();
+      await settle();
+      const request = http.expectOne({ method: 'PUT', url: '/api/students/7/group' });
+      expect(request.request.body).toEqual({ studentGroupId: 1 });
+      request.flush({ ...anna, studentGroupId: 1 });
+      await reloadWith([
+        { id: 1, name: 'Group 1', students: [{ ...anna, studentGroupId: 1 }] },
+        { id: 3, name: 'Group 3', students: [] },
+        groups[2],
+      ]);
+
+      expect(memberNames(page, 'Group 1')).toEqual(['Anna Berger']);
+      expect(memberNames(page, 'Group 3')).toEqual([]);
+      expect(page.querySelector('[role="status"]')?.textContent).toContain('Anna Berger ist jetzt in Group 1.');
+      expect(sheet(page).open).toBe(false);
+    });
+
+    it('REQ-018: shows the backend message when the target group has the name (409) and keeps the student', async () => {
+      const page = await respond(groups);
+      openAnna(page);
+
+      chip(page, 'Group 1').click();
+      await settle();
+      http.expectOne({ method: 'PUT', url: '/api/students/7/group' }).flush(
+        { status: 409, detail: 'In der Gruppe "Group 1" gibt es bereits einen Schüler "Anna Berger".' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await settle();
+      fixture.detectChanges();
+
+      expect(sheet(page).querySelector('[role="alert"]')?.textContent).toContain('gibt es bereits einen Schüler');
+      expect(sheet(page).open).toBe(true);
+      expect(memberNames(page, 'Group 3')).toEqual(['Anna Berger']);
+      http.expectNone({ method: 'GET', url: '/api/student-groups' });
+    });
+
+    it('REQ-019: removes the student and shows the group without it', async () => {
+      const page = await respond(groups);
+      openAnna(page);
+
+      (sheet(page).querySelector('.remove-student') as HTMLButtonElement).click();
+      await settle();
+      http.expectOne({ method: 'DELETE', url: '/api/students/7' }).flush(null, { status: 204, statusText: 'No Content' });
+      await reloadWith([groups[0], { id: 3, name: 'Group 3', students: [] }, groups[2]]);
+
+      expect(memberNames(page, 'Group 3')).toEqual([]);
+      expect(page.querySelector('[role="status"]')?.textContent).toContain('Anna Berger aus Group 3 entfernt.');
+      expect(sheet(page).open).toBe(false);
+    });
+
+    it('REQ-019: shows the backend message when the student no longer exists (404)', async () => {
+      const page = await respond(groups);
+      openAnna(page);
+
+      (sheet(page).querySelector('.remove-student') as HTMLButtonElement).click();
+      await settle();
+      http.expectOne({ method: 'DELETE', url: '/api/students/7' }).flush(
+        { status: 404, detail: 'Den Schüler 7 gibt es nicht.' },
+        { status: 404, statusText: 'Not Found' },
+      );
+      await settle();
+      fixture.detectChanges();
+
+      expect(sheet(page).querySelector('[role="alert"]')?.textContent).toContain('Den Schüler 7 gibt es nicht.');
+    });
+
+    it('REQ-012: shows the backend message when a group with students is deleted (409)', async () => {
+      const page = await respond(groups);
+      (page.querySelector('button[aria-label="Group 3 löschen"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      const confirm = page.querySelector('dialog[aria-labelledby="delete-group-heading"]') as HTMLDialogElement;
+
+      (confirm.querySelector('.confirm-delete') as HTMLButtonElement).click();
+      await settle();
+      http.expectOne({ method: 'DELETE', url: '/api/student-groups/3' }).flush(
+        { status: 409, detail: 'Die Schülergruppe "Group 3" hat noch Schüler und kann nicht gelöscht werden.' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await settle();
+      fixture.detectChanges();
+
+      expect(confirm.querySelector('[role="alert"]')?.textContent).toContain('hat noch Schüler');
+      expect(memberNames(page, 'Group 3')).toEqual(['Anna Berger']);
+    });
+
+    it('does not send anything when the sheet is cancelled', async () => {
+      const page = await respond(groups);
+      openAnna(page);
+
+      (sheet(page).querySelector('.sheet-actions .button') as HTMLButtonElement).click();
+
+      expect(sheet(page).open).toBe(false);
+      http.expectNone({ method: 'PUT', url: '/api/students/7/group' });
+      http.expectNone({ method: 'DELETE', url: '/api/students/7' });
+    });
+  });
 });

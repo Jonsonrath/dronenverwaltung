@@ -7,10 +7,11 @@ import { problemMessage } from '../../core/problem-message';
 import { StudentApi } from '../../core/student-api';
 import { StudentGroupApi } from '../../core/student-group-api';
 import { StudentGroup } from '../../core/student-group.model';
+import { Student } from '../../core/student.model';
 
 /**
  * Student group list with the forms to add (REQ-003), rename (REQ-011) and delete (REQ-012) a group,
- * and the members of every group with the form to add a student (REQ-016, REQ-017).
+ * and the members of every group with the forms to add, move and remove a student (REQ-016 ... REQ-019).
  * Every rule is checked by the backend; its messages are shown in the sheet that sent the request.
  */
 @Component({
@@ -54,6 +55,7 @@ export class StudentGroups {
   private readonly renameSheet = viewChild.required<ElementRef<HTMLDialogElement>>('renameSheet');
   private readonly deleteSheet = viewChild.required<ElementRef<HTMLDialogElement>>('deleteSheet');
   private readonly addStudentSheet = viewChild.required<ElementRef<HTMLDialogElement>>('addStudentSheet');
+  private readonly studentSheet = viewChild.required<ElementRef<HTMLDialogElement>>('studentSheet');
 
   /** A click on the dimmed area around a sheet closes it; the dialog element itself is that area. */
   protected closeOnBackdrop(event: MouseEvent) {
@@ -253,4 +255,73 @@ export class StudentGroups {
       },
     },
   );
+
+  // ---- move (REQ-018) and remove (REQ-019) a student ----
+
+  /** The student whose sheet is open, with the group it is in. */
+  protected readonly managing = signal<{ student: Student; group: StudentGroup } | undefined>(undefined);
+
+  /** The groups the open student can be moved to: all except its own. */
+  protected readonly moveTargets = computed(() => {
+    const managing = this.managing();
+    if (!managing || !this.groups.hasValue()) {
+      return [];
+    }
+    return this.groups.value().filter((group) => group.id !== managing.group.id);
+  });
+
+  /** Message from the backend when moving or removing failed, e.g. 409 name already in the target group. */
+  protected readonly studentActionError = signal('');
+
+  /** True while a move or remove request is on its way, so nothing is sent twice. */
+  protected readonly studentBusy = signal(false);
+
+  protected openStudent(student: Student, group: StudentGroup) {
+    this.managing.set({ student, group });
+    this.studentActionError.set('');
+    this.studentSheet().nativeElement.showModal();
+  }
+
+  protected closeStudent() {
+    this.studentSheet().nativeElement.close();
+  }
+
+  /** Always sent: whether the target group already has the name is decided by the backend (409). */
+  protected async moveTo(target: StudentGroup) {
+    const managing = this.managing();
+    if (!managing) {
+      return;
+    }
+    await this.studentAction(
+      () => firstValueFrom(this.studentApi.move(managing.student.id, { studentGroupId: target.id })),
+      `${managing.student.name} ist jetzt in ${target.name}.`,
+    );
+  }
+
+  protected async removeStudent() {
+    const managing = this.managing();
+    if (!managing) {
+      return;
+    }
+    await this.studentAction(
+      () => firstValueFrom(this.studentApi.remove(managing.student.id)),
+      `${managing.student.name} aus ${managing.group.name} entfernt.`,
+    );
+  }
+
+  private async studentAction(request: () => Promise<unknown>, success: string) {
+    this.studentBusy.set(true);
+    this.studentActionError.set('');
+    this.notice.set('');
+    try {
+      await request();
+      this.notice.set(success);
+      this.closeStudent();
+      this.groups.reload();
+    } catch (error) {
+      this.studentActionError.set(problemMessage(error));
+    } finally {
+      this.studentBusy.set(false);
+    }
+  }
 }

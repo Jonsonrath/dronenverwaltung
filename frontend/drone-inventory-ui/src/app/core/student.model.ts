@@ -11,3 +11,8 @@ export interface AddStudentRequest {
   name: string;
   class?: string;
 }
+
+/** Body of PUT /api/students/{id}/group (REQ-018). */
+export interface MoveStudentRequest {
+  studentGroupId: number;
+}

@@ -14,3 +14,9 @@ export interface CreateDroneRequest {
   name: string;
   description?: string;
 }
+
+/** Body of PUT /api/drones/{id} (REQ-013). */
+export interface UpdateDroneRequest {
+  name: string;
+  description?: string;
+}

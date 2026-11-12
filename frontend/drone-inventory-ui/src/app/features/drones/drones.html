@@ -10,6 +10,8 @@
 
 @if (added()) {
   <p class="added" role="status">{{ added() }} hinzugefügt. Sie ist jetzt verfügbar.</p>
+} @else if (saved()) {
+  <p class="added" role="status">{{ saved() }} gespeichert.</p>
 }
 
 <section class="inventory" aria-label="Drohnen">
@@ -54,20 +56,23 @@
               <span class="tag tag-available">Verfügbar</span>
             }
             <span class="description">{{ drone.description }}</span>
-            <!-- Shortcuts only: whether a drone can be loaned or returned is decided by the backend. -->
-            @if (drone.status === 'Loaned') {
-              <a class="button bay-action" routerLink="/loans" [attr.aria-label]="drone.name + ' zurückgeben'"
-                >Zurückgeben</a
-              >
-            } @else {
-              <a
-                class="button bay-action"
-                routerLink="/loans/new"
-                [queryParams]="{ drone: drone.id }"
-                [attr.aria-label]="drone.name + ' ausleihen'"
-                >Ausleihen</a
-              >
-            }
+            <div class="bay-actions">
+              <!-- Shortcuts only: whether a drone can be loaned or returned is decided by the backend. -->
+              @if (drone.status === 'Loaned') {
+                <a class="button" routerLink="/loans" [attr.aria-label]="drone.name + ' zurückgeben'">Zurückgeben</a>
+              } @else {
+                <a
+                  class="button"
+                  routerLink="/loans/new"
+                  [queryParams]="{ drone: drone.id }"
+                  [attr.aria-label]="drone.name + ' ausleihen'"
+                  >Ausleihen</a
+                >
+              }
+              <button class="button" type="button" [attr.aria-label]="drone.name + ' bearbeiten'" (click)="openEdit(drone)">
+                Bearbeiten
+              </button>
+            </div>
           </li>
         }
       </ul>
@@ -107,6 +112,38 @@
         <button class="button" type="button" (click)="closeSheet()">Abbrechen</button>
         <button class="button button-primary" type="submit" [disabled]="droneForm().submitting()">
           {{ droneForm().submitting() ? 'Wird hinzugefügt…' : 'Hinzufügen' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>
+
+<dialog #editSheet class="sheet" aria-labelledby="edit-drone-heading" (click)="closeOnBackdrop($event)">
+  <div class="sheet-body">
+    <h2 id="edit-drone-heading">{{ editing()?.name }} bearbeiten</h2>
+
+    <form class="edit-form" [formRoot]="editForm">
+      @if (editError()) {
+        <p class="alert" role="alert">{{ editError() }}</p>
+      }
+
+      <div class="field">
+        <label for="edit-drone-name">Name</label>
+        <input id="edit-drone-name" type="text" autocomplete="off" [formField]="editForm.name" />
+        @if (editForm.name().touched() && editForm.name().invalid()) {
+          <p class="field-error">{{ editForm.name().errors()[0].message }}</p>
+        }
+      </div>
+
+      <div class="field">
+        <label for="edit-drone-description">Beschreibung <span class="optional">(optional)</span></label>
+        <textarea id="edit-drone-description" [formField]="editForm.description"></textarea>
+      </div>
+
+      <div class="sheet-actions">
+        <button class="button" type="button" (click)="closeEdit()">Abbrechen</button>
+        <button class="button button-primary" type="submit" [disabled]="editForm().submitting()">
+          {{ editForm().submitting() ? 'Wird gespeichert…' : 'Speichern' }}
         </button>
       </div>
     </form>

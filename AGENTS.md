@@ -30,10 +30,11 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 
 - `Drone` (Id, Name, Description)
 - `StudentGroup` (Id, Name)
+- `Student` (Id, Name, Class, StudentGroupId)
 - `Loan` (Id, DroneId, StudentGroupId, LoanDate, ReturnDate, Status: Active | Returned)
 - `LoanItem` (Id, LoanId, Type: Battery | Propeller, Quantity)
 
-`Loan` is the central entity. `LoanItem` only exists inside a `Loan`.
+`Loan` is the central entity. `LoanItem` only exists inside a `Loan`. A `Student` belongs to exactly one `StudentGroup`.
 
 ### Domain Rules
 - A drone has at most one active loan.
@@ -43,6 +44,8 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 - Returned loans are never deleted (history is kept).
 - Batteries and propellers are tracked as quantities only, not as individual items.
 - Drone availability (Available | Loaned) is derived from the active loan. It is NOT stored as its own database field.
+- A student's name is unique within its student group; Class is optional free text.
+- A student group with a loan or with students cannot be deleted.
 
 ## Rules
 - Business logic and validation belong in the backend. Domain rules are enforced there, never only in an Angular form.
@@ -54,7 +57,7 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 ## Backend Conventions
 - Domain rules live in the domain model / services, not in controllers.
 - Compute drone availability from the active loan, never store a status field on `Drone`.
-- HTTP status codes: 201 on create, 404 unknown drone/group/loan, 409 drone already loaned (REQ-005), loan already returned or duplicate drone/group name, 422 invalid input (blank name, negative quantity).
+- HTTP status codes: 201 on create, 404 unknown drone/group/loan, 409 drone already loaned (REQ-005), loan already returned or duplicate drone/group name or student name within a group, 422 invalid input (blank name, negative quantity).
 - Never delete a returned `Loan`; the history must stay.
 - Name tests after the requirement they cover, e.g. `REQ_005_RejectsLoanOfAlreadyLoanedDrone`.
 - Do not add features beyond the current task.

@@ -20,6 +20,7 @@ The application shall answer:
 |---|---|
 | `Drone` | An aircraft that can be loaned. Id, Name, Description. |
 | `StudentGroup` | A group of students that loans and is responsible. Id, Name. |
+| `Student` | A member of exactly one student group. Name, Class (optional). |
 | `Loan` | A loan of one drone to one student group. LoanDate, ReturnDate, Status (Active \| Returned). |
 | `LoanItem` | An accessory position of a loan. Type (Battery \| Propeller), Quantity. |
 
@@ -161,10 +162,10 @@ Returned loans SHALL never be deleted. The system SHALL list past (returned) loa
 - THEN the request is rejected as a conflict
 
 ### REQ-012 Delete student group
-*Added with the OpenSpec change `manage-student-groups` (11.11.2026).* The system SHALL allow deleting a student group that has no loan. A group with an active or returned loan SHALL NOT be deleted, so that the history stays complete.
+*Added with the OpenSpec change `manage-student-groups` (11.11.2026), modified by `student-group-members` (12.11.2026).* The system SHALL allow deleting a student group that has no loan and no student. A group with an active or returned loan SHALL NOT be deleted, so that the history stays complete. A group that still has students SHALL NOT be deleted; they are moved or removed first.
 
 **Scenario: Group without loans**
-- GIVEN a student group "Group 86" without any loan exists
+- GIVEN a student group "Group 86" without any loan and without students exists
 - WHEN it is deleted
 - THEN it is no longer listed
 
@@ -172,6 +173,11 @@ Returned loans SHALL never be deleted. The system SHALL list past (returned) loa
 - GIVEN "Group 3" has an active or returned loan
 - WHEN it is deleted
 - THEN the request is rejected as a conflict and the loan stays
+
+**Scenario: Group with students**
+- GIVEN "Group 86" has no loan and the student "Ben Huber"
+- WHEN it is deleted
+- THEN the request is rejected as a conflict and "Group 86" and "Ben Huber" stay
 
 ### REQ-013 Edit drone
 *Added with the OpenSpec change `edit-drones` (12.11.2026).* The system SHALL allow changing the name and the description of a drone. The same rules as for a new drone apply (not empty, unique). Loans stay assigned to the drone.
@@ -186,25 +192,63 @@ Returned loans SHALL never be deleted. The system SHALL list past (returned) loa
 - WHEN "TELLO-07" is renamed to "tello-02"
 - THEN the request is rejected as a conflict
 
+### REQ-016 Add student to group
+*Added with the OpenSpec change `student-group-members` (12.11.2026).* The system SHALL allow adding a student with a name and an optional class to a student group. A student belongs to exactly one group. The name SHALL NOT be empty and SHALL be unique within the group (ignoring upper/lower case, also for umlauts, and surrounding spaces); the same name in another group is allowed.
+
+**Scenario: Add a student**
+- GIVEN the student group "Group 3" exists
+- WHEN "Anna Berger" with class "4AHIF" is added to "Group 3"
+- THEN the student is stored with a unique id, the name, the class and the group
+
+**Scenario: Name already in the group**
+- GIVEN "Group 3" has the student "Anna Berger"
+- WHEN " anna berger " is added to "Group 3"
+- THEN the request is rejected as a conflict
+
+### REQ-017 List group members
+*Added with the OpenSpec change `student-group-members` (12.11.2026).* The system SHALL list the students of every student group with id, name and class, ordered by name, as part of the student group list.
+
+**Scenario: Group with students**
+- GIVEN "Group 3" has the students "Ben Huber" and "Anna Berger"
+- WHEN the student group list is requested
+- THEN "Group 3" is listed with "Anna Berger" and "Ben Huber" in this order
+
+### REQ-018 Move student
+*Added with the OpenSpec change `student-group-members` (12.11.2026).* The system SHALL allow moving a student to another student group. The name SHALL stay unique within the target group.
+
+**Scenario: Move a student**
+- GIVEN "Anna Berger" is a student of "Group 3" and "Group 1" exists
+- WHEN "Anna Berger" is moved to "Group 1"
+- THEN she is a student of "Group 1" and no longer of "Group 3"
+
+**Scenario: Name already in the target group**
+- GIVEN "Group 1" already has a student "Anna Berger"
+- WHEN "Anna Berger" of "Group 3" is moved to "Group 1"
+- THEN the request is rejected as a conflict and she stays in "Group 3"
+
+### REQ-019 Remove student
+*Added with the OpenSpec change `student-group-members` (12.11.2026).* The system SHALL allow removing a student. Loans are not affected.
+
+**Scenario: Remove a student**
+- GIVEN "Ben Huber" is a student of "Group 3"
+- WHEN "Ben Huber" is removed
+- THEN "Group 3" is listed without "Ben Huber"
+
 ## Planned Requirements (draft, specs in review)
 
-*Feature backlog of 12.11.2026.* REQ-013 is implemented (see above). Each line is its own OpenSpec change under `openspec/changes/`; the full requirement with SHALL and scenarios is in that change's delta spec. When a change is implemented, its requirements move into the list above.
+*Feature backlog of 12.11.2026.* REQ-013 and REQ-016 … REQ-019 are implemented (see above). Each line is its own OpenSpec change under `openspec/changes/`; the full requirement with SHALL and scenarios is in that change's delta spec. When a change is implemented, its requirements move into the list above.
 
 | ID | Requirement | OpenSpec change | Assignment |
 |---|---|---|---|
 | REQ-014 | Report drone damage | `support-damaged-drones` | change request 1 |
 | REQ-015 | Repair drone | `support-damaged-drones` | change request 1 |
-| REQ-016 | Add student to group | `student-group-members` | change request 3 |
-| REQ-017 | List group members | `student-group-members` | change request 3 |
-| REQ-018 | Move student | `student-group-members` | change request 3 |
-| REQ-019 | Remove student | `student-group-members` | change request 3 |
 | REQ-020 | Set responsible student | `responsible-student` | change request 2 |
 | REQ-021 | Responsible student on loans | `responsible-student` | change request 2 |
 | REQ-022 | Record returned accessories | `return-differences` | change request 5 |
 | REQ-023 | Report damage on return | `damage-report-on-return` | change request 6 |
 | REQ-024 | Drone SSID | `drone-ssid` | change request 7 |
 
-Modified by these changes: REQ-002 and REQ-004 (damaged drones), REQ-012 (groups with students cannot be deleted).
+Modified by these changes: REQ-002 and REQ-004 (damaged drones).
 
 ## Out of Scope
 
@@ -222,3 +266,4 @@ These follow later as separate change requests.
 - Drone names and student group names must be unique (ignoring upper/lower case, also for umlauts, and surrounding spaces).
 - A loan with 0 batteries and 0 propellers is allowed (quantities >= 0).
 - LoanDate and ReturnDate are stored as date and time and shown as date.
+- A student belongs to exactly one student group (12.11.2026); student names are unique only within a group.

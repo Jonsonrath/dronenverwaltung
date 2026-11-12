@@ -66,7 +66,7 @@ SQLite
 
 | Seite | Pfad | Was man dort tut | Anforderung |
 |---|---|---|---|
-| Drohnen | `/drones` | Drohnen mit Status (Verfügbar / Ausgeliehen / Defekt) sehen, neue Drohne hinzufügen, Name und Beschreibung bearbeiten, Defekt melden und als repariert markieren | REQ-001, REQ-002, REQ-013 – REQ-015 |
+| Drohnen | `/drones` | Drohnen mit Status (Verfügbar / Ausgeliehen / Defekt) sehen, neue Drohne hinzufügen, Name, SSID und Beschreibung bearbeiten, Defekt melden und als repariert markieren | REQ-001, REQ-002, REQ-013 – REQ-015, REQ-024 |
 | Schülergruppen | `/student-groups` | Gruppen sehen (mit der Drohne, die sie gerade haben), hinzufügen, umbenennen und löschen | REQ-003, REQ-011, REQ-012 |
 | Neue Ausleihe | `/loans/new` | Drohne mit Akkus und Propellern an eine Gruppe ausleihen | REQ-004 – REQ-006 |
 | Aktive Ausleihen | `/loans` | Ausgeliehene Drohnen sehen und zurückgeben | REQ-007 – REQ-009 |
@@ -95,6 +95,7 @@ Ausformuliert mit SHALL und Given/When/Then in [`docs/requirements.md`](docs/req
 | REQ-013 | Drohne bearbeiten (Name, Beschreibung) |
 | REQ-014 | Defekt einer Drohne melden |
 | REQ-015 | Drohne als repariert markieren |
+| REQ-024 | SSID einer Drohne (optional, eindeutig) |
 
 ## 🚫 Out of Scope
 

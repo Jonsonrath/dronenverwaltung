@@ -313,16 +313,37 @@ Loans returned before this change have no returned quantities recorded and count
 - WHEN "Ben Huber" is removed
 - THEN "Group 3" is listed without "Ben Huber"
 
+### REQ-024 Drone SSID
+*Added with the OpenSpec change `drone-ssid` (change request 7, 12.11.2026).* The system SHALL allow setting an optional SSID for a drone when it is created or edited, and SHALL list the SSID with each drone. Leading and trailing whitespace SHALL be removed; an empty SSID SHALL count as no SSID. A set SSID SHALL be unique among all drones, ignoring upper/lower case. There is no format check.
+
+**Scenario: Create a drone with SSID**
+- WHEN a drone is created with name "TELLO-07" and SSID " TELLO-9FA21B "
+- THEN the drone is listed with the SSID "TELLO-9FA21B"
+
+**Scenario: Several drones without SSID**
+- GIVEN the drone "TELLO-08" has no SSID
+- WHEN a drone "TELLO-09" is created without SSID
+- THEN both drones are listed without SSID
+
+**Scenario: SSID of another drone**
+- GIVEN the drone "TELLO-07" has the SSID "TELLO-9FA21B"
+- WHEN a drone is created or another drone is edited with the SSID "tello-9fa21b"
+- THEN the request is rejected as a conflict
+
+**Scenario: Change the SSID**
+- GIVEN the drone "TELLO-07" has no SSID
+- WHEN "TELLO-07" is edited with the SSID "TELLO-9FA21B"
+- THEN "TELLO-07" is listed with the SSID "TELLO-9FA21B"
+
 ## Planned Requirements (draft, specs in review)
 
-*Feature backlog of 12.11.2026.* REQ-013 – REQ-019 and REQ-022 are implemented (see above). Each line is its own OpenSpec change under `openspec/changes/`; the full requirement with SHALL and scenarios is in that change's delta spec. When a change is implemented, its requirements move into the list above.
+*Feature backlog of 12.11.2026.* REQ-013 – REQ-019, REQ-022 and REQ-024 are implemented (see above). Each line is its own OpenSpec change under `openspec/changes/`; the full requirement with SHALL and scenarios is in that change's delta spec. When a change is implemented, its requirements move into the list above.
 
 | ID | Requirement | OpenSpec change | Assignment |
 |---|---|---|---|
 | REQ-020 | Set responsible student | `responsible-student` | change request 2 |
 | REQ-021 | Responsible student on loans | `responsible-student` | change request 2 |
 | REQ-023 | Report damage on return | `damage-report-on-return` | change request 6 |
-| REQ-024 | Drone SSID | `drone-ssid` | change request 7 |
 
 Modified by the implemented changes: REQ-002 and REQ-004 (damaged drones), REQ-012 (groups with students cannot be deleted).
 

@@ -59,6 +59,9 @@
           >
             <app-drone-glyph [out]="drone.status === 'Loaned'" />
             <span class="name">{{ drone.name }}</span>
+            @if (drone.ssid) {
+              <span class="ssid">SSID {{ drone.ssid }}</span>
+            }
             @switch (drone.status) {
               @case ('Loaned') {
                 <span class="tag tag-loaned">Ausgeliehen</span>
@@ -137,11 +140,17 @@
         }
       </div>
 
+      <!-- Uniqueness of the SSID is checked by the backend (REQ-024). -->
+      <div class="field">
+        <label for="drone-ssid">SSID <span class="optional">(optional)</span></label>
+        <input id="drone-ssid" type="text" autocomplete="off" placeholder="TELLO-9FA21B" [formField]="droneForm.ssid" />
+      </div>
+
       <div class="field">
         <label for="drone-description">Beschreibung <span class="optional">(optional)</span></label>
         <textarea
           id="drone-description"
-          placeholder="SSID, Schäden, was man wissen sollte"
+          placeholder="Schäden, was man wissen sollte"
           [formField]="droneForm.description"
         ></textarea>
       </div>
@@ -171,6 +180,11 @@
         @if (editForm.name().touched() && editForm.name().invalid()) {
           <p class="field-error">{{ editForm.name().errors()[0].message }}</p>
         }
+      </div>
+
+      <div class="field">
+        <label for="edit-drone-ssid">SSID <span class="optional">(optional)</span></label>
+        <input id="edit-drone-ssid" type="text" autocomplete="off" [formField]="editForm.ssid" />
       </div>
 
       <div class="field">

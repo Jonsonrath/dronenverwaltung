@@ -16,7 +16,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 3. Rules and docs
 
-- [ ] 3.1 AGENTS.md and `openspec/config.yaml`: add `Student` to the domain terms; `docs/requirements.md` REQ-016 … REQ-019 and the modified REQ-012; verify `openspec validate student-group-members --strict` (#96)
+- [x] 3.1 AGENTS.md and `openspec/config.yaml`: add `Student` to the domain terms; `docs/requirements.md` REQ-016 … REQ-019 and the modified REQ-012; verify `openspec validate student-group-members --strict` (#96)
 
 ## Workflow follow-up
 

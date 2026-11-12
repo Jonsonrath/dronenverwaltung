@@ -10,9 +10,10 @@ context: |
   - The frontend communicates exclusively with the backend REST API.
   - The frontend never accesses the database directly.
   - Business logic and validation live in the backend.
-  Domain concepts (Ubiquitous Language, no synonyms): Drone, StudentGroup, Loan, LoanItem
+  Domain concepts (Ubiquitous Language, no synonyms): Drone, StudentGroup, Student, Loan, LoanItem
   - Drone: Id, Name, Description
   - StudentGroup: Id, Name
+  - Student: Id, Name, Class (optional), StudentGroupId – belongs to exactly one StudentGroup
   - Loan: Id, DroneId, StudentGroupId, LoanDate, ReturnDate, Status (Active | Returned)
   - LoanItem: Id, LoanId, Type (Battery | Propeller), Quantity
   Domain rules:
@@ -23,6 +24,8 @@ context: |
   - Returned loans are never deleted.
   - Batteries and propellers are tracked as quantities only.
   - Drone availability (Available | Loaned) is derived from the active loan, not stored.
+  - A student's name is unique within its student group.
+  - A student group with a loan or with students cannot be deleted.
   Out of scope: login/roles, individual battery inventory, reservations,
   damage management, return differences, statistics and exports.
 
@@ -34,7 +37,7 @@ rules:
     - Reference the requirement ID (REQ-001 ... REQ-010) in the requirement.
     - Cover error cases as their own scenarios (duplicate loan, negative quantity, unknown drone or group).
     - Describe behavior, not implementation details.
-    - Use the domain terms Drone, StudentGroup, Loan, LoanItem consistently.
+    - Use the domain terms Drone, StudentGroup, Student, Loan, LoanItem consistently.
   tasks:
     - Keep tasks small, independent and individually testable.
     - Group tasks by Backend and Frontend and add a "verify ..." note to each task.

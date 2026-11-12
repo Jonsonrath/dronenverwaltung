@@ -1,8 +1,9 @@
 /*
- * App shell (design §2):
+ * App shell (design §2, §7):
  * - desktop (>= 64rem): side navigation on the left, content on the right
  * - tablet (40–64rem): top bar
- * - phone (< 40rem): brand on top, tab bar at the bottom (thumb reach at the cabinet)
+ * - phone (< 40rem): brand on top, tab bar with icons at the bottom (thumb reach at the cabinet)
+ * The current page is marked in the accent yellow.
  */
 
 :host {
@@ -13,8 +14,9 @@
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-3);
   color: var(--text);
+  font-family: var(--font-display);
   font-size: var(--text-md);
   font-weight: 600;
   text-decoration: none;
@@ -22,21 +24,44 @@
 }
 
 .brand-mark {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 2rem;
+  height: 2rem;
   fill: none;
-  stroke: var(--muted);
-  stroke-width: 2;
+  stroke: var(--on-accent);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.brand-tile {
+  fill: var(--accent);
+  stroke: none;
+}
+
+.brand-body {
+  fill: var(--on-accent);
+  stroke: none;
 }
 
 .tab {
   display: flex;
   align-items: center;
+  gap: var(--space-3);
   color: var(--muted);
   font-weight: 500;
   text-decoration: none;
   white-space: nowrap;
   transition: color var(--ease), background-color var(--ease);
+}
+
+.icon {
+  flex: none;
+  width: 1.375rem;
+  height: 1.375rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .tab:hover {
@@ -47,8 +72,12 @@
   color: var(--text);
 }
 
+.tab.is-active .icon {
+  color: var(--accent);
+}
+
 .page {
-  max-width: 64rem;
+  max-width: 76rem;
   padding: var(--space-8) var(--space-6);
 }
 
@@ -56,7 +85,7 @@
 @media (min-width: 64rem) {
   :host {
     display: grid;
-    grid-template-columns: 15rem minmax(0, 1fr);
+    grid-template-columns: 16rem minmax(0, 1fr);
   }
 
   .bar {
@@ -82,7 +111,8 @@
   }
 
   .tab {
-    min-height: 2.5rem;
+    position: relative;
+    min-height: 2.75rem;
     padding: 0 var(--space-3);
     border-radius: var(--radius-sm);
   }
@@ -93,6 +123,21 @@
 
   .tab.is-active {
     background: var(--raised);
+    font-weight: 600;
+  }
+
+  /* Yellow marker on the edge of the current page */
+  .tab.is-active::before {
+    content: '';
+    position: absolute;
+    inset: 0.625rem auto 0.625rem calc(-1 * var(--space-4));
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--accent);
+  }
+
+  .page {
+    padding: var(--space-8);
   }
 }
 
@@ -101,7 +146,7 @@
   .bar {
     display: flex;
     align-items: stretch;
-    gap: var(--space-6);
+    gap: var(--space-5);
     padding: 0 var(--space-6);
     border-bottom: 1px solid var(--line);
     background: var(--surface);
@@ -111,6 +156,10 @@
     align-self: center;
   }
 
+  .brand span {
+    display: none;
+  }
+
   .tabs {
     display: flex;
     gap: var(--space-1);
@@ -118,11 +167,12 @@
   }
 
   .tab {
+    gap: var(--space-2);
     padding: var(--space-4) var(--space-3);
   }
 
   .tab.is-active {
-    box-shadow: inset 0 -2px 0 var(--text);
+    box-shadow: inset 0 -3px 0 var(--accent);
   }
 }
 
@@ -146,25 +196,23 @@
 
   .tab {
     flex: 1 1 0%;
-    min-width: 0;
+    flex-direction: column;
     justify-content: center;
-    min-height: 3.5rem;
+    gap: var(--space-1);
+    min-width: 0;
+    min-height: 4rem;
     padding: var(--space-2) var(--space-1);
-    font-size: var(--text-xs);
-    line-height: 1.2;
+    font-size: 0.6875rem;
+    line-height: 1.15;
     text-align: center;
     white-space: normal;
   }
 
   .tab.is-active {
-    box-shadow: inset 0 2px 0 var(--text);
+    box-shadow: inset 0 3px 0 var(--accent);
   }
 
   .page {
-    padding: var(--space-6) var(--space-4) calc(var(--space-8) + 3.5rem);
-  }
-
-  .page h1 {
-    font-size: var(--text-xl);
+    padding: var(--space-5) var(--space-4) calc(var(--space-8) + 4rem);
   }
 }

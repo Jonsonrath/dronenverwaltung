@@ -22,6 +22,10 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 - [ ] 4.1 Run the assignment's example end to end again through the new UI (as in `docs/end-to-end-check.md`) and update that document and the README if anything changed; verify `dotnet test` and `npx ng test --watch=false` pass and screenshots of all pages at desktop and phone width (#59)
 
+## 5. Second design pass
+
+- [x] 5.1 Give the app the identity from design §7: accent color, status colors and Barlow in `styles.css`; navigation with icons; drones page as cabinet (count, bays with `shared/drone-glyph`, shortcuts to the loan form and the active loans); loan form with numbered steps, loan slip and preselection from `?drone=<id>`; groups, loan tables, stepper, messages and favicon in the same style; verify `npx ng build`, all `npx ng test` pass with unchanged behavior assertions plus new tests (cabinet count, bay links, loan slip, preselection), AA contrast of every color, a loan / 409 / return / 422 run through the real UI and screenshots at 1440 / 800 / 390 px without horizontal overflow down to 320 px (#68)
+
 ## Workflow follow-up
 
 - Create GitHub Issues for these tasks with `/openspec-to-github improve-frontend-design` and write the issue numbers back into this file.

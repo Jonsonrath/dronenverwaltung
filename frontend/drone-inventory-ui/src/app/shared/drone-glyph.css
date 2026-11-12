@@ -1,0 +1,40 @@
+/* Size and color come from outside: set width and `color` on <app-drone-glyph>. */
+:host {
+  display: block;
+  width: 2.75rem;
+  aspect-ratio: 1;
+  color: var(--status, var(--muted));
+}
+
+svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+}
+
+.body {
+  fill: currentColor;
+}
+
+.rotor {
+  fill: color-mix(in srgb, currentColor 16%, transparent);
+}
+
+/* Out of the cabinet: only the dashed outline of the drone is left in the bay. */
+:host(.is-out) svg {
+  stroke-width: 2;
+  stroke-dasharray: 2.5 4;
+}
+
+:host(.is-out) .arms {
+  display: none;
+}
+
+:host(.is-out) .body,
+:host(.is-out) .rotor {
+  fill: none;
+}

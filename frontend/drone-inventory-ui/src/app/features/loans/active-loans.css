@@ -1,16 +1,32 @@
-/* Table layout: loan-table.css. Here: the status bar of a loaned drone and the return action. */
+/* Table layout: loan-table.css. Here: the mark of a drone that is out and the return action. */
 
-/* Every active loan is a drone that is out: the same ochre bar as "Loaned" in the drone list. */
+/* Every active loan is a drone that is out: the blue of "Loaned" on the edge of its plate. */
 .table tbody td:first-child {
-  box-shadow: inset 3px 0 0 var(--loaned);
+  box-shadow: inset 4px 0 0 var(--loaned);
 }
+
 .action {
+  width: 1%;
   text-align: right;
+  white-space: nowrap;
+}
+
+/* Return is what this page is for: outlined in the accent, filled on hover. */
+.action .button {
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: none;
+  color: var(--accent);
+}
+
+.action .button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 .added,
 p.alert {
-  margin-bottom: var(--space-4);
+  margin: 0 0 var(--space-4);
 }
 
 @media (max-width: 40rem) {
@@ -19,12 +35,13 @@ p.alert {
   }
 
   .table tbody tr {
-    box-shadow: inset 3px 0 0 var(--loaned);
+    box-shadow: inset 4px 0 0 var(--loaned);
   }
 
   .table .action {
     grid-column: 1 / -1;
-    margin-top: var(--space-2);
+    width: auto;
+    margin-top: var(--space-3);
   }
 
   .table .action .button {

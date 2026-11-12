@@ -1,6 +1,41 @@
-/* Shared by the active loans page and the loan history. */
+/* Shared by the active loans page and the loan history: one plate per loan (design §5, §7). */
+
+.table {
+  border-collapse: separate;
+  border-spacing: 0 var(--space-2);
+}
+
+.table th {
+  padding-top: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.table td {
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+  transition: background-color var(--ease);
+}
+
+.table td:first-child {
+  border-left: 1px solid var(--line);
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.table td:last-child {
+  border-right: 1px solid var(--line);
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.table tbody tr:hover td {
+  background: var(--raised);
+}
+
 .group,
 .drone {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
   font-weight: 600;
   white-space: nowrap;
 }
@@ -8,18 +43,6 @@
 .date {
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
-}
-
-.table td {
-  vertical-align: middle;
-}
-
-.table tbody tr {
-  transition: background-color var(--ease);
-}
-
-.table tbody tr:hover {
-  background: var(--surface);
 }
 
 .visually-hidden {
@@ -32,6 +55,11 @@
 
 /* Phone: one block per loan – group and drone on top, the values below with labels. */
 @media (max-width: 40rem) {
+  .table,
+  .table tbody {
+    display: block;
+  }
+
   thead {
     position: absolute;
     width: 1px;
@@ -45,14 +73,25 @@
     /* Three label columns; the last one takes the rest, so full-width rows can stretch. */
     grid-template-columns: auto auto 1fr;
     gap: var(--space-1) var(--space-5);
-    padding: var(--space-3);
-    border-bottom: 1px solid var(--line);
+    margin-bottom: var(--space-3);
+    padding: var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--surface);
   }
 
-  .table td {
+  .table td,
+  .table td:first-child,
+  .table td:last-child {
     padding: 0;
-    border-bottom: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
     text-align: left;
+  }
+
+  .table tbody tr:hover td {
+    background: none;
   }
 
   .table .group {
@@ -62,6 +101,9 @@
   .table .drone {
     grid-column: 1 / -1;
     margin-bottom: var(--space-2);
+    color: var(--muted);
+    font-family: var(--font);
+    font-size: var(--text-base);
     font-weight: 500;
   }
 
@@ -70,6 +112,6 @@
     display: block;
     color: var(--muted);
     font-size: var(--text-xs);
-    font-weight: 600;
+    font-weight: 500;
   }
 }

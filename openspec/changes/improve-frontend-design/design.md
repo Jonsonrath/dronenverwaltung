@@ -45,6 +45,8 @@ Constraints: no backend/API change; the frontend shows backend states and messag
 - **The one memorable element:** that status bar down the left of every drone row – the whole cabinet readable at a glance. Everything else stays quiet: no gradients, no shadows, no decoration, no viewfinder corners (dropped from the first draft).
 - **Type:** IBM Plex Sans (400 / 500 / 600) – technical, engineering, fits hardware and a school; page titles large in weight 500; tabular figures for quantities and dates; sentence case, no all-caps labels, no monospace labels.
 
+*Revised again in task 5.1:* with almost no color and no picture the pages were correct but anonymous. Palette, type and the memorable element are replaced by §7; the rules "color is never the only signal" and AA contrast stay.
+
 *Alternatives:* navy + teal + glow (first draft) – rejected by the team as generic; near-black with a neon accent – the most common "dark tech" default.
 
 ### 2. Layout
@@ -69,6 +71,29 @@ Active loans and history stay tables on desktop (they are tabular data with numb
 
 ### 6. Tests
 Selectors are updated where markup changes (`tbody tr` → drone list items, `<select>` → radio inputs). The asserted behavior stays identical: same requests and bodies, same shown values, same backend messages. New tests: `QuantityStepper` (+, −, disabled at 0, typing, works with `[formField]`) and tile/chip selection sending the right ids.
+
+### 7. Second design pass: the drone cabinet (task 5.1)
+The app is used standing in front of a cabinet with numbered bays. That is the picture the UI takes over.
+
+- **Palette** (replaces the table in §1):
+
+  | Token | Value | Use |
+  |---|---|---|
+  | `--bg` / `--surface` / `--raised` / `--line` | `#14161A` / `#1B1E24` / `#252932` / `#343946` | page, panels and bays, hover and controls, borders |
+  | `--text` / `--muted` | `#F2F3F5` / `#9AA1AE` | text |
+  | `--accent` / `--on-accent` | `#FFCB3D` / `#1C1600` | primary buttons, current page, selection, focus ring – the yellow of cabinet labels and airfield markings |
+  | `--available` | `#5FD39A` | Available |
+  | `--loaned` | `#7DB6FF` | Loaned (blue, so it cannot be mistaken for the yellow accent) |
+  | `--error` | `#FF8A8A` | backend error messages |
+
+  Measured contrast on `--bg` / `--surface` / `--raised`: text 16.3 / 15.0 / 13.1, muted 7.0 / 6.4 / 5.6, accent 12.0 / 11.0 / 9.6, available 9.7 / 9.0 / 7.8, loaned 8.6 / 8.0 / 6.9, error 8.0 / 7.4 / 6.4; button text on the accent 11.9. All above 4.5:1.
+- **Type:** Barlow Semi Condensed (500 / 600) for titles, drone and group names and numbers – a signage face, like equipment labels; Barlow (400 / 500 / 600) for everything else. System fonts as fallback.
+- **The memorable element:** the drone glyph (`shared/drone-glyph`, a quadcopter from above). A drone that is in its bay is drawn filled in green, a drone that is out is only a dashed blue outline in a dashed bay. The status word stays next to it.
+- **Drones page:** head with "n of m in the cabinet" and one segment per drone; the list is a grid of bays (one per line on phones). Each bay ends with a shortcut: *Loan this drone* → `/loans/new?drone=<id>`, *Return this drone* → `/loans`. The count only counts the statuses the backend sent.
+- **Loan form:** the three choices are a real sequence and are numbered 1–3. A loan slip (drone, student group, batteries, propellers) reads the choice back above the button. With `?drone=<id>` the drone is chosen already if the backend lists it; otherwise nothing is chosen. Loaned drones stay selectable, the backend answers 409 as before.
+- **Navigation:** an icon per link; the current page has the yellow marker (side: left edge, top bar: underline, bottom tabs: top line).
+- **Student groups / loans:** groups as name plates in a grid; every loan is one plate (table on desktop, block on phones); an active loan carries the blue edge, *Return* is outlined in the accent.
+- **Tests:** existing assertions unchanged (`drones.spec.ts` only gets a router provider because of the new links). New: cabinet count, bay links, loan slip, preselection from the link (known and unknown id).
 
 ## Risks / Trade-offs
 

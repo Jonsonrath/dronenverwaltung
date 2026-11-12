@@ -1,5 +1,16 @@
-<h1>Student groups</h1>
-<p class="lead">Groups that can loan a drone.</p>
+<header class="page-head">
+  <div>
+    <h1>Student groups</h1>
+    <p class="lead">Groups that can loan a drone.</p>
+  </div>
+
+  @if (groups.hasValue() && groups.value().length > 0) {
+    <p class="count">
+      <span class="figure">{{ groups.value().length }}</span>
+      {{ groups.value().length === 1 ? 'group' : 'groups' }}
+    </p>
+  }
+</header>
 
 <div class="layout">
   <section class="inventory" aria-label="Student groups">

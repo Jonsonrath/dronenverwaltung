@@ -13,7 +13,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 3. Docs
 
-- [ ] 3.1 Add REQ-013 to `docs/requirements.md` and the README; verify the README table and `openspec validate edit-drones --strict` (#82)
+- [x] 3.1 Add REQ-013 to `docs/requirements.md` and the README; verify the README table and `openspec validate edit-drones --strict` (#82)
 
 ## Workflow follow-up
 

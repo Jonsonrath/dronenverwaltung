@@ -2,8 +2,10 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using DroneInventory.Api.Contracts;
+using DroneInventory.Api.Data;
 using DroneInventory.Api.Domain;
 using DroneInventory.Api.Tests.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DroneInventory.Api.Tests.Api;
 
@@ -102,6 +104,55 @@ public class DroneStatusApiTests : IDisposable
         using var json = JsonDocument.Parse(await _client.GetStringAsync("/api/drones"));
 
         Assert.Equal("Available", json.RootElement[0].GetProperty("status").GetString());
+    }
+
+    // Change support-damaged-drones, task 1.2: MODIFIED "List drones with availability (REQ-002)".
+    // The damage is written directly into the database here; the damage endpoints follow in task 1.3.
+
+    [Fact]
+    public async Task REQ_002_DamagedDrone()
+    {
+        var drone = await CreateDrone("TELLO-11");
+        await MarkDamaged(drone.Id, "Propeller gebrochen");
+
+        var listed = (await _client.GetFromJsonAsync<List<DroneResponse>>("/api/drones"))!.Single();
+
+        Assert.Equal((DroneStatus.Damaged, "Propeller gebrochen"), (listed.Status, listed.DamageReason));
+    }
+
+    [Fact]
+    public async Task REQ_002_LoanedDroneThatIsDamaged()
+    {
+        var drone = await CreateDrone("TELLO-02");
+        var group = await CreateGroup("Group 3");
+        await LoanDrone(drone.Id, group.Id);
+        await MarkDamaged(drone.Id, "Kamera ausgefallen");
+
+        var listed = (await _client.GetFromJsonAsync<List<DroneResponse>>("/api/drones"))!.Single();
+
+        Assert.Equal((DroneStatus.Loaned, "Kamera ausgefallen"), (listed.Status, listed.DamageReason));
+    }
+
+    [Fact]
+    public async Task REQ_002_UndamagedDroneHasNoDamageReasonAndDamagedIsSentAsText()
+    {
+        await CreateDrone("TELLO-07");
+        var damaged = await CreateDrone("TELLO-11");
+        await MarkDamaged(damaged.Id, "Propeller gebrochen");
+
+        using var json = JsonDocument.Parse(await _client.GetStringAsync("/api/drones"));
+
+        Assert.Equal(JsonValueKind.Null, json.RootElement[0].GetProperty("damageReason").ValueKind);
+        Assert.Equal("Damaged", json.RootElement[1].GetProperty("status").GetString());
+        Assert.Equal("Propeller gebrochen", json.RootElement[1].GetProperty("damageReason").GetString());
+    }
+
+    private async Task MarkDamaged(int droneId, string reason)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<DroneInventoryDbContext>();
+        (await db.Drones.FindAsync(droneId))!.ReportDamage(reason);
+        await db.SaveChangesAsync();
     }
 
     private async Task<DroneStatus> StatusOf(string droneName)

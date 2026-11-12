@@ -62,12 +62,13 @@ public class DroneService(DroneInventoryDbContext db)
         }
 
         var isLoaned = await db.Loans.AnyAsync(l => l.DroneId == id && l.Status == LoanStatus.Active, cancellationToken);
-        return (drone, isLoaned ? DroneStatus.Loaned : DroneStatus.Available);
+        return (drone, DroneStatusRules.Derive(isLoaned, drone.DamageReason));
     }
 
     /// <summary>
-    /// All drones, ordered by name, each with its status derived from the loans (REQ-002):
-    /// Loaned if it has an active loan, otherwise Available. No status is stored.
+    /// All drones, ordered by name, each with its status derived from the loans and the damage
+    /// (REQ-002): Loaned if it has an active loan, otherwise Damaged if damaged, otherwise
+    /// Available. No status is stored.
     /// </summary>
     public async Task<IReadOnlyList<(Drone Drone, DroneStatus Status)>> ListAsync(CancellationToken cancellationToken = default)
     {
@@ -81,7 +82,7 @@ public class DroneService(DroneInventoryDbContext db)
             })
             .ToListAsync(cancellationToken);
 
-        return rows.Select(r => (r.Drone, r.IsLoaned ? DroneStatus.Loaned : DroneStatus.Available)).ToList();
+        return rows.Select(r => (r.Drone, DroneStatusRules.Derive(r.IsLoaned, r.Drone.DamageReason))).ToList();
     }
 
     private static ConflictException DuplicateName(Drone drone) =>

@@ -36,7 +36,7 @@ public class EditDroneApiTests : IDisposable
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var edited = await response.Content.ReadFromJsonAsync<DroneResponse>(JsonOptions);
-        Assert.Equal(new DroneResponse(drone.Id, "TELLO-07", "rechter Propellerschutz beschädigt", DroneStatus.Available), edited);
+        Assert.Equal(new DroneResponse(drone.Id, "TELLO-07", "rechter Propellerschutz beschädigt", DroneStatus.Available, null), edited);
         Assert.Equal(["TELLO-07"], (await Drones()).Select(d => d.Name));
     }
 

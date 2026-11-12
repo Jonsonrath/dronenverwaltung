@@ -26,7 +26,7 @@ context: |
   - Drone status (Available | Loaned | Damaged) is derived, not stored: Loaned with an active loan,
     otherwise Damaged if a damage reason is set, otherwise Available.
   Out of scope: login/roles, individual battery inventory, reservations,
-  return differences, statistics and exports.
+  statistics and exports.
 
 rules:
   proposal:

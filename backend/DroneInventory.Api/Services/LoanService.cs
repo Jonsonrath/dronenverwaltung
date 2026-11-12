@@ -53,8 +53,14 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
     /// ReturnDate; the drone becomes available again because it has no active loan.
     /// Throws NotFoundException for an unknown loan and ConflictException if the loan
     /// has already been returned. The loan itself is kept (REQ-010).
+    /// Returned batteries / propellers (REQ-022): null counts as the loaned quantity, a
+    /// number outside 0..loaned quantity throws ValidationException and the loan stays active.
     /// </summary>
-    public async Task<Loan> ReturnAsync(int loanId, CancellationToken cancellationToken = default)
+    public async Task<Loan> ReturnAsync(
+        int loanId,
+        int? returnedBatteries = null,
+        int? returnedPropellers = null,
+        CancellationToken cancellationToken = default)
     {
         var loan = await db.Loans
             .Include(l => l.Drone)
@@ -63,7 +69,7 @@ public class LoanService(DroneInventoryDbContext db, TimeProvider time)
             .SingleOrDefaultAsync(l => l.Id == loanId, cancellationToken)
             ?? throw new NotFoundException($"Die Ausleihe {loanId} gibt es nicht.");
 
-        loan.Return(time.GetUtcNow().UtcDateTime);
+        loan.Return(time.GetUtcNow().UtcDateTime, returnedBatteries, returnedPropellers);
         try
         {
             await db.SaveChangesAsync(cancellationToken);

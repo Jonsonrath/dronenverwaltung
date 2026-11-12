@@ -69,4 +69,14 @@ describe('LoanApi', () => {
     expect(request.request.method).toBe('POST');
     expect(await result).toEqual({ id: 2, status: 'Returned' });
   });
+
+  it('REQ-022: returnLoan() with returned quantities sends them as the body', async () => {
+    const result = firstValueFrom(api.returnLoan(2, { batteries: 3, propellers: 8 }));
+    const request = http.expectOne('/api/loans/2/return');
+    request.flush({ id: 2, status: 'Returned', returnedBatteries: 3, returnedPropellers: 8 });
+
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ batteries: 3, propellers: 8 });
+    expect(await result).toEqual({ id: 2, status: 'Returned', returnedBatteries: 3, returnedPropellers: 8 });
+  });
 });

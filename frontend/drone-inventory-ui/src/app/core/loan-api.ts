@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
 import { Observable } from 'rxjs';
-import { CreateLoanRequest, Loan, LoanStatus } from './loan.model';
+import { CreateLoanRequest, Loan, LoanStatus, ReturnLoanRequest } from './loan.model';
 
 /** Backend calls for loans (design.md §6). */
 @Service()
@@ -25,8 +25,10 @@ export class LoanApi {
   /**
    * Returns a loan (REQ-008, REQ-009): the backend sets the ReturnDate and the drone is
    * available again. It rejects a loan that is already returned (409) or unknown (404).
+   * The optional body holds the returned batteries and propellers (REQ-022); the backend
+   * rejects a number below 0 or above the loaned quantity (422).
    */
-  returnLoan(id: number): Observable<Loan> {
-    return this.http.post<Loan>(`/api/loans/${id}/return`, null);
+  returnLoan(id: number, returned?: ReturnLoanRequest): Observable<Loan> {
+    return this.http.post<Loan>(`/api/loans/${id}/return`, returned ?? null);
   }
 }

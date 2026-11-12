@@ -31,7 +31,7 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 - `Drone` (Id, Name, Description, DamageReason)
 - `StudentGroup` (Id, Name)
 - `Loan` (Id, DroneId, StudentGroupId, LoanDate, ReturnDate, Status: Active | Returned)
-- `LoanItem` (Id, LoanId, Type: Battery | Propeller, Quantity)
+- `LoanItem` (Id, LoanId, Type: Battery | Propeller, Quantity, ReturnedQuantity)
 
 `Loan` is the central entity. `LoanItem` only exists inside a `Loan`.
 
@@ -44,6 +44,7 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 - Returned loans are never deleted (history is kept).
 - Batteries and propellers are tracked as quantities only, not as individual items.
 - Drone status (Available | Loaned | Damaged) is derived: Loaned with an active loan, otherwise Damaged if a damage reason is set, otherwise Available. It is NOT stored as its own database field.
+- At the return the returned quantity of each accessory is recorded (0 ... loaned quantity, default: the loaned quantity); missing = loaned − returned is derived, not stored (REQ-022).
 
 ## Rules
 - Business logic and validation belong in the backend. Domain rules are enforced there, never only in an Angular form.
@@ -69,7 +70,7 @@ Use exactly these terms in specs, code, database and conversation. Do not invent
 - Keep the UI simple. Required views: drone list with status, drone form, student group form, loan form (with batteries/propellers), active loans, return action, loan history.
 
 ## Out of Scope (initial change)
-Login/users/roles, individual battery inventory (BAT-001 ...), reservations, return differences, statistics/exports. These come later as separate change requests. (Damage management was added with the change `support-damaged-drones`.)
+Login/users/roles, individual battery inventory (BAT-001 ...), reservations, statistics/exports. These come later as separate change requests. (Damage management and return differences were added with the changes `support-damaged-drones` and `return-differences`.)
 
 ## Workflow
 - Requirements REQ-001 ... REQ-010 are written with SHALL and at least one Given/When/Then scenario.

@@ -4,16 +4,16 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 1. Backend
 
-- [ ] 1.1 `Drone.Ssid` / `NormalizedSsid`, filtered unique index, migration `AddDroneSsid` (design §1, §2); verify with domain and mapping tests `REQ_024_...` (two drones without SSID allowed)
-- [ ] 1.2 `ssid` in create, edit and list (design §3); verify with API tests for every scenario of REQ-024
+- [ ] 1.1 `Drone.Ssid` / `NormalizedSsid`, filtered unique index, migration `AddDroneSsid` (design §1, §2); verify with domain and mapping tests `REQ_024_...` (two drones without SSID allowed) (#112)
+- [ ] 1.2 `ssid` in create, edit and list (design §3); verify with API tests for every scenario of REQ-024 (#113)
 
 ## 2. Frontend
 
-- [ ] 2.1 SSID field in both drone sheets and SSID in the bay (design §4); verify with Vitest tests for the request bodies and the 409 message, `npx ng build`, and one run through the real UI
+- [ ] 2.1 SSID field in both drone sheets and SSID in the bay (design §4); verify with Vitest tests for the request bodies and the 409 message, `npx ng build`, and one run through the real UI (#114)
 
 ## 3. Docs
 
-- [ ] 3.1 `docs/requirements.md` REQ-024 and the README; verify `openspec validate drone-ssid --strict`
+- [ ] 3.1 `docs/requirements.md` REQ-024 and the README; verify `openspec validate drone-ssid --strict` (#115)
 
 ## Workflow follow-up
 

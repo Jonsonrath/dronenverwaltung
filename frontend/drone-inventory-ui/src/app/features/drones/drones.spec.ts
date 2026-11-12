@@ -218,4 +218,88 @@ describe('Drones page', () => {
       expect(page.querySelector('.field-error')?.textContent).toContain('Name eingeben.');
     });
   });
+
+  // Change edit-drones: "Edit drone (REQ-013)" – Bearbeiten on every bay opens a sheet.
+  describe('edit a drone', () => {
+    const tello07: Drone = { id: 7, name: 'TELO-07', description: 'rechter Propellerschutz beschädigt', status: 'Available' };
+    const settle = () => new Promise((resolve) => setTimeout(resolve));
+    const editSheet = (page: HTMLElement) =>
+      page.querySelector('dialog[aria-labelledby="edit-drone-heading"]') as HTMLDialogElement;
+
+    async function submitEdit(page: HTMLElement, name: string, description: string) {
+      const nameInput = page.querySelector('#edit-drone-name') as HTMLInputElement;
+      const descriptionInput = page.querySelector('#edit-drone-description') as HTMLTextAreaElement;
+      nameInput.value = name;
+      nameInput.dispatchEvent(new Event('input'));
+      descriptionInput.value = description;
+      descriptionInput.dispatchEvent(new Event('input'));
+      page.querySelector('form.edit-form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+      await settle();
+      fixture.detectChanges();
+    }
+
+    it('REQ-013: opens the edit sheet with name and description of the drone', async () => {
+      const page = await respond([tello07]);
+
+      (page.querySelector('button[aria-label="TELO-07 bearbeiten"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      expect(editSheet(page).open).toBe(true);
+      expect(editSheet(page).querySelector('h2')?.textContent).toBe('TELO-07 bearbeiten');
+      expect((page.querySelector('#edit-drone-name') as HTMLInputElement).value).toBe('TELO-07');
+      expect((page.querySelector('#edit-drone-description') as HTMLTextAreaElement).value).toBe(
+        'rechter Propellerschutz beschädigt',
+      );
+    });
+
+    it('REQ-013: sends the changes to the backend and shows the renamed drone', async () => {
+      const page = await respond([tello07]);
+      (page.querySelector('button[aria-label="TELO-07 bearbeiten"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      await submitEdit(page, 'TELLO-07', 'Propellerschutz erneuert');
+      const request = http.expectOne({ method: 'PUT', url: '/api/drones/7' });
+      expect(request.request.body).toEqual({ name: 'TELLO-07', description: 'Propellerschutz erneuert' });
+      const edited = { ...tello07, name: 'TELLO-07', description: 'Propellerschutz erneuert' };
+      request.flush(edited);
+      await settle();
+      fixture.detectChanges();
+      http.expectOne({ method: 'GET', url: '/api/drones' }).flush([edited]);
+      await settle();
+      fixture.detectChanges();
+
+      expect(page.querySelector('.drone-list li .name')?.textContent).toBe('TELLO-07');
+      expect(page.querySelector('[role="status"]')?.textContent).toContain('TELLO-07 gespeichert.');
+      expect(editSheet(page).open).toBe(false);
+    });
+
+    it('REQ-013: shows the backend message for the name of another drone (409) in the sheet', async () => {
+      const page = await respond([tello07]);
+      (page.querySelector('button[aria-label="TELO-07 bearbeiten"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      await submitEdit(page, 'TELLO-02', '');
+      http.expectOne({ method: 'PUT', url: '/api/drones/7' }).flush(
+        { status: 409, detail: 'Eine Drohne mit dem Namen "TELLO-02" gibt es bereits.' },
+        { status: 409, statusText: 'Conflict' },
+      );
+      await settle();
+      fixture.detectChanges();
+
+      expect(editSheet(page).querySelector('[role="alert"]')?.textContent).toContain('gibt es bereits');
+      expect(editSheet(page).open).toBe(true);
+      http.expectNone({ method: 'GET', url: '/api/drones' });
+    });
+
+    it('does not send an empty name and asks for one', async () => {
+      const page = await respond([tello07]);
+      (page.querySelector('button[aria-label="TELO-07 bearbeiten"]') as HTMLButtonElement).click();
+      fixture.detectChanges();
+
+      await submitEdit(page, '', '');
+
+      http.expectNone({ method: 'PUT', url: '/api/drones/7' });
+      expect(editSheet(page).querySelector('.field-error')?.textContent).toContain('Name eingeben.');
+    });
+  });
 });

@@ -34,6 +34,18 @@ describe('DroneApi', () => {
     expect(await result).toEqual(drones);
   });
 
+  it('REQ-013: update() sends PUT /api/drones/{id} with name and description', async () => {
+    const edited: Drone = { id: 7, name: 'TELLO-07', description: 'Propellerschutz erneuert', status: 'Available' };
+
+    const result = firstValueFrom(api.update(7, { name: 'TELLO-07', description: 'Propellerschutz erneuert' }));
+    const request = http.expectOne('/api/drones/7');
+    request.flush(edited);
+
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({ name: 'TELLO-07', description: 'Propellerschutz erneuert' });
+    expect(await result).toEqual(edited);
+  });
+
   it('REQ-001: create() sends POST /api/drones with name and description', async () => {
     const created: Drone = { id: 7, name: 'TELLO-07', description: 'SSID: TELLO-9FA21B', status: 'Available' };
 

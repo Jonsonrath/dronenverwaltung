@@ -4,10 +4,11 @@ import { form, FormField, FormRoot, required } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { DroneApi } from '../../core/drone-api';
+import { Drone } from '../../core/drone.model';
 import { problemMessage } from '../../core/problem-message';
 import { DroneGlyph } from '../../shared/drone-glyph';
 
-/** Drone list with the derived status (REQ-002) and the form to add a drone (REQ-001). */
+/** Drone list with the derived status (REQ-002) and the forms to add (REQ-001) and edit (REQ-013) a drone. */
 @Component({
   selector: 'app-drones',
   imports: [FormField, FormRoot, RouterLink, DroneGlyph],
@@ -44,12 +45,69 @@ export class Drones {
     this.sheet().nativeElement.close();
   }
 
-  /** A click on the dimmed area around the sheet closes it; the dialog element itself is that area. */
+  /** A click on the dimmed area around a sheet closes it; the dialog element itself is that area. */
   protected closeOnBackdrop(event: MouseEvent) {
-    if (event.target === this.sheet().nativeElement) {
-      this.closeSheet();
+    if (event.target instanceof HTMLDialogElement) {
+      event.target.close();
     }
   }
+
+  // ---- edit (REQ-013) ----
+
+  private readonly editSheet = viewChild.required<ElementRef<HTMLDialogElement>>('editSheet');
+
+  /** The drone whose name and description are being changed. */
+  protected readonly editing = signal<Drone | undefined>(undefined);
+
+  protected readonly changes = signal({ name: '', description: '' });
+
+  /** Message from the backend when saving failed, e.g. 409 name of another drone. */
+  protected readonly editError = signal('');
+
+  /** Name of the drone that was saved last, for the confirmation text. */
+  protected readonly saved = signal('');
+
+  protected openEdit(drone: Drone) {
+    this.editing.set(drone);
+    this.editError.set('');
+    this.editForm().reset({ name: drone.name, description: drone.description });
+    this.editSheet().nativeElement.showModal();
+  }
+
+  protected closeEdit() {
+    this.editSheet().nativeElement.close();
+  }
+
+  // Only a convenience check; the backend validates the name (REQ-013).
+  protected readonly editForm = form(
+    this.changes,
+    (drone) => {
+      required(drone.name, { message: 'Name eingeben.' });
+    },
+    {
+      submission: {
+        action: async () => {
+          const drone = this.editing();
+          if (!drone) {
+            return undefined;
+          }
+          this.editError.set('');
+          this.added.set('');
+          this.saved.set('');
+          try {
+            const result = await firstValueFrom(this.droneApi.update(drone.id, this.changes()));
+            this.saved.set(result.name);
+            this.closeEdit();
+            this.drones.reload();
+          } catch (error) {
+            this.editError.set(problemMessage(error));
+          }
+          return undefined;
+        },
+        onInvalid: () => this.editError.set(''),
+      },
+    },
+  );
 
   // Only a convenience check; the backend validates the name (REQ-001).
   protected readonly droneForm = form(
@@ -62,6 +120,7 @@ export class Drones {
         action: async () => {
           this.saveError.set('');
           this.added.set('');
+          this.saved.set('');
           const { name, description } = this.newDrone();
           try {
             const drone = await firstValueFrom(this.droneApi.create({ name, description }));

@@ -9,7 +9,7 @@ Each task is one GitHub Issue, one branch and one pull request. Implement only t
 
 ## 2. Frontend
 
-- [ ] 2.1 `DroneApi.update` and *Bearbeiten* with a sheet on the drones page (design §4); verify with Vitest tests for the request, the reloaded list and the shown 409 / 422 messages, `npx ng build`, and one run through the real UI (#81)
+- [x] 2.1 `DroneApi.update` and *Bearbeiten* with a sheet on the drones page (design §4); verify with Vitest tests for the request, the reloaded list and the shown 409 / 422 messages, `npx ng build`, and one run through the real UI (#81)
 
 ## 3. Docs
 
